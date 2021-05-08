@@ -2,16 +2,10 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using Vivify.Events;
     using UnityEngine;
 
     internal class PostProcessingController : MonoBehaviour
     {
-        internal static MaterialData[] PostProcessingMaterial { get; private set; } = new MaterialData[4];
-
         private readonly RenderTexture[] _previousFrames = new RenderTexture[4];
 
         private enum TextureRequest
@@ -23,8 +17,10 @@
             Pass0_Previous = -1,
             Pass1_Previous = -2,
             Pass2_Previous = -3,
-            Pass3_Previous = -4
+            Pass3_Previous = -4,
         }
+
+        internal static MaterialData[] PostProcessingMaterial { get; private set; } = new MaterialData[4];
 
         internal static void ResetMaterial()
         {
@@ -77,10 +73,10 @@
 
                 for (int i = 0; i < length; i++)
                 {
-                    //RenderTexture.ReleaseTemporary(_previousFrames[i]);
+                    ////RenderTexture.ReleaseTemporary(_previousFrames[i]);
                     if (tempTextures[i] != null)
                     {
-                        //_previousFrames[i] = RenderTexture.GetTemporary(src.width, src.height, src.depth, src.format);
+                        ////previousFrames[i] = RenderTexture.GetTemporary(src.width, src.height, src.depth, src.format);
                         Graphics.Blit(tempTextures[i], _previousFrames[i]);
                     }
 

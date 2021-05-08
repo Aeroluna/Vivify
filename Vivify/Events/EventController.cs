@@ -1,6 +1,5 @@
 ﻿namespace Vivify.Events
 {
-    using System.Collections.Generic;
     using CustomJSONData;
     using CustomJSONData.CustomBeatmap;
     using UnityEngine;
@@ -12,7 +11,6 @@
         public CustomEventCallbackController CustomEventCallbackController { get; private set; }
 
         public BeatmapObjectSpawnController BeatmapObjectSpawnController => HarmonyPatches.BeatmapObjectSpawnControllerStart.BeatmapObjectSpawnController;
-
 
         internal static void CustomEventCallbackInit(CustomEventCallbackController customEventCallbackController)
         {

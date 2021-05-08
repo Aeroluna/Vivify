@@ -5,8 +5,6 @@
     using System.Linq;
     using CustomJSONData;
     using CustomJSONData.CustomBeatmap;
-    using UnityEngine;
-    using Vivify.Events;
     using static Vivify.Plugin;
 
     internal static class SceneTransitionHelper

@@ -1,9 +1,5 @@
 ﻿namespace Vivify
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Reflection;
-    using HarmonyLib;
     using UnityEngine.SceneManagement;
     using static Vivify.Plugin;
 

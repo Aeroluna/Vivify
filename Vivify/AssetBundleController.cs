@@ -1,12 +1,6 @@
 ﻿namespace Vivify
 {
-    using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using CustomJSONData;
-    using CustomJSONData.CustomBeatmap;
     using UnityEngine;
 
     internal static class AssetBundleController
@@ -58,13 +52,13 @@
 
     internal class MaterialData
     {
-        internal Material Material { get; }
-
-        internal Dictionary<string, string> TextureRequests { get; } = new Dictionary<string, string>();
-
         internal MaterialData(Material material)
         {
             Material = material;
         }
+
+        internal Material Material { get; }
+
+        internal Dictionary<string, string> TextureRequests { get; } = new Dictionary<string, string>();
     }
 }

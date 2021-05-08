@@ -4,16 +4,24 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using Heck;
-    using Heck.Animation;
     using CustomJSONData;
     using CustomJSONData.CustomBeatmap;
+    using Heck.Animation;
     using UnityEngine;
 
     internal static class SetMaterialPropertyEvent
     {
+        internal enum MaterialProperty
+        {
+            Texture,
+            Color,
+            Float,
+            FloatArray,
+            Int,
+            Vector,
+            VectorArray,
+        }
+
         internal static void Callback(CustomEventData customEventData)
         {
             if (customEventData.type == "SetMaterialProperty")
@@ -60,7 +68,7 @@
                 switch (type)
                 {
                     case MaterialProperty.Texture:
-                        //TODO: implement setting any texture
+                        // TODO: implement setting any texture
                         AssetBundleController.MaterialData[material].TextureRequests.Add(name, Convert.ToString(value));
                         break;
 
@@ -95,27 +103,8 @@
                         // im lazy, shoot me
                         Plugin.Logger.Log($"{type} not currently supported");
                         break;
-
                 }
             }
-        }
-
-        private static PointDefinition GetPointDefinition(dynamic data, string name)
-        {
-            Dictionary<string, PointDefinition> pointDefinitions = Trees.at(((CustomBeatmapData)EventController.Instance.CustomEventCallbackController._beatmapData).customData, "pointDefinitions");
-            AnimationHelper.TryGetPointData(data, name, out PointDefinition pointData, pointDefinitions);
-            return pointData;
-        }
-
-        internal enum MaterialProperty
-        {
-            Texture,
-            Color,
-            Float,
-            FloatArray,
-            Int,
-            Vector,
-            VectorArray
         }
 
         internal static IEnumerator AnimatePropertyCoroutine(PointDefinition points, Material material, string name, MaterialProperty type, float duration, float startTime, Functions easing)
@@ -148,6 +137,13 @@
                     break;
                 }
             }
+        }
+
+        private static PointDefinition GetPointDefinition(dynamic data, string name)
+        {
+            Dictionary<string, PointDefinition> pointDefinitions = Trees.at(((CustomBeatmapData)EventController.Instance.CustomEventCallbackController._beatmapData).customData, "pointDefinitions");
+            AnimationHelper.TryGetPointData(data, name, out PointDefinition pointData, pointDefinitions);
+            return pointData;
         }
     }
 }

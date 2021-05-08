@@ -1,8 +1,6 @@
 ﻿namespace Vivify.HarmonyPatches
 {
-    using System;
     using HarmonyLib;
-    using UnityEngine;
 
     [HarmonyPatch(typeof(MainCamera))]
     [HarmonyPatch("Awake")]

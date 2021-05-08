@@ -2,19 +2,14 @@
 {
     using System;
     using System.Collections;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
     using CustomJSONData;
     using CustomJSONData.CustomBeatmap;
-    using UnityEngine;
-    using Vivify.HarmonyPatches;
     using Heck.Animation;
+    using UnityEngine;
 
     internal static class ApplyPostProcessingEvent
     {
-        private readonly static Coroutine[] _activeCoroutine = new Coroutine[4];
+        private static readonly Coroutine[] _activeCoroutine = new Coroutine[4];
 
         internal static void Callback(CustomEventData customEventData)
         {

@@ -1,18 +1,10 @@
 ﻿namespace Vivify
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Reflection;
-    using System.Threading.Tasks;
     using HarmonyLib;
-    using IPA;
-    using IPA.Config;
-    using IPA.Config.Stores;
     using Heck;
+    using IPA;
     using UnityEngine.SceneManagement;
-    using UnityEngine;
     using IPALogger = IPA.Logging.Logger;
 
     [Plugin(RuntimeOptions.DynamicInit)]
