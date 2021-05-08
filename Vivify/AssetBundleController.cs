@@ -1,4 +1,4 @@
-﻿namespace Vivify.Events
+﻿namespace Vivify
 {
     using System;
     using System.Collections.Generic;
@@ -14,6 +14,8 @@
         private static AssetBundle _mainBundle;
 
         internal static Dictionary<string, UnityEngine.Object> Assets { get; private set; }
+
+        internal static Dictionary<Material, MaterialData> MaterialData { get; private set; }
 
         internal static void ClearBundle()
         {
@@ -35,15 +37,34 @@
             }
 
             Assets = new Dictionary<string, UnityEngine.Object>();
+            MaterialData = new Dictionary<Material, MaterialData>();
 
             string[] assetnames = _mainBundle.GetAllAssetNames();
             foreach (string name in assetnames)
             {
                 Plugin.Logger.Log($"Loaded [{name}]");
-                Assets.Add(name, _mainBundle.LoadAsset(name));
+                UnityEngine.Object asset = _mainBundle.LoadAsset(name);
+                Assets.Add(name, asset);
+
+                if (asset is Material mat)
+                {
+                    MaterialData.Add(mat, new MaterialData(mat));
+                }
             }
 
             return true;
+        }
+    }
+
+    internal class MaterialData
+    {
+        internal Material Material { get; }
+
+        internal Dictionary<string, string> TextureRequests { get; } = new Dictionary<string, string>();
+
+        internal MaterialData(Material material)
+        {
+            Material = material;
         }
     }
 }

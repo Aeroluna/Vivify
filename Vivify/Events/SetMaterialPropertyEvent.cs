@@ -59,6 +59,11 @@
 
                 switch (type)
                 {
+                    case MaterialProperty.Texture:
+                        //TODO: implement setting any texture
+                        AssetBundleController.MaterialData[material].TextureRequests.Add(name, Convert.ToString(value));
+                        break;
+
                     case MaterialProperty.Color:
                         if (value is List<object>)
                         {

@@ -14,7 +14,7 @@
 
     internal static class ApplyPostProcessingEvent
     {
-        private static Coroutine _activeCoroutine;
+        private readonly static Coroutine[] _activeCoroutine = new Coroutine[4];
 
         internal static void Callback(CustomEventData customEventData)
         {
@@ -30,24 +30,28 @@
                 float duration = (float?)Trees.at(customEventData.data, "_duration") ?? 0f;
                 duration = 60f * duration / EventController.Instance.BeatmapObjectSpawnController.currentBpm; // Convert to real time;
 
+                int pass = (int?)Trees.at(customEventData.data, "_pass") ?? 0;
+
                 string assetName = Trees.at(customEventData.data, "_asset");
                 if (AssetBundleController.Assets.TryGetValue(assetName, out UnityEngine.Object gameObject))
                 {
                     if (gameObject is Material material)
                     {
-                        PostProcessingController.PostProcessingMaterial = material;
-                        if (_activeCoroutine != null)
-                        {
-                            EventController.Instance.StopCoroutine(_activeCoroutine);
-                        }
-
-                        _activeCoroutine = EventController.Instance.StartCoroutine(KillPostProcessingCoroutine(duration, customEventData.time));
-
                         dynamic properties = Trees.at(customEventData.data, "_properties");
                         if (properties != null)
                         {
                             SetMaterialPropertyEvent.SetMaterialProperties(material, properties, duration, easing, customEventData.time);
                         }
+
+                        MaterialData materialData = AssetBundleController.MaterialData[material];
+                        PostProcessingController.PostProcessingMaterial[pass] = materialData;
+
+                        if (_activeCoroutine[pass] != null)
+                        {
+                            EventController.Instance.StopCoroutine(_activeCoroutine[pass]);
+                        }
+
+                        _activeCoroutine[pass] = EventController.Instance.StartCoroutine(KillPostProcessingCoroutine(pass, duration, customEventData.time));
                     }
                     else
                     {
@@ -61,7 +65,7 @@
             }
         }
 
-        internal static IEnumerator KillPostProcessingCoroutine(float duration, float startTime)
+        internal static IEnumerator KillPostProcessingCoroutine(int pass, float duration, float startTime)
         {
             while (true)
             {
@@ -72,7 +76,7 @@
                 }
                 else
                 {
-                    PostProcessingController.PostProcessingMaterial = null;
+                    PostProcessingController.PostProcessingMaterial[pass] = null;
                     break;
                 }
             }

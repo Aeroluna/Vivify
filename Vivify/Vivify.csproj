@@ -120,7 +120,7 @@
     <Compile Include="HarmonyPatches\BeatmapObjectSpawnController.cs" />
     <Compile Include="VivifyController.cs" />
     <Compile Include="Events\EventController.cs" />
-    <Compile Include="Events\AssetBundleController.cs" />
+    <Compile Include="AssetBundleController.cs" />
     <Compile Include="Events\ApplyPostProcessingEvent.cs" />
     <Compile Include="Events\InstantiatePrefabEvent.cs" />
     <Compile Include="HarmonyPatches\MainEffectController.cs" />

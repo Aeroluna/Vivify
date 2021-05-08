@@ -33,7 +33,8 @@
         {
             if (current.name == "GameCore")
             {
-                Events.AssetBundleController.ClearBundle();
+                PostProcessingController.ResetMaterial();
+                AssetBundleController.ClearBundle();
                 ToggleVivifyPatches(false);
             }
         }
