@@ -9,7 +9,7 @@
 
     internal static class ApplyPostProcessingEvent
     {
-        private static readonly Coroutine[] _activeCoroutine = new Coroutine[4];
+        private static readonly Coroutine[] _activeCoroutine = new Coroutine[PostProcessingController.TEXTURECOUNT];
 
         internal static void Callback(CustomEventData customEventData)
         {

@@ -7,9 +7,30 @@
     {
         private static AssetBundle _mainBundle;
 
-        internal static Dictionary<string, UnityEngine.Object> Assets { get; private set; }
+        internal static Dictionary<string, Object> Assets { get; private set; }
 
         internal static Dictionary<Material, MaterialData> MaterialData { get; private set; }
+
+        internal static T TryGetAsset<T>(string assetName)
+        {
+            if (Assets.TryGetValue(assetName, out Object gameObject))
+            {
+                if (gameObject is T t)
+                {
+                    return t;
+                }
+                else
+                {
+                    Plugin.Logger.Log($"Found {assetName}, but was null or not {typeof(T).FullName}!", IPA.Logging.Logger.Level.Error);
+                }
+            }
+            else
+            {
+                Plugin.Logger.Log($"Could not find {typeof(T).FullName} {assetName}", IPA.Logging.Logger.Level.Error);
+            }
+
+            return default;
+        }
 
         internal static void ClearBundle()
         {
@@ -30,14 +51,14 @@
                 return false;
             }
 
-            Assets = new Dictionary<string, UnityEngine.Object>();
+            Assets = new Dictionary<string, Object>();
             MaterialData = new Dictionary<Material, MaterialData>();
 
             string[] assetnames = _mainBundle.GetAllAssetNames();
             foreach (string name in assetnames)
             {
                 Plugin.Logger.Log($"Loaded [{name}]");
-                UnityEngine.Object asset = _mainBundle.LoadAsset(name);
+                Object asset = _mainBundle.LoadAsset(name);
                 Assets.Add(name, asset);
 
                 if (asset is Material mat)
@@ -59,6 +80,6 @@
 
         internal Material Material { get; }
 
-        internal Dictionary<string, string> TextureRequests { get; } = new Dictionary<string, string>();
+        internal Dictionary<string, TextureRequest> TextureRequests { get; } = new Dictionary<string, TextureRequest>();
     }
 }

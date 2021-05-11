@@ -37,21 +37,12 @@
                 duration = 60f * duration / EventController.Instance.BeatmapObjectSpawnController.currentBpm; // Convert to real time;
 
                 string assetName = Trees.at(customEventData.data, "_asset");
-                if (AssetBundleController.Assets.TryGetValue(assetName, out UnityEngine.Object gameObject))
+
+                Material material = AssetBundleController.TryGetAsset<Material>(assetName);
+                if (material != null)
                 {
-                    if (gameObject is Material material)
-                    {
-                        dynamic properties = Trees.at(customEventData.data, "_properties");
-                        SetMaterialProperties(material, properties, duration, easing, customEventData.time);
-                    }
-                    else
-                    {
-                        Plugin.Logger.Log($"Found {assetName}, but was not material!", IPA.Logging.Logger.Level.Error);
-                    }
-                }
-                else
-                {
-                    Plugin.Logger.Log($"Could not find material {assetName}", IPA.Logging.Logger.Level.Error);
+                    dynamic properties = Trees.at(customEventData.data, "_properties");
+                    SetMaterialProperties(material, properties, duration, easing, customEventData.time);
                 }
             }
         }
@@ -68,8 +59,26 @@
                 switch (type)
                 {
                     case MaterialProperty.Texture:
-                        // TODO: implement setting any texture
-                        AssetBundleController.MaterialData[material].TextureRequests.Add(name, Convert.ToString(value));
+                        string texValue = Convert.ToString(value);
+                        if (Enum.TryParse(texValue, out TextureRequest textureRequest))
+                        {
+                            AssetBundleController.MaterialData[material].TextureRequests.Add(name, textureRequest);
+
+                            int requestId = (int)textureRequest;
+                            if (requestId >= 0)
+                            {
+                                material.SetTexture(name, PostProcessingController.MainRenderTextures[requestId]);
+                            }
+                        }
+                        else
+                        {
+                            Texture texture = AssetBundleController.TryGetAsset<Texture>(texValue);
+                            if (texture != null)
+                            {
+                                material.SetTexture(name, texture);
+                            }
+                        }
+
                         break;
 
                     case MaterialProperty.Color:
@@ -101,7 +110,7 @@
 
                     default:
                         // im lazy, shoot me
-                        Plugin.Logger.Log($"{type} not currently supported");
+                        Plugin.Logger.Log($"{type} not currently supported", IPA.Logging.Logger.Level.Warning);
                         break;
                 }
             }

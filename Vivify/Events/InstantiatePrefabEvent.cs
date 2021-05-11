@@ -14,7 +14,8 @@
             if (customEventData.type == "InstantiatePrefab")
             {
                 string assetName = Trees.at(customEventData.data, "_asset");
-                if (AssetBundleController.Assets.TryGetValue(assetName, out UnityEngine.Object prefab))
+                UnityEngine.Object prefab = AssetBundleController.TryGetAsset<UnityEngine.Object>(assetName);
+                if (prefab != null)
                 {
                     Vector3 position = Vector3.zero;
                     IEnumerable<float> positionraw = ((List<object>)Trees.at(customEventData.data, "_position"))?.Select(n => Convert.ToSingle(n));
@@ -31,10 +32,6 @@
                     }
 
                     UnityEngine.Object.Instantiate(prefab, position, rotation);
-                }
-                else
-                {
-                    Plugin.Logger.Log($"Could not find asset {assetName}", IPA.Logging.Logger.Level.Error);
                 }
             }
         }

@@ -124,7 +124,7 @@
     <Compile Include="AssetBundleController.cs" />
     <Compile Include="Events\ApplyPostProcessingEvent.cs" />
     <Compile Include="Events\InstantiatePrefabEvent.cs" />
-    <Compile Include="HarmonyPatches\MainEffectController.cs" />
+    <Compile Include="HarmonyPatches\MainCamera.cs" />
     <Compile Include="HarmonyPatches\SceneTransition\MissionLevelScenesTransitionSetupDataSO.cs" />
     <Compile Include="HarmonyPatches\SceneTransition\MultiplayerLevelScenesTransitionSetupDataSO.cs" />
     <Compile Include="Plugin.cs" />

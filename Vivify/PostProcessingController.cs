@@ -4,53 +4,58 @@
     using System.Collections.Generic;
     using UnityEngine;
 
+    internal enum TextureRequest
+    {
+        Pass0,
+        Pass1,
+        Pass2,
+        Pass3,
+        Pass0_Previous = -1,
+        Pass1_Previous = -2,
+        Pass2_Previous = -3,
+        Pass3_Previous = -4,
+    }
+
     internal class PostProcessingController : MonoBehaviour
     {
-        private readonly RenderTexture[] _previousFrames = new RenderTexture[4];
+        internal const int TEXTURECOUNT = 4;
 
-        private enum TextureRequest
-        {
-            Pass0,
-            Pass1,
-            Pass2,
-            Pass3,
-            Pass0_Previous = -1,
-            Pass1_Previous = -2,
-            Pass2_Previous = -3,
-            Pass3_Previous = -4,
-        }
+        private readonly RenderTexture[] _previousFrames = new RenderTexture[TEXTURECOUNT];
 
-        internal static MaterialData[] PostProcessingMaterial { get; private set; } = new MaterialData[4];
+        private bool _doMainRender;
+
+        internal static MaterialData[] PostProcessingMaterial { get; private set; } = new MaterialData[TEXTURECOUNT];
+
+        internal static RenderTexture[] MainRenderTextures { get; private set; }
 
         internal static void ResetMaterial()
         {
-            PostProcessingMaterial = new MaterialData[4];
+            PostProcessingMaterial = new MaterialData[TEXTURECOUNT];
         }
 
         private void OnRenderImage(RenderTexture src, RenderTexture dest)
         {
             if (VivifyController.VivifyActive)
             {
-                int length = PostProcessingMaterial.Length;
-                RenderTexture[] tempTextures = new RenderTexture[length];
+                RenderTexture[] tempTextures = new RenderTexture[TEXTURECOUNT];
                 int last = -1;
-                for (int i = 0; i < length; i++)
+                for (int i = 0; i < TEXTURECOUNT; i++)
                 {
                     if (PostProcessingMaterial[i] != null)
                     {
                         Material material = PostProcessingMaterial[i].Material;
 
-                        foreach (KeyValuePair<string, string> pair in PostProcessingMaterial[i].TextureRequests)
+                        foreach (KeyValuePair<string, TextureRequest> pair in PostProcessingMaterial[i].TextureRequests)
                         {
-                            int request = (int)Enum.Parse(typeof(TextureRequest), pair.Value);
+                            int requestId = (int)pair.Value;
                             Texture tex;
-                            if (request >= 0)
+                            if (requestId >= 0)
                             {
-                                tex = tempTextures[request];
+                                tex = tempTextures[requestId];
                             }
                             else
                             {
-                                tex = _previousFrames[Math.Abs(request) - 1];
+                                tex = _previousFrames[Math.Abs(requestId) - 1];
                             }
 
                             material.SetTexture(pair.Key, tex);
@@ -71,13 +76,18 @@
                     Graphics.Blit(src, dest);
                 }
 
-                for (int i = 0; i < length; i++)
+                for (int i = 0; i < TEXTURECOUNT; i++)
                 {
                     ////RenderTexture.ReleaseTemporary(_previousFrames[i]);
                     if (tempTextures[i] != null)
                     {
                         ////previousFrames[i] = RenderTexture.GetTemporary(src.width, src.height, src.depth, src.format);
                         Graphics.Blit(tempTextures[i], _previousFrames[i]);
+
+                        if (_doMainRender)
+                        {
+                            Graphics.Blit(tempTextures[i], MainRenderTextures[i]);
+                        }
                     }
 
                     RenderTexture.ReleaseTemporary(tempTextures[i]);
@@ -92,9 +102,23 @@
         private void Awake()
         {
             Camera camera = GetComponent<Camera>();
-            for (int i = 0; i < _previousFrames.Length; i++)
+            for (int i = 0; i < TEXTURECOUNT; i++)
             {
                 _previousFrames[i] = new RenderTexture(camera.pixelWidth, camera.pixelHeight, 0);
+            }
+
+            if (gameObject.name == "MainCamera")
+            {
+                _doMainRender = true;
+
+                if (MainRenderTextures == null)
+                {
+                    MainRenderTextures = new RenderTexture[TEXTURECOUNT];
+                    for (int i = 0; i < TEXTURECOUNT; i++)
+                    {
+                        MainRenderTextures[i] = new RenderTexture(camera.pixelWidth, camera.pixelHeight, 0);
+                    }
+                }
             }
         }
 
