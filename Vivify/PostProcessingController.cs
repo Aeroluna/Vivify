@@ -61,7 +61,7 @@
                             material.SetTexture(pair.Key, tex);
                         }
 
-                        tempTextures[i] = RenderTexture.GetTemporary(src.width, src.height, src.depth, src.format);
+                        tempTextures[i] = RenderTexture.GetTemporary(src.descriptor);
                         Graphics.Blit(src, tempTextures[i], material);
                         last = i;
                     }
