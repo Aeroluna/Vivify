@@ -4,9 +4,9 @@
   "name": "Vivify",
   "author": "Aeroluna",
   "version": "0.0.1",
-  "description": "",
-  "gameVersion": "1.15.0",
+  "description": "Bring your map to life!",
+  "gameVersion": "1.16.4",
   "dependsOn": {
-    "BSIPA": "^4.1.6"
+    "BSIPA": "^4.2.0"
   }
 }

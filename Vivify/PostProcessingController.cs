@@ -20,7 +20,7 @@
     {
         internal const int TEXTURECOUNT = 4;
 
-        private readonly RenderTexture[] _previousFrames = new RenderTexture[TEXTURECOUNT];
+        private RenderTexture[] _previousFrames;
 
         private bool _doMainRender;
 
@@ -37,6 +37,30 @@
         {
             if (VivifyController.VivifyActive)
             {
+                // init previousframes and mainrenders
+                if (_previousFrames == null)
+                {
+                    _previousFrames = new RenderTexture[TEXTURECOUNT];
+                    for (int i = 0; i < TEXTURECOUNT; i++)
+                    {
+                        _previousFrames[i] = new RenderTexture(src.descriptor);
+                    }
+
+                    if (gameObject.name == "MainCamera")
+                    {
+                        _doMainRender = true;
+
+                        if (MainRenderTextures == null)
+                        {
+                            MainRenderTextures = new RenderTexture[TEXTURECOUNT];
+                            for (int i = 0; i < TEXTURECOUNT; i++)
+                            {
+                                MainRenderTextures[i] = new RenderTexture(src.descriptor);
+                            }
+                        }
+                    }
+                }
+
                 RenderTexture[] tempTextures = new RenderTexture[TEXTURECOUNT];
                 int last = -1;
                 for (int i = 0; i < TEXTURECOUNT; i++)
@@ -96,29 +120,6 @@
             else
             {
                 Graphics.Blit(src, dest);
-            }
-        }
-
-        private void Awake()
-        {
-            Camera camera = GetComponent<Camera>();
-            for (int i = 0; i < TEXTURECOUNT; i++)
-            {
-                _previousFrames[i] = new RenderTexture(camera.pixelWidth, camera.pixelHeight, 0);
-            }
-
-            if (gameObject.name == "MainCamera")
-            {
-                _doMainRender = true;
-
-                if (MainRenderTextures == null)
-                {
-                    MainRenderTextures = new RenderTexture[TEXTURECOUNT];
-                    for (int i = 0; i < TEXTURECOUNT; i++)
-                    {
-                        MainRenderTextures[i] = new RenderTexture(camera.pixelWidth, camera.pixelHeight, 0);
-                    }
-                }
             }
         }
 
