@@ -6,9 +6,9 @@ Bring your map to life.
 This documentation assumes basic understanding of custom events and tracks.
 
 ## Event Types
-- [`ApplyPostProcessing`](#AnimateTrack)
-- [`SetMaterialProperty`](#AssignPathAnimation)
-- [`InstantiatePrefab`](#AssignTrackParent)
+- [`SetMaterialProperty`](#SetMaterialProperty)
+- [`ApplyPostProcessing`](#ApplyPostProcessing)
+- [`InstantiatePrefab`](#InstantiatePrefab)
 
 # Creating an asset bundle
 Firstly, make sure you have a Unity install (for maximum compatibility, Beat Saber uses version 2019.4.18f1) and create a project.

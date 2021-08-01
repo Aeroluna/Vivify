@@ -11,6 +11,8 @@
 
         internal static Dictionary<Material, MaterialData> MaterialData { get; private set; } = new Dictionary<Material, MaterialData>();
 
+        internal static Dictionary<string, GameObject> InstantiatedPrefabs { get; private set; } = new Dictionary<string, GameObject>();
+
         internal static T? TryGetAsset<T>(string assetName)
         {
             if (Assets.TryGetValue(assetName, out Object gameObject))
@@ -53,6 +55,7 @@
 
             Assets = new Dictionary<string, Object>();
             MaterialData = new Dictionary<Material, MaterialData>();
+            InstantiatedPrefabs = new Dictionary<string, GameObject>();
 
             string[] assetnames = _mainBundle.GetAllAssetNames();
             foreach (string name in assetnames)

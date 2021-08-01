@@ -47,6 +47,7 @@
                             EventController.Instance.StopCoroutine(_activeCoroutine[pass]);
                         }
 
+                        Plugin.Logger.Log($"Applied post processing material [{assetName}] for [{duration}] seconds.");
                         _activeCoroutine[pass] = EventController.Instance.StartCoroutine(KillPostProcessingCoroutine(pass, duration, customEventData.time));
                     }
                     else
