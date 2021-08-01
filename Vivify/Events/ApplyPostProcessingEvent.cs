@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections;
+    using System.Collections.Generic;
     using CustomJSONData;
     using CustomJSONData.CustomBeatmap;
     using Heck.Animation;
@@ -15,24 +16,24 @@
         {
             if (customEventData.type == "ApplyPostProcessing")
             {
-                string easingString = (string)Trees.at(customEventData.data, "_easing");
+                string? easingString = customEventData.data.Get<string>("_easing");
                 Functions easing = Functions.easeLinear;
                 if (easingString != null)
                 {
                     easing = (Functions)Enum.Parse(typeof(Functions), easingString);
                 }
 
-                float duration = (float?)Trees.at(customEventData.data, "_duration") ?? 0f;
-                duration = 60f * duration / EventController.Instance.BeatmapObjectSpawnController.currentBpm; // Convert to real time;
+                float duration = customEventData.data.Get<float?>("_duration") ?? 0f;
+                duration = 60f * duration / EventController.Instance!.BeatmapObjectSpawnController!.currentBpm; // Convert to real time;
 
-                int pass = (int?)Trees.at(customEventData.data, "_pass") ?? 0;
+                int pass = customEventData.data.Get<int?>("_pass") ?? 0;
 
-                string assetName = Trees.at(customEventData.data, "_asset");
+                string assetName = customEventData.data.Get<string>("_asset") ?? throw new InvalidOperationException("Asset name not found.");
                 if (AssetBundleController.Assets.TryGetValue(assetName, out UnityEngine.Object gameObject))
                 {
                     if (gameObject is Material material)
                     {
-                        dynamic properties = Trees.at(customEventData.data, "_properties");
+                        List<object>? properties = customEventData.data.Get<List<object>>("_properties");
                         if (properties != null)
                         {
                             SetMaterialPropertyEvent.SetMaterialProperties(material, properties, duration, easing, customEventData.time);
@@ -64,7 +65,7 @@
         {
             while (true)
             {
-                float elapsedTime = EventController.Instance.CustomEventCallbackController._audioTimeSource.songTime - startTime;
+                float elapsedTime = EventController.Instance!.CustomEventCallbackController!.AudioTimeSource!.songTime - startTime;
                 if (elapsedTime < duration)
                 {
                     yield return null;

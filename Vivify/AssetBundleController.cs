@@ -5,13 +5,13 @@
 
     internal static class AssetBundleController
     {
-        private static AssetBundle _mainBundle;
+        private static AssetBundle? _mainBundle;
 
-        internal static Dictionary<string, Object> Assets { get; private set; }
+        internal static Dictionary<string, Object> Assets { get; private set; } = new Dictionary<string, Object>();
 
-        internal static Dictionary<Material, MaterialData> MaterialData { get; private set; }
+        internal static Dictionary<Material, MaterialData> MaterialData { get; private set; } = new Dictionary<Material, MaterialData>();
 
-        internal static T TryGetAsset<T>(string assetName)
+        internal static T? TryGetAsset<T>(string assetName)
         {
             if (Assets.TryGetValue(assetName, out Object gameObject))
             {

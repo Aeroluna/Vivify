@@ -13,19 +13,19 @@
         {
             if (customEventData.type == "InstantiatePrefab")
             {
-                string assetName = Trees.at(customEventData.data, "_asset");
-                UnityEngine.Object prefab = AssetBundleController.TryGetAsset<UnityEngine.Object>(assetName);
+                string assetName = customEventData.data.Get<string>("_asset") ?? throw new InvalidOperationException("Asset name not found.");
+                UnityEngine.Object? prefab = AssetBundleController.TryGetAsset<UnityEngine.Object>(assetName);
                 if (prefab != null)
                 {
                     Vector3 position = Vector3.zero;
-                    IEnumerable<float> positionraw = ((List<object>)Trees.at(customEventData.data, "_position"))?.Select(n => Convert.ToSingle(n));
+                    IEnumerable<float>? positionraw = customEventData.data.Get<List<object>>("_position")?.Select(n => Convert.ToSingle(n));
                     if (positionraw != null)
                     {
                         position = new Vector3(positionraw.ElementAt(0), positionraw.ElementAt(1), positionraw.ElementAt(2));
                     }
 
                     Quaternion rotation = Quaternion.identity;
-                    IEnumerable<float> rotraw = ((List<object>)Trees.at(customEventData.data, "_rotation"))?.Select(n => Convert.ToSingle(n));
+                    IEnumerable<float>? rotraw = customEventData.data.Get<List<object>>("_rotation")?.Select(n => Convert.ToSingle(n));
                     if (rotraw != null)
                     {
                         rotation = Quaternion.Euler(rotraw.ElementAt(0), rotraw.ElementAt(1), rotraw.ElementAt(2));

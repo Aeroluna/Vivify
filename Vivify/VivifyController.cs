@@ -16,11 +16,11 @@
                 VivifyActive = value;
                 if (VivifyActive)
                 {
-                    CustomJSONData.CustomEventCallbackController.customEventCallbackControllerInit += Events.EventController.CustomEventCallbackInit;
+                    CustomJSONData.CustomEventCallbackController.didInitEvent += Events.EventController.CustomEventCallbackInit;
                 }
                 else
                 {
-                    CustomJSONData.CustomEventCallbackController.customEventCallbackControllerInit -= Events.EventController.CustomEventCallbackInit;
+                    CustomJSONData.CustomEventCallbackController.didInitEvent -= Events.EventController.CustomEventCallbackInit;
                 }
             }
         }

@@ -26,35 +26,34 @@
         {
             if (customEventData.type == "SetMaterialProperty")
             {
-                string easingString = (string)Trees.at(customEventData.data, "_easing");
+                string? easingString = customEventData.data.Get<string>("_easing");
                 Functions easing = Functions.easeLinear;
                 if (easingString != null)
                 {
                     easing = (Functions)Enum.Parse(typeof(Functions), easingString);
                 }
 
-                float duration = (float?)Trees.at(customEventData.data, "_duration") ?? 0f;
-                duration = 60f * duration / EventController.Instance.BeatmapObjectSpawnController.currentBpm; // Convert to real time;
+                float duration = customEventData.data.Get<float?>("_duration") ?? 0f;
+                duration = 60f * duration / EventController.Instance!.BeatmapObjectSpawnController!.currentBpm; // Convert to real time;
 
-                string assetName = Trees.at(customEventData.data, "_asset");
+                string assetName = customEventData.data.Get<string>("_asset") ?? throw new InvalidOperationException("Asset name not found.");
 
-                Material material = AssetBundleController.TryGetAsset<Material>(assetName);
+                Material? material = AssetBundleController.TryGetAsset<Material>(assetName);
                 if (material != null)
                 {
-                    dynamic properties = Trees.at(customEventData.data, "_properties");
+                    List<object> properties = customEventData.data.Get<List<object>>("_properties") ?? throw new InvalidOperationException("No properties found.");
                     SetMaterialProperties(material, properties, duration, easing, customEventData.time);
                 }
             }
         }
 
-        internal static void SetMaterialProperties(Material material, dynamic propertyData, float duration, Functions easing, float startTime)
+        internal static void SetMaterialProperties(Material material, List<object> properties, float duration, Functions easing, float startTime)
         {
-            List<object> properties = (List<object>)propertyData;
-            foreach (dynamic property in properties)
+            foreach (Dictionary<string, object?> property in properties)
             {
-                string name = Trees.at(property, "_name");
-                MaterialProperty type = Enum.Parse(typeof(MaterialProperty), Trees.at(property, "_type"));
-                object value = Trees.at(property, "_value");
+                string name = property.Get<string>("_name") ?? throw new InvalidOperationException("Property name not found.");
+                MaterialProperty type = (MaterialProperty)Enum.Parse(typeof(MaterialProperty), property.Get<string>("_type"));
+                object value = property.Get<object>("_value") ?? throw new InvalidOperationException("Property value not found.");
 
                 switch (type)
                 {
@@ -67,12 +66,15 @@
                             int requestId = (int)textureRequest;
                             if (requestId >= 0)
                             {
-                                material.SetTexture(name, PostProcessingController.MainRenderTextures[requestId]);
+                                if (PostProcessingController.MainRenderTextures != null)
+                                {
+                                    material.SetTexture(name, PostProcessingController.MainRenderTextures[requestId]);
+                                }
                             }
                         }
                         else
                         {
-                            Texture texture = AssetBundleController.TryGetAsset<Texture>(texValue);
+                            Texture? texture = AssetBundleController.TryGetAsset<Texture>(texValue);
                             if (texture != null)
                             {
                                 material.SetTexture(name, texture);
@@ -84,7 +86,7 @@
                     case MaterialProperty.Color:
                         if (value is List<object>)
                         {
-                            EventController.Instance.StartCoroutine(AnimatePropertyCoroutine(GetPointDefinition(property, "_value"), material, name, MaterialProperty.Color, duration, startTime, easing));
+                            EventController.Instance!.StartCoroutine(AnimatePropertyCoroutine(GetPointDefinition(property, "_value"), material, name, MaterialProperty.Color, duration, startTime, easing));
                         }
                         else
                         {
@@ -98,7 +100,7 @@
                     case MaterialProperty.Float:
                         if (value is List<object>)
                         {
-                            EventController.Instance.StartCoroutine(AnimatePropertyCoroutine(GetPointDefinition(property, "_value"), material, name, MaterialProperty.Float, duration, startTime, easing));
+                            EventController.Instance!.StartCoroutine(AnimatePropertyCoroutine(GetPointDefinition(property, "_value"), material, name, MaterialProperty.Float, duration, startTime, easing));
                         }
                         else
                         {
@@ -120,7 +122,7 @@
         {
             while (true)
             {
-                float elapsedTime = EventController.Instance.CustomEventCallbackController._audioTimeSource.songTime - startTime;
+                float elapsedTime = EventController.Instance!.CustomEventCallbackController!.AudioTimeSource!.songTime - startTime;
                 float time = Easings.Interpolate(Mathf.Min(elapsedTime / duration, 1f), easing);
                 switch (type)
                 {
@@ -148,11 +150,12 @@
             }
         }
 
-        private static PointDefinition GetPointDefinition(dynamic data, string name)
+        private static PointDefinition GetPointDefinition(Dictionary<string, object?> data, string name)
         {
-            Dictionary<string, PointDefinition> pointDefinitions = Trees.at(((CustomBeatmapData)EventController.Instance.CustomEventCallbackController._beatmapData).customData, "pointDefinitions");
-            AnimationHelper.TryGetPointData(data, name, out PointDefinition pointData, pointDefinitions);
-            return pointData;
+            Dictionary<string, PointDefinition> pointDefinitions = EventController.Instance!.CustomEventCallbackController!.BeatmapData!.customData.Get<Dictionary<string, PointDefinition>>("pointDefinitions")
+                ?? throw new InvalidOperationException("Could not get BeatmapData point definitions.");
+            AnimationHelper.TryGetPointData(data, name, out PointDefinition? pointData, pointDefinitions);
+            return pointData ?? throw new InvalidOperationException("Failed to create point definition.");
         }
     }
 }

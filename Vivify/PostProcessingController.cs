@@ -20,13 +20,13 @@
     {
         internal const int TEXTURECOUNT = 4;
 
-        private RenderTexture[] _previousFrames;
+        private RenderTexture[]? _previousFrames;
 
         private bool _doMainRender;
 
-        internal static MaterialData[] PostProcessingMaterial { get; private set; } = new MaterialData[TEXTURECOUNT];
+        internal static MaterialData?[] PostProcessingMaterial { get; private set; } = new MaterialData[TEXTURECOUNT];
 
-        internal static RenderTexture[] MainRenderTextures { get; private set; }
+        internal static RenderTexture[]? MainRenderTextures { get; private set; }
 
         internal static void ResetMaterial()
         {
@@ -65,11 +65,12 @@
                 int last = -1;
                 for (int i = 0; i < TEXTURECOUNT; i++)
                 {
-                    if (PostProcessingMaterial[i] != null)
+                    MaterialData? materialData = PostProcessingMaterial[i];
+                    if (materialData != null)
                     {
-                        Material material = PostProcessingMaterial[i].Material;
+                        Material material = materialData.Material;
 
-                        foreach (KeyValuePair<string, TextureRequest> pair in PostProcessingMaterial[i].TextureRequests)
+                        foreach (KeyValuePair<string, TextureRequest> pair in materialData.TextureRequests)
                         {
                             int requestId = (int)pair.Value;
                             Texture tex;
@@ -110,7 +111,10 @@
 
                         if (_doMainRender)
                         {
-                            Graphics.Blit(tempTextures[i], MainRenderTextures[i]);
+                            if (MainRenderTextures != null)
+                            {
+                                Graphics.Blit(tempTextures[i], MainRenderTextures[i]);
+                            }
                         }
                     }
 
@@ -125,9 +129,12 @@
 
         private void OnDestroy()
         {
-            for (int i = 0; i < _previousFrames.Length; i++)
+            if (_previousFrames != null)
             {
-                _previousFrames[i].Release();
+                for (int i = 0; i < _previousFrames.Length; i++)
+                {
+                    _previousFrames[i].Release();
+                }
             }
         }
     }

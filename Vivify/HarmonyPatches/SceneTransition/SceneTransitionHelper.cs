@@ -13,7 +13,7 @@
         {
             if (previewBeatmapLevel is CustomPreviewBeatmapLevel customPreviewBeatmapLevel && difficultyBeatmap.beatmapData is CustomBeatmapData customBeatmapData)
             {
-                IEnumerable<string> requirements = ((List<object>)Trees.at(customBeatmapData.beatmapCustomData, "_requirements"))?.Cast<string>();
+                IEnumerable<string>? requirements = customBeatmapData.beatmapCustomData.Get<List<object>>("_requirements")?.Cast<string>();
                 bool assRequirement = requirements?.Contains(CAPABILITY) ?? false;
 
                 if (assRequirement)
@@ -27,7 +27,7 @@
                     }
                     else
                     {
-                        Plugin.Logger.Log("bundle not found!", IPA.Logging.Logger.Level.Error);
+                        Logger.Log("bundle not found!", IPA.Logging.Logger.Level.Error);
                     }
                 }
             }
