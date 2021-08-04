@@ -30,6 +30,7 @@
             Instance.CustomEventCallbackController.AddCustomEventCallback(ApplyPostProcessingEvent.Callback);
             Instance.CustomEventCallbackController.AddCustomEventCallback(SetMaterialPropertyEvent.Callback);
             Instance.CustomEventCallbackController.AddCustomEventCallback(DestroyPrefabEvent.Callback);
+            Instance.CustomEventCallbackController.AddCustomEventCallback(DeclareMaskEvent.Callback);
         }
     }
 }

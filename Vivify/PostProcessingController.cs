@@ -2,7 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using UnityEngine;
+    using UnityEngine.Rendering;
 
     internal enum TextureRequest
     {
@@ -24,13 +26,57 @@
 
         private bool _doMainRender;
 
+        private CommandBuffer? _commandBuffer;
+
+        private Camera? _camera;
+
+        internal static Dictionary<string, MaskController> Masks { get; private set; } = new Dictionary<string, MaskController>();
+
         internal static MaterialData?[] PostProcessingMaterial { get; private set; } = new MaterialData[TEXTURECOUNT];
 
         internal static RenderTexture[]? MainRenderTextures { get; private set; }
 
         internal static void ResetMaterial()
         {
+            Masks = new Dictionary<string, MaskController>();
             PostProcessingMaterial = new MaterialData[TEXTURECOUNT];
+        }
+
+        private void OnPreRender()
+        {
+            if (_commandBuffer == null)
+            {
+                throw new InvalidOperationException("Command buffer was null.");
+            }
+
+            _commandBuffer.Clear();
+
+            foreach (KeyValuePair<string, MaskController> pair in Masks)
+            {
+                MaskController controller = pair.Value;
+                int id = Shader.PropertyToID("_Temp" + pair.Key);
+                _commandBuffer.GetTemporaryRT(id, -1, -1, 24, FilterMode.Bilinear, RenderTextureFormat.Depth);
+                _commandBuffer.SetRenderTarget(id);
+                _commandBuffer.ClearRenderTarget(true, true, new Color(0, 0, 0, 0));
+
+                foreach (MaskRenderer maskRenderer in controller.MaskRenderers)
+                {
+                    if (maskRenderer == null || !maskRenderer.isActiveAndEnabled)
+                    {
+                        continue;
+                    }
+
+                    foreach (Renderer renderer in maskRenderer.ChildRenderers)
+                    {
+                        if (renderer.enabled)
+                        {
+                            _commandBuffer.DrawRenderer(renderer, renderer.material);
+                        }
+                    }
+                }
+
+                _commandBuffer.SetGlobalTexture(pair.Key, id);
+            }
         }
 
         private void OnRenderImage(RenderTexture src, RenderTexture dest)
@@ -40,6 +86,7 @@
                 // init previousframes and mainrenders
                 if (_previousFrames == null)
                 {
+                    Plugin.Logger.Log(src.descriptor.colorFormat);
                     _previousFrames = new RenderTexture[TEXTURECOUNT];
                     for (int i = 0; i < TEXTURECOUNT; i++)
                     {
@@ -61,6 +108,7 @@
                     }
                 }
 
+                // blit all passes
                 RenderTexture[] tempTextures = new RenderTexture[TEXTURECOUNT];
                 int last = -1;
                 for (int i = 0; i < TEXTURECOUNT; i++)
@@ -92,6 +140,7 @@
                     }
                 }
 
+                // write last pass to screen
                 if (last != -1)
                 {
                     Graphics.Blit(tempTextures[last], dest);
@@ -101,6 +150,7 @@
                     Graphics.Blit(src, dest);
                 }
 
+                // finalize/blit to previousframe
                 for (int i = 0; i < TEXTURECOUNT; i++)
                 {
                     ////RenderTexture.ReleaseTemporary(_previousFrames[i]);
@@ -127,14 +177,46 @@
             }
         }
 
-        private void OnDestroy()
+        private void OnEnable()
         {
+            _camera = GetComponent<Camera>();
+            _camera.depthTextureMode = DepthTextureMode.Depth;
+            _commandBuffer = new CommandBuffer() { name = "PostProcessingBuffer" };
+            _camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
+        }
+
+        private void OnDisable()
+        {
+            if (_commandBuffer != null)
+            {
+                _camera?.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
+                _commandBuffer.Dispose();
+                _commandBuffer = null;
+            }
+
             if (_previousFrames != null)
             {
                 for (int i = 0; i < _previousFrames.Length; i++)
                 {
                     _previousFrames[i].Release();
                 }
+            }
+        }
+
+        internal class MaskController
+        {
+            internal HashSet<MaskRenderer> MaskRenderers { get; } = new HashSet<MaskRenderer>();
+
+            internal void AddMaskRenderer(MaskRenderer maskRenderer)
+            {
+                MaskRenderers.Add(maskRenderer);
+                maskRenderer.OnDestroyed += OnMaskRendererDestroyed;
+            }
+
+            private void OnMaskRendererDestroyed(MaskRenderer maskRenderer)
+            {
+                MaskRenderers.Remove(maskRenderer);
+                maskRenderer.OnDestroyed -= OnMaskRendererDestroyed;
             }
         }
     }

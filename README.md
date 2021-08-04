@@ -62,7 +62,7 @@ Here is an example of one being defined to animate [`_position`](#_position): (S
   "_data": {
     "_asset": "assets/screens/glitchmat.mat",
     "_duration": 8,
-    "_properties_": [{
+    "_properties": [{
       "_name": "_Juice",
       "_type": "Float",
       "_value": [
