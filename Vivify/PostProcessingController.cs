@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Heck.Animation;
     using UnityEngine;
     using UnityEngine.Rendering;
 
@@ -118,6 +119,13 @@
                     {
                         Material material = materialData.Material;
 
+                        // does not work; only samples from vr cam for some reason
+                        /*for (int j = 0; j < TEXTURECOUNT; j++)
+                        {
+                            Shader.SetGlobalTexture($"_Pass{j}", tempTextures[j]);
+                            Shader.SetGlobalTexture($"_Pass{j}_Previous", _previousFrames[j]);
+                        }*/
+
                         foreach (KeyValuePair<string, TextureRequest> pair in materialData.TextureRequests)
                         {
                             int requestId = (int)pair.Value;
@@ -203,9 +211,58 @@
             }
         }
 
-        internal class MaskController
+        internal class MaskController : IDisposable
         {
+            private readonly IEnumerable<Track> _tracks;
+
+            internal MaskController(IEnumerable<Track> tracks)
+            {
+                _tracks = tracks;
+                foreach (Track track in tracks)
+                {
+                    foreach (GameObject gameObject in track.GameObjects)
+                    {
+                        CreateMaskRenderer(gameObject);
+                    }
+
+                    track.OnGameObjectAdded += OnGameObjectAdded;
+                    track.OnGameObjectRemoved += OnGameObjectRemoved;
+                }
+            }
+
             internal HashSet<MaskRenderer> MaskRenderers { get; } = new HashSet<MaskRenderer>();
+
+            public void Dispose()
+            {
+                foreach (Track track in _tracks)
+                {
+                    if (track != null)
+                    {
+                        track.OnGameObjectAdded -= OnGameObjectAdded;
+                        track.OnGameObjectRemoved -= OnGameObjectRemoved;
+                    }
+                }
+            }
+
+            internal void CreateMaskRenderer(GameObject gameObject)
+            {
+                MaskRenderer maskRenderer = gameObject.GetComponent<MaskRenderer>();
+                maskRenderer ??= gameObject.AddComponent<MaskRenderer>();
+                AddMaskRenderer(maskRenderer);
+            }
+
+            internal void OnGameObjectAdded(GameObject gameObject)
+            {
+                CreateMaskRenderer(gameObject);
+            }
+
+            internal void OnGameObjectRemoved(GameObject gameObject)
+            {
+                MaskRenderer maskRenderer = gameObject.GetComponent<MaskRenderer>();
+                if (maskRenderer != null) {
+                    OnMaskRendererDestroyed(maskRenderer);
+                }
+            }
 
             internal void AddMaskRenderer(MaskRenderer maskRenderer)
             {
