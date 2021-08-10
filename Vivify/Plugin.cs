@@ -16,6 +16,8 @@
         internal const string HARMONYIDCORE = "com.aeroluna.BeatSaber.VivifyCore";
         internal const string HARMONYID = "com.aeroluna.BeatSaber.Vivify";
 
+        internal const int CULLINGLAYER = 22;
+
         internal static readonly Harmony _harmonyInstanceCore = new Harmony(HARMONYIDCORE);
         internal static readonly Harmony _harmonyInstance = new Harmony(HARMONYID);
 

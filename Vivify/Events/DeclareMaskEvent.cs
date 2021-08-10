@@ -2,9 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using CustomJSONData;
     using CustomJSONData.CustomBeatmap;
     using Heck.Animation;
+    using UnityEngine;
+    using Vivify.PostProcessing;
 
     internal static class DeclareMaskEvent
     {
@@ -15,7 +18,7 @@
                 string name = customEventData.data.Get<string>("_name") ?? throw new InvalidOperationException("Mask name not found.");
                 IEnumerable<Track> tracks = AnimationHelper.GetTrackArray(customEventData.data, EventController.Instance!.CustomEventCallbackController!.BeatmapData!)
                     ?? throw new InvalidOperationException("No tracks found.");
-                PostProcessingController.MaskController maskController = new PostProcessingController.MaskController(tracks);
+                MaskController maskController = new MaskController(tracks);
                 PostProcessingController.Masks.Add(name, maskController);
                 Plugin.Logger.Log($"Created mask [{name}].");
             }

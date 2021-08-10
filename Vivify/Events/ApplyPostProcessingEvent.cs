@@ -7,6 +7,7 @@
     using CustomJSONData.CustomBeatmap;
     using Heck.Animation;
     using UnityEngine;
+    using Vivify.PostProcessing;
 
     internal static class ApplyPostProcessingEvent
     {

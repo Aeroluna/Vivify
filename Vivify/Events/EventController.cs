@@ -26,11 +26,12 @@
             Instance = customEventCallbackController.gameObject.AddComponent<EventController>();
 
             Instance.CustomEventCallbackController = customEventCallbackController;
-            Instance.CustomEventCallbackController.AddCustomEventCallback(InstantiatePrefabEvent.Callback);
-            Instance.CustomEventCallbackController.AddCustomEventCallback(ApplyPostProcessingEvent.Callback);
-            Instance.CustomEventCallbackController.AddCustomEventCallback(SetMaterialPropertyEvent.Callback);
-            Instance.CustomEventCallbackController.AddCustomEventCallback(DestroyPrefabEvent.Callback);
-            Instance.CustomEventCallbackController.AddCustomEventCallback(DeclareMaskEvent.Callback);
+            customEventCallbackController.AddCustomEventCallback(InstantiatePrefabEvent.Callback);
+            customEventCallbackController.AddCustomEventCallback(ApplyPostProcessingEvent.Callback);
+            customEventCallbackController.AddCustomEventCallback(SetMaterialPropertyEvent.Callback);
+            customEventCallbackController.AddCustomEventCallback(DestroyPrefabEvent.Callback);
+            customEventCallbackController.AddCustomEventCallback(DeclareMaskEvent.Callback);
+            customEventCallbackController.AddCustomEventCallback(DeclareCullingMaskEvent.Callback);
         }
     }
 }

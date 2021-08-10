@@ -8,6 +8,7 @@
     using CustomJSONData.CustomBeatmap;
     using Heck.Animation;
     using UnityEngine;
+    using Vivify.PostProcessing;
 
     internal static class SetMaterialPropertyEvent
     {
@@ -64,7 +65,7 @@
                             AssetBundleController.MaterialData[material].TextureRequests.Add(name, textureRequest);
 
                             int requestId = (int)textureRequest;
-                            if (requestId >= 0)
+                            if (requestId >= 0 && requestId <= 3)
                             {
                                 if (PostProcessingController.MainRenderTextures != null)
                                 {
@@ -104,7 +105,6 @@
                         }
                         else
                         {
-                            Plugin.Logger.Log(value.GetType());
                             material.SetFloat(name, Convert.ToSingle(value));
                         }
 

@@ -1,4 +1,4 @@
-﻿namespace Vivify
+﻿namespace Vivify.PostProcessing
 {
     using System;
     using System.Collections.Generic;

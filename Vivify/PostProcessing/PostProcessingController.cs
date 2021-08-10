@@ -1,7 +1,8 @@
-﻿namespace Vivify
+﻿namespace Vivify.PostProcessing
 {
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
     using System.Linq;
     using Heck.Animation;
     using UnityEngine;
@@ -17,6 +18,7 @@
         Pass1_Previous = -2,
         Pass2_Previous = -3,
         Pass3_Previous = -4,
+        TempCulling = 5
     }
 
     internal class PostProcessingController : MonoBehaviour
@@ -24,14 +26,16 @@
         internal const int TEXTURECOUNT = 4;
 
         private RenderTexture[]? _previousFrames;
-
         private bool _doMainRender;
-
         private CommandBuffer? _commandBuffer;
-
         private Camera? _camera;
+        private GameObject? _cullingObject;
+        private Camera? _cullingCamera;
+        private RenderTexture? _cullingTexture;
 
         internal static Dictionary<string, MaskController> Masks { get; private set; } = new Dictionary<string, MaskController>();
+
+        internal static Dictionary<string, MaskController> CullingMasks { get; private set; } = new Dictionary<string, MaskController>();
 
         internal static MaterialData?[] PostProcessingMaterial { get; private set; } = new MaterialData[TEXTURECOUNT];
 
@@ -40,6 +44,7 @@
         internal static void ResetMaterial()
         {
             Masks = new Dictionary<string, MaskController>();
+            CullingMasks = new Dictionary<string, MaskController>();
             PostProcessingMaterial = new MaterialData[TEXTURECOUNT];
         }
 
@@ -52,6 +57,7 @@
 
             _commandBuffer.Clear();
 
+            // Set mask texturesd
             foreach (KeyValuePair<string, MaskController> pair in Masks)
             {
                 MaskController controller = pair.Value;
@@ -87,7 +93,6 @@
                 // init previousframes and mainrenders
                 if (_previousFrames == null)
                 {
-                    Plugin.Logger.Log(src.descriptor.colorFormat);
                     _previousFrames = new RenderTexture[TEXTURECOUNT];
                     for (int i = 0; i < TEXTURECOUNT; i++)
                     {
@@ -106,6 +111,26 @@
                                 MainRenderTextures[i] = new RenderTexture(src.descriptor);
                             }
                         }
+                    }
+                }
+
+                RenderTexture texture = RenderTexture.GetTemporary(src.descriptor);
+                foreach (KeyValuePair<string, MaskController> pair in CullingMasks)
+                {
+                    MaskController controller = pair.Value;
+                    Renderer[] maskRenderers = controller.MaskRenderers.SelectMany(n => n.ChildRenderers).ToArray();
+                    int[] cachedLayers = maskRenderers.Select(n => n.gameObject.layer).ToArray();
+                    foreach (Renderer renderer in maskRenderers)
+                    {
+                        renderer.gameObject.layer = Plugin.CULLINGLAYER;
+                    }
+
+                    _cullingCamera!.Render();
+                    Graphics.Blit(_cullingTexture, texture);
+
+                    for (int i = 0; i < cachedLayers.Length; i++)
+                    {
+                        maskRenderers[i].gameObject.layer = cachedLayers[i];
                     }
                 }
 
@@ -130,13 +155,20 @@
                         {
                             int requestId = (int)pair.Value;
                             Texture tex;
-                            if (requestId >= 0)
+                            if (pair.Value == TextureRequest.TempCulling)
                             {
-                                tex = tempTextures[requestId];
+                                tex = texture;
                             }
                             else
                             {
-                                tex = _previousFrames[Math.Abs(requestId) - 1];
+                                if (requestId >= 0)
+                                {
+                                    tex = tempTextures[requestId];
+                                }
+                                else
+                                {
+                                    tex = _previousFrames[Math.Abs(requestId) - 1];
+                                }
                             }
 
                             material.SetTexture(pair.Key, tex);
@@ -178,6 +210,8 @@
 
                     RenderTexture.ReleaseTemporary(tempTextures[i]);
                 }
+
+                RenderTexture.ReleaseTemporary(texture);
             }
             else
             {
@@ -191,10 +225,57 @@
             _camera.depthTextureMode = DepthTextureMode.Depth;
             _commandBuffer = new CommandBuffer() { name = "PostProcessingBuffer" };
             _camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
+
+            _cullingObject = new GameObject("CullingCamera");
+            _cullingObject.SetActive(false);
+            _cullingObject.transform.SetParent(transform, false);
+            _cullingCamera = _cullingObject.AddComponent<Camera>();
+            _cullingCamera.CopyFrom(_camera);
+            _cullingCamera.enabled = false;
+            _cullingTexture = new RenderTexture(Screen.width, Screen.height, 24);
+            _cullingCamera.targetTexture = _cullingTexture;
+            CopyComponent(gameObject.GetComponent<BloomPrePass>(), _cullingObject);
+            _cullingObject.SetActive(true);
+
+            /*
+            _cullingCamera.cullingMask &= ~(1 << 0);
+
+            string binary = Convert.ToString(_cullingCamera.cullingMask, 2);
+            binary = new string(binary.ToCharArray().Reverse().ToArray());
+            List<int> layers = new List<int>();
+            for (int i = 0; i < binary.Length; i++)
+            {
+                if (binary[i] == '0')
+                {
+                    layers.Add(i);
+                }
+            }
+            Plugin.Logger.Log($"{gameObject.name}: {binary}");
+            Plugin.Logger.Log($"culling: {string.Join(", ", layers)}");
+            layers.ForEach(n => Plugin.Logger.Log($"{n}: {LayerMask.LayerToName(n)}"));*/
+        }
+
+        private T? CopyComponent<T>(T original, GameObject destination)
+            where T : Component
+        {
+            Type type = original.GetType();
+            Component copy = destination.AddComponent(type);
+            FieldInfo[] fields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (FieldInfo field in fields)
+            {
+                field.SetValue(copy, field.GetValue(original));
+            }
+
+            return copy as T;
         }
 
         private void OnDisable()
         {
+            if (_cullingObject != null)
+            {
+                Destroy(_cullingObject);
+            }
+
             if (_commandBuffer != null)
             {
                 _camera?.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
@@ -209,71 +290,10 @@
                     _previousFrames[i].Release();
                 }
             }
-        }
 
-        internal class MaskController : IDisposable
-        {
-            private readonly IEnumerable<Track> _tracks;
-
-            internal MaskController(IEnumerable<Track> tracks)
+            if (_cullingTexture != null)
             {
-                _tracks = tracks;
-                foreach (Track track in tracks)
-                {
-                    foreach (GameObject gameObject in track.GameObjects)
-                    {
-                        CreateMaskRenderer(gameObject);
-                    }
-
-                    track.OnGameObjectAdded += OnGameObjectAdded;
-                    track.OnGameObjectRemoved += OnGameObjectRemoved;
-                }
-            }
-
-            internal HashSet<MaskRenderer> MaskRenderers { get; } = new HashSet<MaskRenderer>();
-
-            public void Dispose()
-            {
-                foreach (Track track in _tracks)
-                {
-                    if (track != null)
-                    {
-                        track.OnGameObjectAdded -= OnGameObjectAdded;
-                        track.OnGameObjectRemoved -= OnGameObjectRemoved;
-                    }
-                }
-            }
-
-            internal void CreateMaskRenderer(GameObject gameObject)
-            {
-                MaskRenderer maskRenderer = gameObject.GetComponent<MaskRenderer>();
-                maskRenderer ??= gameObject.AddComponent<MaskRenderer>();
-                AddMaskRenderer(maskRenderer);
-            }
-
-            internal void OnGameObjectAdded(GameObject gameObject)
-            {
-                CreateMaskRenderer(gameObject);
-            }
-
-            internal void OnGameObjectRemoved(GameObject gameObject)
-            {
-                MaskRenderer maskRenderer = gameObject.GetComponent<MaskRenderer>();
-                if (maskRenderer != null) {
-                    OnMaskRendererDestroyed(maskRenderer);
-                }
-            }
-
-            internal void AddMaskRenderer(MaskRenderer maskRenderer)
-            {
-                MaskRenderers.Add(maskRenderer);
-                maskRenderer.OnDestroyed += OnMaskRendererDestroyed;
-            }
-
-            private void OnMaskRendererDestroyed(MaskRenderer maskRenderer)
-            {
-                MaskRenderers.Remove(maskRenderer);
-                maskRenderer.OnDestroyed -= OnMaskRendererDestroyed;
+                _cullingTexture.Release();
             }
         }
     }

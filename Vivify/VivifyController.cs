@@ -1,6 +1,7 @@
 ﻿namespace Vivify
 {
     using UnityEngine.SceneManagement;
+    using Vivify.PostProcessing;
     using static Vivify.Plugin;
 
     public static class VivifyController
