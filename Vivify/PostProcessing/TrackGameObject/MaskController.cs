@@ -2,9 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
     using Heck.Animation;
     using UnityEngine;
 
@@ -17,25 +14,23 @@
 
         internal HashSet<MaskRenderer> MaskRenderers { get; } = new HashSet<MaskRenderer>();
 
-        public new void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
+
             foreach (MaskRenderer maskRenderer in MaskRenderers)
             {
                 maskRenderer.OnDestroyed -= OnMaskRendererDestroyed;
             }
         }
 
-        internal void AddMaskRenderer(MaskRenderer maskRenderer)
-        {
-            MaskRenderers.Add(maskRenderer);
-            maskRenderer.OnDestroyed += OnMaskRendererDestroyed;
-        }
-
         protected override void OnGameObjectAdded(GameObject gameObject)
         {
-            MaskRenderer maskRenderer = gameObject.GetComponent<MaskRenderer>();
+            MaskRenderer? maskRenderer = gameObject.GetComponent<MaskRenderer>();
             maskRenderer ??= gameObject.AddComponent<MaskRenderer>();
-            AddMaskRenderer(maskRenderer);
+
+            MaskRenderers.Add(maskRenderer);
+            maskRenderer.OnDestroyed += OnMaskRendererDestroyed;
         }
 
         protected override void OnGameObjectRemoved(GameObject gameObject)

@@ -5,7 +5,6 @@
     using HarmonyLib;
     using Heck;
     using IPA;
-    using UnityEngine;
     using UnityEngine.SceneManagement;
     using IPALogger = IPA.Logging.Logger;
 

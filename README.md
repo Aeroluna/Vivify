@@ -97,21 +97,18 @@ Here is an example of one being defined to animate [`_position`](#_position): (S
 This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from within.
 
 ## Passes
-This event can target a specific "pass" to render to. After, this "pass" can be requested from any Material by requesting `Pass*` (0 - 3).
-```js
-"_properties_": [{
-  "_name": "_Pass0",
-  "_type": "Texture",
-  "_value": "Pass0"
-}]
+This event can target a specific "pass" to render to. After, this "pass" can be accessed from any Shader by the global texture `_Pass*` (0 - 3).
+```csharp
+sampler2D _Pass0;
+
+fixed4 frag (v2f i) : SV_Target
+{
+    return tex2D(_Pass, i.uv);
+}
 ```
 For even more fun, you can sample whatever that pass rendered last frame by appending `_Previous`.
-```js
-"_properties_": [{
-  "_name": "_PreviousTex",
-  "_type": "Texture",
-  "_value": "Pass0_Previous"
-}]
+```
+sampler2D _Pass0_Previous;
 ```
 
 ```js

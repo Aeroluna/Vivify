@@ -8,6 +8,8 @@
     {
         internal event Action<MaskRenderer>? OnDestroyed;
 
+        internal event Action? OnTransformChanged;
+
         internal List<Renderer> ChildRenderers { get; } = new List<Renderer>();
 
         private void OnEnable()
@@ -23,6 +25,7 @@
         private void OnTransformChildrenChanged()
         {
             UpdateChildRenderers();
+            OnTransformChanged?.Invoke();
         }
 
         private void UpdateChildRenderers()

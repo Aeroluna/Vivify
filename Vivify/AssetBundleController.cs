@@ -2,7 +2,6 @@
 {
     using System.Collections.Generic;
     using UnityEngine;
-    using Vivify.PostProcessing;
 
     internal static class AssetBundleController
     {
@@ -83,7 +82,5 @@
         }
 
         internal Material Material { get; }
-
-        internal Dictionary<string, TextureRequest> TextureRequests { get; } = new Dictionary<string, TextureRequest>();
     }
 }

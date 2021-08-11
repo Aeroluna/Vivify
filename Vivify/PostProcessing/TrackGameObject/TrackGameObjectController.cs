@@ -2,9 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
     using Heck.Animation;
     using UnityEngine;
 
@@ -29,7 +26,7 @@
             }
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             foreach (Track track in _tracks)
             {

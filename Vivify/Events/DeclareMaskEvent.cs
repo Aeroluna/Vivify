@@ -2,11 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using CustomJSONData;
     using CustomJSONData.CustomBeatmap;
     using Heck.Animation;
-    using UnityEngine;
     using Vivify.PostProcessing;
 
     internal static class DeclareMaskEvent
