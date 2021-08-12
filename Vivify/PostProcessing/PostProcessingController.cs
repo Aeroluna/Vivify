@@ -81,7 +81,7 @@
             }
 
             // Culling masks
-            _cullingTextures.ForEach(n => n?.Release());
+            _cullingTextures.ForEach(n => RenderTexture.ReleaseTemporary(n));
             _cullingTextures.Clear();
 
             // cache mirrors
@@ -102,11 +102,31 @@
                     renderer.layer = Plugin.CULLINGLAYER;
                 }
 
-                _cullingCamera!.Render();
-                RenderTexture renderTexture = new RenderTexture(Screen.width, Screen.height, 24);
+                if (controller.Whitelist)
+                {
+                    int cachedMask = _cullingCamera!.cullingMask;
+                    _cullingCamera.cullingMask = 1 << Plugin.CULLINGLAYER;
+                    _cullingCamera.Render();
+                    _cullingCamera.cullingMask = cachedMask;
+                }
+                else
+                {
+                    _cullingCamera!.Render();
+                }
+
+                RenderTexture renderTexture = RenderTexture.GetTemporary(Screen.width, Screen.height, 24);
                 Graphics.Blit(_cullingCameraTexture, renderTexture);
                 _commandBuffer.SetGlobalTexture(pair.Key, renderTexture);
                 _cullingTextures.Add(renderTexture);
+
+                // DOES NOT WORK WILL FIX LATER
+                /*if (controller.DepthTexture)
+                {
+                    RenderTexture depthTexture = RenderTexture.GetTemporary(Screen.width, Screen.height, 24, RenderTextureFormat.Depth);
+                    Graphics.Blit(_cullingCameraTexture, depthTexture);
+                    _commandBuffer.SetGlobalTexture(pair.Key + "_Depth", depthTexture);
+                    _cullingTextures.Add(depthTexture);
+                }*/
 
                 // reset renderer layers
                 for (int i = 0; i < cachedLayers.Length; i++)

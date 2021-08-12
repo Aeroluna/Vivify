@@ -9,14 +9,17 @@
     {
         private readonly HashSet<MaskRenderer> _maskRenderers = new HashSet<MaskRenderer>();
 
-        internal CullingMaskController(IEnumerable<Track> tracks, bool whitelist)
+        internal CullingMaskController(IEnumerable<Track> tracks, bool whitelist, bool depthTexture)
             : base(tracks)
         {
             Whitelist = whitelist;
+            DepthTexture = depthTexture;
             UpdateGameObjects();
         }
 
         internal bool Whitelist { get; }
+
+        internal bool DepthTexture { get; }
 
         internal GameObject[] GameObjects { get; private set; } = System.Array.Empty<GameObject>();
 

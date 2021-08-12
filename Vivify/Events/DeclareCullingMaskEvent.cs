@@ -19,7 +19,8 @@
                 IEnumerable<Track> tracks = AnimationHelper.GetTrackArray(customEventData.data, EventController.Instance!.CustomEventCallbackController!.BeatmapData!)
                     ?? throw new InvalidOperationException("No tracks found.");
                 bool whitelist = customEventData.data.Get<bool?>("_whitelist") ?? false;
-                CullingMaskController maskController = new CullingMaskController(tracks, whitelist);
+                bool depthTexture = customEventData.data.Get<bool?>("_depthTexture") ?? false;
+                CullingMaskController maskController = new CullingMaskController(tracks, whitelist, depthTexture);
                 PostProcessingController.CullingMasks.Add(name, maskController);
                 Plugin.Logger.Log($"Created culling mask [{name}].");
                 /*
