@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using IPA.Utilities;
     using UnityEngine;
     using UnityEngine.Rendering;
 
@@ -11,7 +12,10 @@
     {
         internal const int TEXTURECOUNT = 4;
 
-        private readonly RenderTexture[] _previousFrames = new RenderTexture[TEXTURECOUNT];
+        private static readonly int _mirrorTexPropertyID = Shader.PropertyToID("_ReflectionTex");
+        private readonly FieldAccessor<Mirror, MeshRenderer>.Accessor _mirrorMeshRenderer = FieldAccessor<Mirror, MeshRenderer>.GetAccessor("_renderer");
+
+        private readonly RenderTexture?[] _previousFrames = new RenderTexture[TEXTURECOUNT];
         private List<RenderTexture> _cullingTextures = new List<RenderTexture>();
         private CommandBuffer? _commandBuffer;
         private Camera? _camera;
@@ -79,6 +83,13 @@
             // Culling masks
             _cullingTextures.ForEach(n => n?.Release());
             _cullingTextures.Clear();
+
+            // cache mirrors
+            // the textures for mirrors has already been made, so we cache the mirror textures,
+            // do our rendering on the second camera (which will change the textures of the mirror), than swap our original textures back on
+            Material[] mirrorMaterials = MirrorsController.EnabledMirrors.Select(n => _mirrorMeshRenderer(ref n).sharedMaterial).ToArray();
+            Texture[] cachedTexture = mirrorMaterials.Select(n => n.GetTexture(_mirrorTexPropertyID)).ToArray();
+
             foreach (KeyValuePair<string, CullingMaskController> pair in CullingMasks)
             {
                 CullingMaskController controller = pair.Value;
@@ -92,7 +103,6 @@
                 }
 
                 _cullingCamera!.Render();
-
                 RenderTexture renderTexture = new RenderTexture(Screen.width, Screen.height, 24);
                 Graphics.Blit(_cullingCameraTexture, renderTexture);
                 _commandBuffer.SetGlobalTexture(pair.Key, renderTexture);
@@ -105,10 +115,16 @@
                 }
             }
 
+            // clean mirrors
+            for (int i = 0; i < mirrorMaterials.Length; i++)
+            {
+                mirrorMaterials[i].SetTexture(_mirrorTexPropertyID, cachedTexture[i]);
+            }
+
             // get previous texes
             for (int i = 0; i < TEXTURECOUNT; i++)
             {
-                if (_previousFrames![i].IsCreated())
+                if (_previousFrames[i] != null)
                 {
                     _commandBuffer.SetGlobalTexture($"_Pass{i}_Previous", _previousFrames[i]);
                 }
@@ -139,11 +155,17 @@
             {
                 if (sucessfulPasses[i].HasValue)
                 {
-                    _commandBuffer.Blit(sucessfulPasses[i]!.Value, _previousFrames![i]);
+                    if (_previousFrames[i] == null)
+                    {
+                        _previousFrames[i] = RenderTexture.GetTemporary(Screen.width, Screen.height, 24);
+                    }
+
+                    _commandBuffer.Blit(sucessfulPasses[i]!.Value, _previousFrames[i]);
                 }
                 else
                 {
-                    _previousFrames![i].Release();
+                    RenderTexture.ReleaseTemporary(_previousFrames[i]);
+                    _previousFrames[i] = null;
                 }
             }
 
@@ -152,6 +174,12 @@
             {
                 _commandBuffer.Blit(last.Value, BuiltinRenderTextureType.CameraTarget);
             }
+        }
+
+        private void Update()
+        {
+            _cullingCamera!.CopyFrom(_camera);
+            _cullingCamera!.targetTexture = _cullingCameraTexture;
         }
 
         private void OnEnable()
@@ -169,15 +197,14 @@
             _cullingCamera.enabled = false;
             _cullingCameraTexture = new RenderTexture(Screen.width, Screen.height, 24);
             _cullingCamera.targetTexture = _cullingCameraTexture;
-            CopyComponent(gameObject.GetComponent<BloomPrePass>(), _cullingObject);
+            ////CopyComponent(gameObject.GetComponent<BloomPrePass>(), _cullingObject);
             _cullingObject.SetActive(true);
+
+            CopyComponent(gameObject.GetComponent<MainEffectController>(), _cullingObject);
 
             _cullingTextures = new List<RenderTexture>(1);
 
-            for (int i = 0; i < TEXTURECOUNT; i++)
-            {
-                _previousFrames[i] = new RenderTexture(Screen.width, Screen.height, 24);
-            }
+            MirrorsController.UpdateMirrors();
 
             /*
             _cullingCamera.cullingMask &= ~(1 << 0);
@@ -205,7 +232,10 @@
             FieldInfo[] fields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
             foreach (FieldInfo field in fields)
             {
-                field.SetValue(copy, field.GetValue(original));
+                if (Attribute.IsDefined(field, typeof(SerializeField)))
+                {
+                    field.SetValue(copy, field.GetValue(original));
+                }
             }
 
             return copy as T;
@@ -229,7 +259,7 @@
             {
                 for (int i = 0; i < _previousFrames.Length; i++)
                 {
-                    _previousFrames[i].Release();
+                    RenderTexture.ReleaseTemporary(_previousFrames[i]);
                 }
             }
 

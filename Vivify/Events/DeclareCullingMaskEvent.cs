@@ -22,7 +22,7 @@
                 CullingMaskController maskController = new CullingMaskController(tracks, whitelist);
                 PostProcessingController.CullingMasks.Add(name, maskController);
                 Plugin.Logger.Log($"Created culling mask [{name}].");
-
+                /*
                 GameObject[] gameObjects = Resources.FindObjectsOfTypeAll<GameObject>();
                 List<int> layers = new List<int>();
                 gameObjects.Select(n => n.layer).ToList().ForEach(n =>
@@ -33,7 +33,7 @@
                     }
                 });
                 layers.Sort();
-                Plugin.Logger.Log($"used layers: {string.Join(", ", layers)}");
+                Plugin.Logger.Log($"used layers: {string.Join(", ", layers)}");*/
             }
         }
     }

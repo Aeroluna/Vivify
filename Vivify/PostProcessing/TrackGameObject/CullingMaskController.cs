@@ -18,7 +18,7 @@
 
         internal bool Whitelist { get; }
 
-        internal GameObject[] GameObjects { get; private set; } = new GameObject[0];
+        internal GameObject[] GameObjects { get; private set; } = System.Array.Empty<GameObject>();
 
         public override void Dispose()
         {
@@ -39,6 +39,8 @@
             _maskRenderers.Add(maskRenderer);
             maskRenderer.OnDestroyed += OnMaskRendererDestroyed;
             maskRenderer.OnTransformChanged += UpdateGameObjects;
+
+            UpdateGameObjects();
         }
 
         protected override void OnGameObjectRemoved(GameObject gameObject)
@@ -55,6 +57,8 @@
             _maskRenderers.Remove(maskRenderer);
             maskRenderer.OnDestroyed -= OnMaskRendererDestroyed;
             maskRenderer.OnTransformChanged -= UpdateGameObjects;
+
+            UpdateGameObjects();
         }
 
         private void UpdateGameObjects()
