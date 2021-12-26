@@ -1,19 +1,19 @@
-﻿namespace Vivify.PostProcessing
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
+namespace Vivify.PostProcessing
+{
     internal static class MirrorsController
     {
         private static Mirror[] _mirrors = Array.Empty<Mirror>();
 
-        private static List<Mirror> _enabledMirrors = new List<Mirror>();
+        private static List<Mirror> _enabledMirrors = new();
 
         private static MirrorEnableEventHandler[] _eventHandlers = Array.Empty<MirrorEnableEventHandler>();
 
-        internal static List<Mirror> EnabledMirrors
+        internal static IEnumerable<Mirror> EnabledMirrors
         {
             get
             {

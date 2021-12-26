@@ -1,16 +1,16 @@
-﻿namespace Vivify.PostProcessing
-{
-    using System;
-    using System.Collections.Generic;
-    using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
+namespace Vivify.PostProcessing
+{
     internal class MaskRenderer : MonoBehaviour
     {
         internal event Action<MaskRenderer>? OnDestroyed;
 
         internal event Action? OnTransformChanged;
 
-        internal List<Renderer> ChildRenderers { get; } = new List<Renderer>();
+        internal List<Renderer> ChildRenderers { get; } = new();
 
         private void OnEnable()
         {
@@ -34,16 +34,16 @@
             FindRenderers(transform);
         }
 
-        private void FindRenderers(Transform transform)
+        private void FindRenderers(Transform target)
         {
-            Renderer renderer = transform.GetComponent<Renderer>();
+            Renderer renderer = target.GetComponent<Renderer>();
             if (renderer != null)
             {
                 ChildRenderers.Add(renderer);
             }
 
             // include children
-            foreach (Transform child in transform)
+            foreach (Transform child in target)
             {
                 if (child.GetComponent<MaskRenderer>() == null)
                 {

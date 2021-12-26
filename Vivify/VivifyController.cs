@@ -1,39 +1,55 @@
-﻿namespace Vivify
-{
-    using UnityEngine.SceneManagement;
-    using Vivify.PostProcessing;
-    using static Vivify.Plugin;
+﻿using CustomJSONData;
+using HarmonyLib;
+using Heck;
+using UnityEngine.SceneManagement;
+using Vivify.Events;
+using Vivify.PostProcessing;
 
+namespace Vivify
+{
     public static class VivifyController
     {
-        internal static bool VivifyActive { get; private set; } = false;
+        internal const string CAPABILITY = "Vivify";
+        internal const string HARMONYIDCORE = "com.aeroluna.BeatSaber.VivifyCore";
+        internal const string HARMONYID = "com.aeroluna.BeatSaber.Vivify";
+
+        internal const int CULLINGLAYER = 22;
+
+        internal static readonly Harmony _harmonyInstanceCore = new(HARMONYIDCORE);
+        internal static readonly Harmony _harmonyInstance = new(HARMONYID);
+
+        internal static bool VivifyActive { get; private set; }
 
         public static void ToggleVivifyPatches(bool value)
         {
-            if (value != VivifyActive)
+            if (value == VivifyActive)
             {
-                Heck.HeckData.TogglePatches(_harmonyInstance, value);
+                return;
+            }
 
-                VivifyActive = value;
-                if (VivifyActive)
-                {
-                    CustomJSONData.CustomEventCallbackController.didInitEvent += Events.EventController.CustomEventCallbackInit;
-                }
-                else
-                {
-                    CustomJSONData.CustomEventCallbackController.didInitEvent -= Events.EventController.CustomEventCallbackInit;
-                }
+            HeckPatchDataManager.TogglePatches(_harmonyInstance, value);
+
+            VivifyActive = value;
+            if (VivifyActive)
+            {
+                CustomEventCallbackController.didInitEvent += EventController.CustomEventCallbackInit;
+            }
+            else
+            {
+                CustomEventCallbackController.didInitEvent -= EventController.CustomEventCallbackInit;
             }
         }
 
         internal static void OnActiveSceneChanged(Scene current, Scene _)
         {
-            if (current.name == "GameCore")
+            if (current.name != "GameCore")
             {
-                PostProcessingController.ResetMaterial();
-                AssetBundleController.ClearBundle();
-                ToggleVivifyPatches(false);
+                return;
             }
+
+            PostProcessingController.ResetMaterial();
+            AssetBundleController.ClearBundle();
+            ToggleVivifyPatches(false);
         }
     }
 }

@@ -1,13 +1,15 @@
-﻿namespace Vivify.PostProcessing
-{
-    using System.Collections.Generic;
-    using System.Linq;
-    using Heck.Animation;
-    using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Heck.Animation;
+using JetBrains.Annotations;
+using UnityEngine;
 
+namespace Vivify.PostProcessing.TrackGameObject
+{
     internal sealed class CullingMaskController : TrackGameObjectController
     {
-        private readonly HashSet<MaskRenderer> _maskRenderers = new HashSet<MaskRenderer>();
+        private readonly HashSet<MaskRenderer> _maskRenderers = new();
 
         internal CullingMaskController(IEnumerable<Track> tracks, bool whitelist, bool depthTexture)
             : base(tracks)
@@ -19,9 +21,11 @@
 
         internal bool Whitelist { get; }
 
+        // TODO: implement depthtexture
+        [PublicAPI]
         internal bool DepthTexture { get; }
 
-        internal GameObject[] GameObjects { get; private set; } = System.Array.Empty<GameObject>();
+        internal GameObject[] GameObjects { get; private set; } = Array.Empty<GameObject>();
 
         public override void Dispose()
         {

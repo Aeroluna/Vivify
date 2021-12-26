@@ -1,65 +1,69 @@
-﻿namespace Vivify.Events
-{
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using CustomJSONData;
-    using CustomJSONData.CustomBeatmap;
-    using Heck.Animation;
-    using UnityEngine;
-    using Vivify.PostProcessing;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using CustomJSONData;
+using CustomJSONData.CustomBeatmap;
+using Heck.Animation;
+using UnityEngine;
+using Vivify.PostProcessing;
+using Logger = IPA.Logging.Logger;
+using Object = UnityEngine.Object;
 
+namespace Vivify.Events
+{
     internal static class ApplyPostProcessingEvent
     {
-        private static readonly Coroutine[] _activeCoroutine = new Coroutine[PostProcessingController.TEXTURECOUNT];
+        private static readonly Coroutine?[] _activeCoroutine = new Coroutine[PostProcessingController.TEXTURECOUNT];
 
         internal static void Callback(CustomEventData customEventData)
         {
-            if (customEventData.type == "ApplyPostProcessing")
+            if (customEventData.type != "ApplyPostProcessing")
             {
-                string? easingString = customEventData.data.Get<string>("_easing");
-                Functions easing = Functions.easeLinear;
-                if (easingString != null)
+                return;
+            }
+
+            string? easingString = customEventData.data.Get<string>("_easing");
+            Functions easing = Functions.easeLinear;
+            if (easingString != null)
+            {
+                easing = (Functions)Enum.Parse(typeof(Functions), easingString);
+            }
+
+            float duration = customEventData.data.Get<float?>("_duration") ?? 0f;
+            duration = 60f * duration / EventController.BeatmapObjectSpawnController.currentBpm; // Convert to real time;
+
+            int pass = customEventData.data.Get<int?>("_pass") ?? 0;
+
+            string assetName = customEventData.data.Get<string>("_asset") ?? throw new InvalidOperationException("Asset name not found.");
+            if (AssetBundleController.Assets.TryGetValue(assetName, out Object gameObject))
+            {
+                if (gameObject is Material material)
                 {
-                    easing = (Functions)Enum.Parse(typeof(Functions), easingString);
-                }
-
-                float duration = customEventData.data.Get<float?>("_duration") ?? 0f;
-                duration = 60f * duration / EventController.Instance!.BeatmapObjectSpawnController!.currentBpm; // Convert to real time;
-
-                int pass = customEventData.data.Get<int?>("_pass") ?? 0;
-
-                string assetName = customEventData.data.Get<string>("_asset") ?? throw new InvalidOperationException("Asset name not found.");
-                if (AssetBundleController.Assets.TryGetValue(assetName, out UnityEngine.Object gameObject))
-                {
-                    if (gameObject is Material material)
+                    List<object>? properties = customEventData.data.Get<List<object>>("_properties");
+                    if (properties != null)
                     {
-                        List<object>? properties = customEventData.data.Get<List<object>>("_properties");
-                        if (properties != null)
-                        {
-                            SetMaterialPropertyEvent.SetMaterialProperties(material, properties, duration, easing, customEventData.time);
-                        }
-
-                        MaterialData materialData = AssetBundleController.MaterialData[material];
-                        PostProcessingController.PostProcessingMaterial[pass] = materialData;
-
-                        if (_activeCoroutine[pass] != null)
-                        {
-                            EventController.Instance.StopCoroutine(_activeCoroutine[pass]);
-                        }
-
-                        Plugin.Logger.Log($"Applied post processing material [{assetName}] for [{duration}] seconds.");
-                        _activeCoroutine[pass] = EventController.Instance.StartCoroutine(KillPostProcessingCoroutine(pass, duration, customEventData.time));
+                        SetMaterialPropertyEvent.SetMaterialProperties(material, properties, duration, easing, customEventData.time);
                     }
-                    else
+
+                    MaterialData materialData = AssetBundleController.MaterialData[material];
+                    PostProcessingController.PostProcessingMaterial[pass] = materialData;
+
+                    if (_activeCoroutine[pass] != null)
                     {
-                        Plugin.Logger.Log($"Found {assetName}, but was not material!", IPA.Logging.Logger.Level.Error);
+                        EventController.Instance.StopCoroutine(_activeCoroutine[pass]);
                     }
+
+                    Log.Logger.Log($"Applied post processing material [{assetName}] for [{duration}] seconds.");
+                    _activeCoroutine[pass] = EventController.Instance.StartCoroutine(KillPostProcessingCoroutine(pass, duration, customEventData.time));
                 }
                 else
                 {
-                    Plugin.Logger.Log($"Could not find material {assetName}", IPA.Logging.Logger.Level.Error);
+                    Log.Logger.Log($"Found {assetName}, but was not material!", Logger.Level.Error);
                 }
+            }
+            else
+            {
+                Log.Logger.Log($"Could not find material {assetName}", Logger.Level.Error);
             }
         }
 
@@ -67,7 +71,7 @@
         {
             while (true)
             {
-                float elapsedTime = EventController.Instance!.CustomEventCallbackController!.AudioTimeSource!.songTime - startTime;
+                float elapsedTime = EventController.Instance.CustomEventCallbackController.AudioTimeSource!.songTime - startTime;
                 if (elapsedTime < duration)
                 {
                     yield return null;

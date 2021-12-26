@@ -1,12 +1,13 @@
-﻿namespace Vivify.HarmonyPatches
-{
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using CustomJSONData;
-    using CustomJSONData.CustomBeatmap;
-    using static Vivify.Plugin;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using CustomJSONData;
+using CustomJSONData.CustomBeatmap;
+using IPA.Logging;
+using static Vivify.VivifyController;
 
+namespace Vivify.HarmonyPatches.SceneTransition
+{
     internal static class SceneTransitionHelper
     {
         internal static void Patch(IDifficultyBeatmap difficultyBeatmap, IPreviewBeatmapLevel previewBeatmapLevel)
@@ -22,17 +23,15 @@
 
                     if (File.Exists(path))
                     {
-                        VivifyController.ToggleVivifyPatches(AssetBundleController.SetNewBundle(path));
+                        ToggleVivifyPatches(AssetBundleController.SetNewBundle(path));
                         return;
                     }
-                    else
-                    {
-                        Logger.Log("bundle not found!", IPA.Logging.Logger.Level.Error);
-                    }
+
+                    Log.Logger.Log("bundle not found!", Logger.Level.Error);
                 }
             }
 
-            VivifyController.ToggleVivifyPatches(false);
+            ToggleVivifyPatches(false);
         }
     }
 }

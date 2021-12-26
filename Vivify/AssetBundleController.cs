@@ -1,17 +1,18 @@
-﻿namespace Vivify
-{
-    using System.Collections.Generic;
-    using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
+using Logger = IPA.Logging.Logger;
 
+namespace Vivify
+{
     internal static class AssetBundleController
     {
         private static AssetBundle? _mainBundle;
 
-        internal static Dictionary<string, Object> Assets { get; private set; } = new Dictionary<string, Object>();
+        internal static Dictionary<string, Object> Assets { get; private set; } = new();
 
-        internal static Dictionary<Material, MaterialData> MaterialData { get; private set; } = new Dictionary<Material, MaterialData>();
+        internal static Dictionary<Material, MaterialData> MaterialData { get; private set; } = new();
 
-        internal static Dictionary<string, GameObject> InstantiatedPrefabs { get; private set; } = new Dictionary<string, GameObject>();
+        internal static Dictionary<string, GameObject> InstantiatedPrefabs { get; private set; } = new();
 
         internal static T? TryGetAsset<T>(string assetName)
         {
@@ -21,14 +22,12 @@
                 {
                     return t;
                 }
-                else
-                {
-                    Plugin.Logger.Log($"Found {assetName}, but was null or not {typeof(T).FullName}!", IPA.Logging.Logger.Level.Error);
-                }
+
+                Log.Logger.Log($"Found {assetName}, but was null or not {typeof(T).FullName}!", Logger.Level.Error);
             }
             else
             {
-                Plugin.Logger.Log($"Could not find {typeof(T).FullName} {assetName}", IPA.Logging.Logger.Level.Error);
+                Log.Logger.Log($"Could not find {typeof(T).FullName} {assetName}", Logger.Level.Error);
             }
 
             return default;
@@ -49,7 +48,7 @@
             _mainBundle = AssetBundle.LoadFromFile(path);
             if (_mainBundle == null)
             {
-                Plugin.Logger.Log($"Failed to load [{path}]", IPA.Logging.Logger.Level.Error);
+                Log.Logger.Log($"Failed to load [{path}]", Logger.Level.Error);
                 return false;
             }
 
@@ -60,7 +59,7 @@
             string[] assetnames = _mainBundle.GetAllAssetNames();
             foreach (string name in assetnames)
             {
-                Plugin.Logger.Log($"Loaded [{name}]");
+                Log.Logger.Log($"Loaded [{name}]");
                 Object asset = _mainBundle.LoadAsset(name);
                 Assets.Add(name, asset);
 

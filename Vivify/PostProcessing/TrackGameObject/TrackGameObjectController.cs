@@ -1,24 +1,24 @@
-﻿namespace Vivify.PostProcessing
-{
-    using System;
-    using System.Collections.Generic;
-    using Heck.Animation;
-    using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Heck.Animation;
+using UnityEngine;
 
+namespace Vivify.PostProcessing.TrackGameObject
+{
     internal abstract class TrackGameObjectController : IDisposable
     {
         private readonly IEnumerable<Track> _tracks;
 
         internal TrackGameObjectController(IEnumerable<Track> tracks)
         {
-            _tracks = tracks;
-            foreach (Track track in tracks)
+            _tracks = tracks.ToList();
+            foreach (Track track in _tracks)
             {
                 foreach (GameObject gameObject in track.GameObjects)
                 {
-#pragma warning disable CA2214 // OnGameObjectAdded should not require initializition
+                    // ReSharper disable once VirtualMemberCallInConstructor
                     OnGameObjectAdded(gameObject);
-#pragma warning restore CA2214
                 }
 
                 track.OnGameObjectAdded += OnGameObjectAdded;
@@ -30,11 +30,13 @@
         {
             foreach (Track track in _tracks)
             {
-                if (track != null)
+                if (track == null)
                 {
-                    track.OnGameObjectAdded -= OnGameObjectAdded;
-                    track.OnGameObjectRemoved -= OnGameObjectRemoved;
+                    continue;
                 }
+
+                track.OnGameObjectAdded -= OnGameObjectAdded;
+                track.OnGameObjectRemoved -= OnGameObjectRemoved;
             }
         }
 

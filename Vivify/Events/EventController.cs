@@ -1,15 +1,16 @@
-﻿namespace Vivify.Events
-{
-    using CustomJSONData;
-    using UnityEngine;
+﻿using CustomJSONData;
+using UnityEngine;
+using Vivify.HarmonyPatches;
 
+namespace Vivify.Events
+{
     public class EventController : MonoBehaviour
     {
-        public static EventController? Instance { get; private set; }
+        public static EventController Instance { get; private set; } = null!;
 
-        public CustomEventCallbackController? CustomEventCallbackController { get; private set; }
+        public static BeatmapObjectSpawnController BeatmapObjectSpawnController => BeatmapObjectSpawnControllerStart.BeatmapObjectSpawnController;
 
-        public BeatmapObjectSpawnController? BeatmapObjectSpawnController => HarmonyPatches.BeatmapObjectSpawnControllerStart.BeatmapObjectSpawnController;
+        public CustomEventCallbackController CustomEventCallbackController { get; private set; } = null!;
 
         internal static void CustomEventCallbackInit(CustomEventCallbackController customEventCallbackController)
         {

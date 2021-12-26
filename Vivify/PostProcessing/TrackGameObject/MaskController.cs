@@ -1,18 +1,17 @@
-﻿namespace Vivify.PostProcessing
-{
-    using System;
-    using System.Collections.Generic;
-    using Heck.Animation;
-    using UnityEngine;
+﻿using System.Collections.Generic;
+using Heck.Animation;
+using UnityEngine;
 
-    internal sealed class MaskController : TrackGameObjectController, IDisposable
+namespace Vivify.PostProcessing.TrackGameObject
+{
+    internal sealed class MaskController : TrackGameObjectController
     {
         internal MaskController(IEnumerable<Track> tracks)
             : base(tracks)
         {
         }
 
-        internal HashSet<MaskRenderer> MaskRenderers { get; } = new HashSet<MaskRenderer>();
+        internal HashSet<MaskRenderer> MaskRenderers { get; } = new();
 
         public override void Dispose()
         {

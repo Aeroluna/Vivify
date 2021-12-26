@@ -13,7 +13,7 @@ This documentation assumes basic understanding of custom events and tracks.
 - [`DeclareCullingMask`](#DeclareCullingMask)
 
 # Creating an asset bundle
-Firstly, make sure you have a Unity install (for maximum compatibility, Beat Saber uses version 2019.4.18f1) and create a project.
+Firstly, make sure you have a Unity install (for maximum compatibility, Beat Saber uses version 2019.4.28) and create a project.
 
 Visit https://learn.unity.com/tutorial/introduction-to-asset-bundles for a basic introduction to creating asset bundles.
 
