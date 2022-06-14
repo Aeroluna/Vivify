@@ -8,8 +8,8 @@ using UnityEngine;
 
 namespace Vivify.HarmonyPatches
 {
-    [HeckPatch(typeof(MirrorRendererSO))]
-    [HeckPatch("GetMirrorTexture")]
+    [HeckPatch(PatchType.Features)]
+    [HarmonyPatch(typeof(MirrorRendererSO), "GetMirrorTexture")]
     internal static class MirrorRendererSOGetMirrorTexture
     {
         private static readonly MethodInfo _fieldOfViewGetter = AccessTools.PropertyGetter(typeof(Camera), nameof(Camera.fieldOfView));
@@ -26,6 +26,7 @@ namespace Vivify.HarmonyPatches
 
         private static float GetFloatHash(Camera camera)
         {
+            // Base game uses field of view to distuingish between cameras, we use hash code
             return camera.GetHashCode();
         }
     }

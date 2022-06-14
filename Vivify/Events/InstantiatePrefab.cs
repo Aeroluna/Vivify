@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using CustomJSONData;
-using CustomJSONData.CustomBeatmap;
+﻿using CustomJSONData.CustomBeatmap;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace Vivify.Events
 {
-    internal static class InstantiatePrefabEvent
+    internal partial class EventController
     {
-        internal static void Callback(CustomEventData customEventData)
+        internal void InstantiatePrefab(CustomEventData customEventData)
         {
-            if (customEventData.type != "InstantiatePrefab")
+            if (!_deserializedData.Resolve(customEventData, out InstantiatePrefabData? heckData))
             {
                 return;
             }
 
-            string assetName = customEventData.data.Get<string>("_asset") ?? throw new InvalidOperationException("Asset name not found.");
+            string assetName = heckData.Asset;
             GameObject? prefab = AssetBundleController.TryGetAsset<GameObject>(assetName);
             if (prefab == null)
             {
@@ -27,26 +24,25 @@ namespace Vivify.Events
 
             Transform transform = gameObject.transform;
 
-            Dictionary<string, object?> data = customEventData.data;
-            Vector3? position = data.GetVector3("_position");
+            Vector3? position = heckData.Position;
             if (position.HasValue)
             {
                 transform.position = position.Value;
             }
 
-            Vector3? rotation = data.GetVector3("_rotation");
+            Vector3? rotation = heckData.Rotation;
             if (rotation.HasValue)
             {
                 transform.rotation = Quaternion.Euler(rotation.Value);
             }
 
-            Vector3? scale = data.GetVector3("_position");
+            Vector3? scale = heckData.Scale;
             if (scale.HasValue)
             {
                 transform.localScale = scale.Value;
             }
 
-            string? id = customEventData.data.Get<string>("_id");
+            string? id = heckData.Id;
             if (id != null)
             {
                 Log.Logger.Log($"Created [{assetName}] with id [{id}].");

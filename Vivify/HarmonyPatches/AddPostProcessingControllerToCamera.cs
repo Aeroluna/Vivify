@@ -1,11 +1,12 @@
 ﻿using HarmonyLib;
+using Heck;
 using JetBrains.Annotations;
 using Vivify.PostProcessing;
 
 namespace Vivify.HarmonyPatches
 {
-    [HarmonyPatch(typeof(MainCamera))]
-    [HarmonyPatch("Awake")]
+    [HeckPatch]
+    [HarmonyPatch(typeof(MainCamera), "Awake")]
     internal static class MainCameraAwake
     {
         [UsedImplicitly]

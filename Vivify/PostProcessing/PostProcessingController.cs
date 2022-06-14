@@ -17,7 +17,6 @@ namespace Vivify.PostProcessing
         private static readonly int _mirrorTexPropertyID = Shader.PropertyToID("_ReflectionTex");
         private readonly FieldAccessor<Mirror, MeshRenderer>.Accessor _mirrorMeshRenderer = FieldAccessor<Mirror, MeshRenderer>.GetAccessor("_renderer");
 
-        // TODO: fix nullability mess
         private readonly RenderTexture?[] _previousFrames = new RenderTexture[TEXTURECOUNT];
         private List<RenderTexture> _cullingTextures = new();
         private CommandBuffer? _commandBuffer;

@@ -1,10 +1,11 @@
-﻿using System.Reflection;
-using Heck;
+﻿using Heck;
 using IPA;
 using IPA.Logging;
 using JetBrains.Annotations;
+using SiraUtil.Zenject;
 using SongCore;
 using UnityEngine.SceneManagement;
+using Vivify.Installers;
 using static Vivify.VivifyController;
 
 namespace Vivify
@@ -12,21 +13,23 @@ namespace Vivify
     [Plugin(RuntimeOptions.DynamicInit)]
     internal class Plugin
     {
-#pragma warning disable CA1822
         [UsedImplicitly]
         [Init]
-        public void Init(Logger pluginLogger)
+        public Plugin(Logger pluginLogger, Zenjector zenjector)
         {
             Log.Logger = new HeckLogger(pluginLogger);
-            HeckPatchDataManager.InitPatches(_harmonyInstance, Assembly.GetExecutingAssembly());
+
+            zenjector.Install<VivifyPlayerInstaller>(Location.Player);
         }
 
+#pragma warning disable CA1822
         [UsedImplicitly]
         [OnEnable]
         public void OnEnable()
         {
             Collections.RegisterCapability(CAPABILITY);
-            _harmonyInstanceCore.PatchAll(Assembly.GetExecutingAssembly());
+            CorePatcher.Enabled = true;
+            FeaturesModule.Enabled = true;
 
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
         }
@@ -36,8 +39,9 @@ namespace Vivify
         public void OnDisable()
         {
             Collections.DeregisterizeCapability(CAPABILITY);
-            _harmonyInstanceCore.UnpatchAll(HARMONYIDCORE);
-            _harmonyInstanceCore.UnpatchAll(HARMONYID);
+            CorePatcher.Enabled = false;
+            FeaturesPatcher.Enabled = false;
+            FeaturesModule.Enabled = false;
 
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
         }
