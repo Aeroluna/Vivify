@@ -17,6 +17,7 @@ namespace Vivify
         internal const string PROPERTIES = "properties";
         internal const string WHITELIST = "whitelist";
         internal const string DEPTH_TEXTURE = "depthTexture";
+        internal const string PREFAB_ID = "id";
 
         internal const string APPLY_POST_PROCESSING = "ApplyPostProcessing";
         internal const string DECLARE_CULLING_MASK = "DeclareCullingMask";
@@ -37,7 +38,7 @@ namespace Vivify
 
         internal static DataDeserializer Deserializer { get; } = DeserializerManager.Register<CustomDataManager>(ID);
 
-        internal static Module FeaturesModule { get; } = ModuleManager.RegisterModule<ModuleCallbacks>(
+        internal static Module FeaturesModule { get; } = ModuleManager.Register<ModuleCallbacks>(
             "Vivify",
             2,
             RequirementType.Condition,

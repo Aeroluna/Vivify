@@ -21,8 +21,8 @@ namespace Vivify.PostProcessing.TrackGameObject
                     OnGameObjectAdded(gameObject);
                 }
 
-                track.OnGameObjectAdded += OnGameObjectAdded;
-                track.OnGameObjectRemoved += OnGameObjectRemoved;
+                track.GameObjectAdded += OnGameObjectAdded;
+                track.GameObjectRemoved += OnGameObjectRemoved;
             }
         }
 
@@ -35,8 +35,8 @@ namespace Vivify.PostProcessing.TrackGameObject
                     continue;
                 }
 
-                track.OnGameObjectAdded -= OnGameObjectAdded;
-                track.OnGameObjectRemoved -= OnGameObjectRemoved;
+                track.GameObjectAdded -= OnGameObjectAdded;
+                track.GameObjectRemoved -= OnGameObjectRemoved;
             }
         }
 

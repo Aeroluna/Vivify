@@ -35,10 +35,17 @@ namespace Vivify.Events
         {
             foreach (MaterialProperty property in properties)
             {
+                PointDefinition? points = property.PointDefinition;
+                if (points == null)
+                {
+                    Log.Logger.Log("Unable to get point definition.", Logger.Level.Error);
+                    return;
+                }
+
                 string name = property.Name;
                 MaterialPropertyType type = property.Type;
                 object value = property.Value;
-                PointDefinition? pointDefinition = property.PointDefinition;
+                bool noDuration = duration == 0 || startTime + duration < _audioTimeSource.songTime;
                 switch (type)
                 {
                     case MaterialPropertyType.Texture:
@@ -54,7 +61,14 @@ namespace Vivify.Events
                     case MaterialPropertyType.Color:
                         if (value is List<object>)
                         {
-                            _coroutineDummy.StartCoroutine(AnimatePropertyCoroutine(pointDefinition, material, name, MaterialPropertyType.Color, duration, startTime, easing));
+                            if (noDuration)
+                            {
+                                material.SetColor(name, points.InterpolateVector4(1));
+                            }
+                            else
+                            {
+                                StartCoroutine(points, material, name, MaterialPropertyType.Color, duration, startTime, easing);
+                            }
                         }
                         else
                         {
@@ -67,7 +81,14 @@ namespace Vivify.Events
                     case MaterialPropertyType.Float:
                         if (value is List<object>)
                         {
-                            _coroutineDummy.StartCoroutine(AnimatePropertyCoroutine(pointDefinition, material, name, MaterialPropertyType.Float, duration, startTime, easing));
+                            if (noDuration)
+                            {
+                                material.SetFloat(name, points.InterpolateLinear(1));
+                            }
+                            else
+                            {
+                                StartCoroutine(points, material, name, MaterialPropertyType.Float, duration, startTime, easing);
+                            }
                         }
                         else
                         {
@@ -84,14 +105,17 @@ namespace Vivify.Events
             }
         }
 
-        internal IEnumerator AnimatePropertyCoroutine(PointDefinition? points, Material material, string name, MaterialPropertyType type, float duration, float startTime, Functions easing)
-        {
-            if (points == null)
-            {
-                Log.Logger.Log("Unable to get point definition.", Logger.Level.Error);
-                goto notSupported;
-            }
+        private void StartCoroutine(
+            PointDefinition points,
+            Material material,
+            string name,
+            MaterialPropertyType type,
+            float duration,
+            float startTime,
+            Functions easing) => _coroutineDummy.StartCoroutine(AnimatePropertyCoroutine(points, material, name, type, duration, startTime, easing));
 
+        private IEnumerator AnimatePropertyCoroutine(PointDefinition points, Material material, string name, MaterialPropertyType type, float duration, float startTime, Functions easing)
+        {
             while (true)
             {
                 float elapsedTime = _audioTimeSource.songTime - startTime;

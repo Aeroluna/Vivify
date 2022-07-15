@@ -15,7 +15,7 @@ namespace Vivify.Installers
             }
 
             // Events
-            Container.Bind<EventController>().AsSingle().NonLazy();
+            Container.BindInterfacesTo<EventController>().AsSingle().NonLazy();
         }
     }
 }

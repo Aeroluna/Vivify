@@ -4,7 +4,7 @@ using System.Linq;
 using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.Animation;
-using UnityEngine;
+using Heck.Animation.Transform;
 using static Heck.HeckController;
 using static Vivify.VivifyController;
 
@@ -27,11 +27,11 @@ namespace Vivify
     {
         internal MaterialProperty(CustomData rawData, Dictionary<string, PointDefinition> pointDefinitions)
         {
-            Name = rawData.Get<string>(NAME) ?? throw new InvalidOperationException("Property name not found.");
+            Name = rawData.GetRequired<string>(NAME);
             Type = (MaterialPropertyType)Enum.Parse(
                 typeof(MaterialPropertyType),
-                rawData.Get<string>(TYPE) ?? throw new InvalidOperationException("Type not found."));
-            Value = rawData.Get<object>(VALUE) ?? throw new InvalidOperationException("Property value not found.");
+                rawData.GetRequired<string>(TYPE));
+            Value = rawData.GetRequired<object>(VALUE);
             PointDefinition = Value is List<object> ? rawData.GetPointData(VALUE, pointDefinitions) : null;
         }
 
@@ -49,9 +49,9 @@ namespace Vivify
         internal ApplyPostProcessingData(CustomData customData, Dictionary<string, PointDefinition> pointDefinitions)
         {
             Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
-            Duration = customData.Get<float?>(DURATION) ?? 0f;
+            Duration = customData.GetRequired<float>(DURATION);
             Pass = customData.Get<int?>(PASS) ?? 0;
-            Asset = customData.Get<string>(ASSET) ?? throw new InvalidOperationException("Asset name not found.");
+            Asset = customData.GetRequired<string>(ASSET);
             List<object>? properties = customData.Get<List<object>>(PROPERTIES);
             if (properties != null)
             {
@@ -78,11 +78,11 @@ namespace Vivify
         {
             Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
             Duration = customData.Get<float?>(DURATION) ?? 0f;
-            Asset = customData.Get<string>(ASSET) ?? throw new InvalidOperationException("Asset name not found.");
+            Asset = customData.GetRequired<string>(ASSET);
             Properties = customData
-                .Get<List<object>>(PROPERTIES)?
+                .GetRequired<List<object>>(PROPERTIES)
                 .Select(n => new MaterialProperty((CustomData)n, pointDefinitions))
-                .ToList() ?? throw new InvalidOperationException("Properties not found.");
+                .ToList();
         }
 
         internal Functions Easing { get; }
@@ -98,7 +98,7 @@ namespace Vivify
     {
         internal DeclareCullingMaskData(CustomData customData, Dictionary<string, Track> tracks)
         {
-            Name = customData.Get<string>(NAME) ?? throw new InvalidOperationException("Mask name not found.");
+            Name = customData.GetRequired<string>(NAME);
             Tracks = customData.GetTrackArray(tracks, false);
             Whitelist = customData.Get<bool?>(WHITELIST) ?? false;
             DepthTexture = customData.Get<bool?>(DEPTH_TEXTURE) ?? false;
@@ -117,7 +117,7 @@ namespace Vivify
     {
         internal DeclareMaskData(CustomData customData, Dictionary<string, Track> tracks)
         {
-            Name = customData.Get<string>(NAME) ?? throw new InvalidOperationException("Mask name not found.");
+            Name = customData.GetRequired<string>(NAME);
             Tracks = customData.GetTrackArray(tracks, false);
         }
 
@@ -130,7 +130,7 @@ namespace Vivify
     {
         internal DestroyPrefabData(CustomData customData)
         {
-            Id = customData.Get<string>(ID) ?? throw new InvalidOperationException("Id not found.");
+            Id = customData.GetRequired<string>(PREFAB_ID);
         }
 
         internal string Id { get; }
@@ -140,20 +140,14 @@ namespace Vivify
     {
         internal InstantiatePrefabData(CustomData customData)
         {
-            Asset = customData.Get<string>(ASSET) ?? throw new InvalidOperationException("Asset name not found.");
-            Id = customData.Get<string>(ID);
-            Position = customData.GetVector3(POSITION);
-            Rotation = customData.GetVector3(ROTATION);
-            Scale = customData.GetVector3(SCALE);
+            Asset = customData.GetRequired<string>(ASSET);
+            Id = customData.Get<string>(PREFAB_ID);
+            TransformData = new TransformData(customData);
         }
 
         internal string Asset { get; }
 
-        internal Vector3? Position { get; }
-
-        internal Vector3? Rotation { get; }
-
-        internal Vector3? Scale { get; }
+        internal TransformData TransformData { get; }
 
         internal string? Id { get; }
     }

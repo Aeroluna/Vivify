@@ -40,6 +40,11 @@ namespace Vivify.Events
                 SetMaterialProperties(material, properties, duration, heckData.Easing, customEventData.time);
             }
 
+            if (duration == 0 || _audioTimeSource.songTime > customEventData.time + duration)
+            {
+                return;
+            }
+
             MaterialData materialData = AssetBundleController.MaterialData[material];
             PostProcessingController.PostProcessingMaterial[pass] = materialData;
 

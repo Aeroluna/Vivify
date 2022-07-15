@@ -18,12 +18,12 @@ namespace Vivify.PostProcessing
         private readonly FieldAccessor<Mirror, MeshRenderer>.Accessor _mirrorMeshRenderer = FieldAccessor<Mirror, MeshRenderer>.GetAccessor("_renderer");
 
         private readonly RenderTexture?[] _previousFrames = new RenderTexture[TEXTURECOUNT];
-        private List<RenderTexture> _cullingTextures = new();
-        private CommandBuffer? _commandBuffer;
-        private Camera? _camera;
-        private GameObject? _cullingObject;
-        private Camera? _cullingCamera;
-        private RenderTexture? _cullingCameraTexture;
+        private readonly List<RenderTexture> _cullingTextures = new(1);
+        private CommandBuffer _commandBuffer = null!;
+        private Camera _camera = null!;
+        private GameObject _cullingObject = null!;
+        private Camera _cullingCamera = null!;
+        private RenderTexture _cullingCameraTexture = null!;
 
         internal static Dictionary<string, MaskController> Masks { get; private set; } = new();
 
@@ -116,14 +116,14 @@ namespace Vivify.PostProcessing
 
                 if (controller.Whitelist)
                 {
-                    int cachedMask = _cullingCamera!.cullingMask;
+                    int cachedMask = _cullingCamera.cullingMask;
                     _cullingCamera.cullingMask = 1 << CULLINGLAYER;
                     _cullingCamera.Render();
                     _cullingCamera.cullingMask = cachedMask;
                 }
                 else
                 {
-                    _cullingCamera!.Render();
+                    _cullingCamera.Render();
                 }
 
                 RenderTexture renderTexture = RenderTexture.GetTemporary(Screen.width, Screen.height, 24);
@@ -212,11 +212,11 @@ namespace Vivify.PostProcessing
 
         private void Update()
         {
-            _cullingCamera!.CopyFrom(_camera);
-            _cullingCamera!.targetTexture = _cullingCameraTexture;
+            _cullingCamera.CopyFrom(_camera);
+            _cullingCamera.targetTexture = _cullingCameraTexture;
         }
 
-        private void Awake()
+        private void Start()
         {
             _camera = GetComponent<Camera>();
             _camera.depthTextureMode = DepthTextureMode.Depth;
@@ -235,8 +235,6 @@ namespace Vivify.PostProcessing
             _cullingObject.SetActive(true);
 
             CopyComponent(gameObject.GetComponent<MainEffectController>(), _cullingObject);
-
-            _cullingTextures = new List<RenderTexture>(1);
 
             MirrorsController.UpdateMirrors();
 
@@ -265,16 +263,12 @@ namespace Vivify.PostProcessing
                 Destroy(_cullingObject);
             }
 
-            if (_commandBuffer != null)
+            if (_camera != null)
             {
-                if (_camera != null)
-                {
-                    _camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
-                }
-
-                _commandBuffer.Dispose();
-                _commandBuffer = null;
+                _camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
             }
+
+            _commandBuffer.Dispose();
 
             foreach (RenderTexture? t in _previousFrames)
             {

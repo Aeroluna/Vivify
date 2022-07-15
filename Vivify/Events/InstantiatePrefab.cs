@@ -23,24 +23,7 @@ namespace Vivify.Events
             GameObject gameObject = Object.Instantiate(prefab);
 
             Transform transform = gameObject.transform;
-
-            Vector3? position = heckData.Position;
-            if (position.HasValue)
-            {
-                transform.position = position.Value;
-            }
-
-            Vector3? rotation = heckData.Rotation;
-            if (rotation.HasValue)
-            {
-                transform.rotation = Quaternion.Euler(rotation.Value);
-            }
-
-            Vector3? scale = heckData.Scale;
-            if (scale.HasValue)
-            {
-                transform.localScale = scale.Value;
-            }
+            heckData.TransformData.Apply(transform, false);
 
             string? id = heckData.Id;
             if (id != null)

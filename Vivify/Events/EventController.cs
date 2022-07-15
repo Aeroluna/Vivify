@@ -2,6 +2,7 @@
 using CustomJSONData.CustomBeatmap;
 using Heck;
 using JetBrains.Annotations;
+using Vivify.PostProcessing;
 using Zenject;
 using static Vivify.VivifyController;
 
@@ -14,6 +15,7 @@ namespace Vivify.Events
         private readonly IAudioTimeSource _audioTimeSource;
         private readonly IBpmController _bpmController;
         private readonly CoroutineDummy _coroutineDummy;
+        private readonly ReLoader? _reLoader;
         private readonly BeatmapDataCallbackWrapper _callbackWrapper;
 
         [UsedImplicitly]
@@ -22,19 +24,30 @@ namespace Vivify.Events
             [Inject(Id = ID)] DeserializedData deserializedData,
             IAudioTimeSource audioTimeSource,
             IBpmController bpmController,
-            CoroutineDummy coroutineDummy)
+            CoroutineDummy coroutineDummy,
+            [InjectOptional] ReLoader? reLoader)
         {
             _callbacksController = callbacksController;
             _deserializedData = deserializedData;
             _audioTimeSource = audioTimeSource;
             _bpmController = bpmController;
             _coroutineDummy = coroutineDummy;
+            _reLoader = reLoader;
+            if (reLoader != null)
+            {
+                reLoader.Rewinded += PostProcessingController.ResetMaterial;
+            }
+
             _callbackWrapper = callbacksController.AddBeatmapCallback<CustomEventData>(HandleCallback);
         }
 
         public void Dispose()
         {
             _callbacksController.RemoveBeatmapCallback(_callbackWrapper);
+            if (_reLoader != null)
+            {
+                _reLoader.Rewinded -= PostProcessingController.ResetMaterial;
+            }
         }
 
         private void HandleCallback(CustomEventData customEventData)
