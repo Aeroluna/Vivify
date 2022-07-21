@@ -9,6 +9,33 @@ namespace Vivify
 {
     internal class CustomDataManager
     {
+        [EarlyDeserializer]
+        internal static void DeserializerEarly(
+            TrackBuilder trackBuilder,
+            CustomBeatmapData beatmapData,
+            IReadOnlyList<CustomEventData> customEventDatas)
+        {
+            foreach (CustomEventData customEventData in customEventDatas)
+            {
+                try
+                {
+                    switch (customEventData.eventType)
+                    {
+                        case INSTANTIATE_PREFAB:
+                            trackBuilder.AddFromCustomData(customEventData.customData, false);
+                            break;
+
+                        default:
+                            continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Logger.LogFailure(e, customEventData);
+                }
+            }
+        }
+
         [CustomEventsDeserializer]
         private static Dictionary<CustomEventData, ICustomEventCustomData> DeserializeCustomEvents(
             CustomBeatmapData beatmapData,
@@ -41,7 +68,7 @@ namespace Vivify
                             break;
 
                         case INSTANTIATE_PREFAB:
-                            dictionary.Add(customEventData, new InstantiatePrefabData(data));
+                            dictionary.Add(customEventData, new InstantiatePrefabData(data, tracks));
                             break;
 
                         case SET_MATERIAL_PROPERTY:

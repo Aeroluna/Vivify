@@ -1,5 +1,7 @@
 ﻿using CustomJSONData.CustomBeatmap;
+using HarmonyLib;
 using UnityEngine;
+using Vivify.Controllers;
 using Object = UnityEngine.Object;
 
 namespace Vivify.Events
@@ -24,6 +26,13 @@ namespace Vivify.Events
 
             Transform transform = gameObject.transform;
             heckData.TransformData.Apply(transform, false);
+
+            if (heckData.Track != null)
+            {
+                _transformControllerFactory.Create(gameObject, heckData.Track);
+            }
+
+            gameObject.GetComponentsInChildren<Animator>().Do(n => _instantiator.InstantiateComponent<AnimatorSyncController>(n.gameObject, new object[] { customEventData.time }));
 
             string? id = heckData.Id;
             if (id != null)

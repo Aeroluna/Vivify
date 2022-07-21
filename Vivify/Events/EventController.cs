@@ -1,6 +1,7 @@
 ﻿using System;
 using CustomJSONData.CustomBeatmap;
 using Heck;
+using Heck.Animation.Transform;
 using JetBrains.Annotations;
 using Vivify.PostProcessing;
 using Zenject;
@@ -10,28 +11,34 @@ namespace Vivify.Events
 {
     internal partial class EventController : IDisposable
     {
+        private readonly IInstantiator _instantiator;
         private readonly BeatmapCallbacksController _callbacksController;
         private readonly DeserializedData _deserializedData;
         private readonly IAudioTimeSource _audioTimeSource;
         private readonly IBpmController _bpmController;
         private readonly CoroutineDummy _coroutineDummy;
+        private readonly TransformControllerFactory _transformControllerFactory;
         private readonly ReLoader? _reLoader;
         private readonly BeatmapDataCallbackWrapper _callbackWrapper;
 
         [UsedImplicitly]
         private EventController(
+            IInstantiator instantiator,
             BeatmapCallbacksController callbacksController,
             [Inject(Id = ID)] DeserializedData deserializedData,
             IAudioTimeSource audioTimeSource,
             IBpmController bpmController,
             CoroutineDummy coroutineDummy,
+            TransformControllerFactory transformControllerFactory,
             [InjectOptional] ReLoader? reLoader)
         {
+            _instantiator = instantiator;
             _callbacksController = callbacksController;
             _deserializedData = deserializedData;
             _audioTimeSource = audioTimeSource;
             _bpmController = bpmController;
             _coroutineDummy = coroutineDummy;
+            _transformControllerFactory = transformControllerFactory;
             _reLoader = reLoader;
             if (reLoader != null)
             {

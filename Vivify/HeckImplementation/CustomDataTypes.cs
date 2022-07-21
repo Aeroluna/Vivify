@@ -138,11 +138,14 @@ namespace Vivify
 
     internal class InstantiatePrefabData : ICustomEventCustomData
     {
-        internal InstantiatePrefabData(CustomData customData)
+        internal InstantiatePrefabData(
+            CustomData customData,
+            Dictionary<string, Track> beatmapTracks)
         {
             Asset = customData.GetRequired<string>(ASSET);
             Id = customData.Get<string>(PREFAB_ID);
             TransformData = new TransformData(customData);
+            Track = customData.GetNullableTrack(beatmapTracks, false);
         }
 
         internal string Asset { get; }
@@ -150,5 +153,7 @@ namespace Vivify
         internal TransformData TransformData { get; }
 
         internal string? Id { get; }
+
+        internal Track? Track { get; }
     }
 }
