@@ -14,6 +14,11 @@ namespace Vivify.PostProcessing
     {
         internal const int TEXTURECOUNT = 4;
 
+        private static readonly int[] _tempPassPropertyID = GetIDs("_TempPass");
+        private static readonly int[] _passPropertyID = GetIDs("_Pass");
+        private static readonly int[] _passPreviousPropertyID = GetIDs("_Pass", "_Previous");
+        private static readonly int _tempMainTexPropertyID = Shader.PropertyToID("_TempMainTex");
+
         private static readonly int _mirrorTexPropertyID = Shader.PropertyToID("_ReflectionTex");
         private readonly FieldAccessor<Mirror, MeshRenderer>.Accessor _mirrorMeshRenderer = FieldAccessor<Mirror, MeshRenderer>.GetAccessor("_renderer");
 
@@ -54,6 +59,17 @@ namespace Vivify.PostProcessing
             }
         }
 
+        private static int[] GetIDs(string prefix, string postfix = "")
+        {
+            int[] result = new int[TEXTURECOUNT];
+            for (int i = 0; i < TEXTURECOUNT; i++)
+            {
+                result[i] = Shader.PropertyToID(prefix + i + postfix);
+            }
+
+            return result;
+        }
+
         private void OnPreRender()
         {
             if (_commandBuffer == null)
@@ -63,9 +79,8 @@ namespace Vivify.PostProcessing
 
             _commandBuffer.Clear();
 
-            int mainTex = Shader.PropertyToID("_TempMainTex");
-            _commandBuffer.GetTemporaryRT(mainTex, -1, -1, 24, FilterMode.Point, RenderTextureFormat.ARGB32);
-            _commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, mainTex);
+            _commandBuffer.GetTemporaryRT(_tempMainTexPropertyID, -1, -1, 24, FilterMode.Point, RenderTextureFormat.ARGB32);
+            _commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, _tempMainTexPropertyID);
 
             // Set mask texturesd
             foreach ((string key, MaskController controller) in Masks)
@@ -158,7 +173,7 @@ namespace Vivify.PostProcessing
             {
                 if (_previousFrames[i] != null)
                 {
-                    _commandBuffer.SetGlobalTexture($"_Pass{i}_Previous", _previousFrames[i]);
+                    _commandBuffer.SetGlobalTexture(_passPreviousPropertyID[i], _previousFrames[i]);
                 }
             }
 
@@ -175,10 +190,10 @@ namespace Vivify.PostProcessing
 
                 Material material = materialData.Material;
 
-                int id = Shader.PropertyToID("_TempPass" + i);
+                int id = _tempPassPropertyID[i];
                 _commandBuffer.GetTemporaryRT(id, -1, -1, 24, FilterMode.Point, RenderTextureFormat.ARGB32);
-                _commandBuffer.Blit(mainTex, id, material);
-                _commandBuffer.SetGlobalTexture($"_Pass{i}", id);
+                _commandBuffer.Blit(_tempMainTexPropertyID, id, material);
+                _commandBuffer.SetGlobalTexture(_passPropertyID[i], id);
                 last = id;
 
                 sucessfulPasses[i] = id;
