@@ -234,7 +234,6 @@ namespace Vivify.PostProcessing
         private void Start()
         {
             _camera = GetComponent<Camera>();
-            _camera.depthTextureMode = DepthTextureMode.Depth;
             _commandBuffer = new CommandBuffer { name = "PostProcessingBuffer" };
             _camera.AddCommandBuffer(CameraEvent.AfterImageEffects, _commandBuffer);
 

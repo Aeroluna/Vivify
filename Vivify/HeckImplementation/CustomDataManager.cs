@@ -22,7 +22,7 @@ namespace Vivify
                     switch (customEventData.eventType)
                     {
                         case INSTANTIATE_PREFAB:
-                            trackBuilder.AddFromCustomData(customEventData.customData, false);
+                            trackBuilder.AddFromCustomData(customEventData.customData, false, false);
                             break;
 
                         default:

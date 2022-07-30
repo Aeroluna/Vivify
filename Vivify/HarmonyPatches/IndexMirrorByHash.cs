@@ -3,19 +3,19 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Heck;
-using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Vivify.HarmonyPatches
 {
     [HeckPatch(PatchType.Features)]
-    [HarmonyPatch(typeof(MirrorRendererSO), "GetMirrorTexture")]
-    internal static class MirrorRendererSOGetMirrorTexture
+    [HarmonyPatch(typeof(MirrorRendererSO))]
+    internal static class IndexMirrorByHash
     {
         private static readonly MethodInfo _fieldOfViewGetter = AccessTools.PropertyGetter(typeof(Camera), nameof(Camera.fieldOfView));
-        private static readonly MethodInfo _getFloatHash = AccessTools.Method(typeof(MirrorRendererSOGetMirrorTexture), nameof(GetFloatHash));
+        private static readonly MethodInfo _getFloatHash = AccessTools.Method(typeof(IndexMirrorByHash), nameof(GetFloatHash));
 
-        [UsedImplicitly]
+        [HarmonyTranspiler]
+        [HarmonyPatch(nameof(MirrorRendererSO.GetMirrorTexture))]
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             return new CodeMatcher(instructions)
