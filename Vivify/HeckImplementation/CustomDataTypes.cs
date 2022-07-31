@@ -120,19 +120,6 @@ namespace Vivify
         internal bool DepthTexture { get; }
     }
 
-    internal class DeclareMaskData : ICustomEventCustomData
-    {
-        internal DeclareMaskData(CustomData customData, Dictionary<string, Track> tracks)
-        {
-            Name = customData.GetRequired<string>(NAME);
-            Tracks = customData.GetTrackArray(tracks, false);
-        }
-
-        internal string Name { get; }
-
-        internal IEnumerable<Track> Tracks { get; }
-    }
-
     internal class DeclareRenderTextureData : ICustomEventCustomData
     {
         internal DeclareRenderTextureData(CustomData customData)

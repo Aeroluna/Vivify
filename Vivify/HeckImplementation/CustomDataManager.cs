@@ -59,10 +59,6 @@ namespace Vivify
                             dictionary.Add(customEventData, new DeclareCullingMaskData(data, tracks));
                             break;
 
-                        case DECLARE_MASK:
-                            dictionary.Add(customEventData, new DeclareMaskData(data, tracks));
-                            break;
-
                         case DECLARE_TEXTURE:
                             dictionary.Add(customEventData, new DeclareRenderTextureData(data));
                             break;

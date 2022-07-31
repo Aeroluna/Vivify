@@ -75,10 +75,6 @@ namespace Vivify.Events
                     DeclareCullingMask(customEventData);
                     break;
 
-                case DECLARE_MASK:
-                    DeclareMask(customEventData);
-                    break;
-
                 case DECLARE_TEXTURE:
                     DeclareRenderTexture(customEventData);
                     break;

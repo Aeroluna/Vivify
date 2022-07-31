@@ -22,8 +22,6 @@ namespace Vivify.PostProcessing
         private Camera _cullingCamera = null!;
         private RenderTexture _cullingCameraTexture = null!;
 
-        internal static Dictionary<string, MaskController> Masks { get; private set; } = new();
-
         internal static Dictionary<string, CullingMaskController> CullingMasks { get; private set; } = new();
 
         internal static HashSet<DeclareRenderTextureData> DeclaredTextureDatas { get; private set; } = new();
@@ -32,7 +30,6 @@ namespace Vivify.PostProcessing
 
         internal static void ResetMaterial()
         {
-            Masks = new Dictionary<string, MaskController>();
             CullingMasks = new Dictionary<string, CullingMaskController>();
             DeclaredTextureDatas = new HashSet<DeclareRenderTextureData>();
 
@@ -154,7 +151,7 @@ namespace Vivify.PostProcessing
 
                 // TODO: clean better
                 RenderTexture? texture = value.Texture;
-                if (texture == null)
+                if (texture == null || !texture.IsCreated())
                 {
                     texture = RenderTexture.GetTemporary((int)(Screen.width / data.XRatio), (int)(Screen.height / data.YRatio), 24);
                     value.Texture = texture;
