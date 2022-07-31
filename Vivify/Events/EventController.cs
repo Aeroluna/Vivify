@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using CustomJSONData.CustomBeatmap;
+using HarmonyLib;
 using Heck;
 using Heck.Animation.Transform;
 using JetBrains.Annotations;
@@ -20,6 +22,8 @@ namespace Vivify.Events
         private readonly TransformControllerFactory _transformControllerFactory;
         private readonly ReLoader? _reLoader;
         private readonly BeatmapDataCallbackWrapper _callbackWrapper;
+
+        private readonly HashSet<IDisposable> _disposables = new();
 
         [UsedImplicitly]
         private EventController(
@@ -55,6 +59,8 @@ namespace Vivify.Events
             {
                 _reLoader.Rewinded -= PostProcessingController.ResetMaterial;
             }
+
+            _disposables.Do(n => n.Dispose());
         }
 
         private void HandleCallback(CustomEventData customEventData)
@@ -71,6 +77,10 @@ namespace Vivify.Events
 
                 case DECLARE_MASK:
                     DeclareMask(customEventData);
+                    break;
+
+                case DECLARE_TEXTURE:
+                    DeclareRenderTexture(customEventData);
                     break;
 
                 case DESTROY_PREFAB:

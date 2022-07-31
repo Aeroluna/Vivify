@@ -13,18 +13,26 @@ namespace Vivify
     {
         internal const string VALUE = "value";
         internal const string PASS = "pass";
+        internal const string PRIORITY = "priority";
+        internal const string TARGET = "target";
         internal const string ASSET = "asset";
         internal const string PROPERTIES = "properties";
         internal const string WHITELIST = "whitelist";
         internal const string DEPTH_TEXTURE = "depthTexture";
         internal const string PREFAB_ID = "id";
 
+        internal const string XRATIO = "xRatio";
+        internal const string YRATIO = "yRatio";
+
         internal const string APPLY_POST_PROCESSING = "ApplyPostProcessing";
         internal const string DECLARE_CULLING_MASK = "DeclareCullingMask";
         internal const string DECLARE_MASK = "DeclareMask";
+        internal const string DECLARE_TEXTURE = "DeclareRenderTexture";
         internal const string DESTROY_PREFAB = "DestroyPrefab";
         internal const string INSTANTIATE_PREFAB = "InstantiatePrefab";
         internal const string SET_MATERIAL_PROPERTY = "SetMaterialProperty";
+
+        internal const string CAMERA_TARGET = "_Camera";
 
         internal const string CAPABILITY = "Vivify";
         internal const string ID = "Vivify";

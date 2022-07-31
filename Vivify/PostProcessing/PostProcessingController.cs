@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using HarmonyLib;
 using IPA.Utilities;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Vivify.PostProcessing.TrackGameObject;
 using static Vivify.VivifyController;
 
@@ -12,19 +12,11 @@ namespace Vivify.PostProcessing
 {
     internal class PostProcessingController : MonoBehaviour
     {
-        internal const int TEXTURECOUNT = 4;
-
-        private static readonly int[] _tempPassPropertyID = GetIDs("_TempPass");
-        private static readonly int[] _passPropertyID = GetIDs("_Pass");
-        private static readonly int[] _passPreviousPropertyID = GetIDs("_Pass", "_Previous");
-        private static readonly int _tempMainTexPropertyID = Shader.PropertyToID("_TempMainTex");
-
         private static readonly int _mirrorTexPropertyID = Shader.PropertyToID("_ReflectionTex");
-        private readonly FieldAccessor<Mirror, MeshRenderer>.Accessor _mirrorMeshRenderer = FieldAccessor<Mirror, MeshRenderer>.GetAccessor("_renderer");
+        private static readonly FieldAccessor<Mirror, MeshRenderer>.Accessor _mirrorMeshRenderer = FieldAccessor<Mirror, MeshRenderer>.GetAccessor("_renderer");
 
-        private readonly RenderTexture?[] _previousFrames = new RenderTexture[TEXTURECOUNT];
-        private readonly List<RenderTexture> _cullingTextures = new(1);
-        private CommandBuffer _commandBuffer = null!;
+        private readonly HashSet<RenderTexture> _cullingTextures = new(1);
+        private readonly Dictionary<string, RenderTextureHolder> _declaredTextures = new();
         private Camera _camera = null!;
         private GameObject _cullingObject = null!;
         private Camera _cullingCamera = null!;
@@ -34,14 +26,17 @@ namespace Vivify.PostProcessing
 
         internal static Dictionary<string, CullingMaskController> CullingMasks { get; private set; } = new();
 
-        internal static MaterialData?[] PostProcessingMaterial { get; private set; } = new MaterialData[TEXTURECOUNT];
+        internal static HashSet<DeclareRenderTextureData> DeclaredTextureDatas { get; private set; } = new();
+
+        internal static HashSet<MaterialData> PostProcessingMaterial { get; private set; } = new();
 
         internal static void ResetMaterial()
         {
             Masks = new Dictionary<string, MaskController>();
             CullingMasks = new Dictionary<string, CullingMaskController>();
+            DeclaredTextureDatas = new HashSet<DeclareRenderTextureData>();
 
-            PostProcessingMaterial = new MaterialData[TEXTURECOUNT];
+            PostProcessingMaterial = new HashSet<MaterialData>();
         }
 
         private static void CopyComponent<T>(T original, GameObject destination)
@@ -59,31 +54,10 @@ namespace Vivify.PostProcessing
             }
         }
 
-        private static int[] GetIDs(string prefix, string postfix = "")
+        private void OnRenderImage(RenderTexture src, RenderTexture dst)
         {
-            int[] result = new int[TEXTURECOUNT];
-            for (int i = 0; i < TEXTURECOUNT; i++)
-            {
-                result[i] = Shader.PropertyToID(prefix + i + postfix);
-            }
-
-            return result;
-        }
-
-        private void OnPreRender()
-        {
-            if (_commandBuffer == null)
-            {
-                throw new InvalidOperationException("Command buffer was null.");
-            }
-
-            _commandBuffer.Clear();
-
-            _commandBuffer.GetTemporaryRT(_tempMainTexPropertyID, -1, -1, 24, FilterMode.Point, RenderTextureFormat.ARGB32);
-            _commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, _tempMainTexPropertyID);
-
             // Set mask texturesd
-            foreach ((string key, MaskController controller) in Masks)
+            /*foreach ((string key, MaskController controller) in Masks)
             {
                 int id = Shader.PropertyToID("_TempMask" + key);
                 _commandBuffer.GetTemporaryRT(id, -1, -1, 24, FilterMode.Point, RenderTextureFormat.Depth);
@@ -107,11 +81,7 @@ namespace Vivify.PostProcessing
                 }
 
                 _commandBuffer.SetGlobalTexture(key, id);
-            }
-
-            // Culling masks
-            _cullingTextures.ForEach(RenderTexture.ReleaseTemporary);
-            _cullingTextures.Clear();
+            }*/
 
             // cache mirrors
             // the textures for mirrors has already been made, so we cache the mirror textures,
@@ -143,7 +113,7 @@ namespace Vivify.PostProcessing
 
                 RenderTexture renderTexture = RenderTexture.GetTemporary(Screen.width, Screen.height, 24);
                 Graphics.Blit(_cullingCameraTexture, renderTexture);
-                _commandBuffer.SetGlobalTexture(key, renderTexture);
+                Shader.SetGlobalTexture(key, renderTexture);
                 _cullingTextures.Add(renderTexture);
 
                 // DOES NOT WORK WILL FIX LATER
@@ -168,61 +138,79 @@ namespace Vivify.PostProcessing
                 mirrorMaterials[i].SetTexture(_mirrorTexPropertyID, cachedTexture[i]);
             }
 
-            // get previous texes
-            for (int i = 0; i < TEXTURECOUNT; i++)
+            // instantiate declared textures
+            foreach (DeclareRenderTextureData declareRenderTextureData in DeclaredTextureDatas)
             {
-                if (_previousFrames[i] != null)
+                if (!_declaredTextures.ContainsKey(declareRenderTextureData.Name))
                 {
-                    _commandBuffer.SetGlobalTexture(_passPreviousPropertyID[i], _previousFrames[i]);
+                    _declaredTextures.Add(declareRenderTextureData.Name, new RenderTextureHolder(declareRenderTextureData));
                 }
+            }
+
+            // set up declared textures
+            foreach ((string _, RenderTextureHolder value) in _declaredTextures)
+            {
+                DeclareRenderTextureData data = value.Data;
+
+                // TODO: clean better
+                RenderTexture? texture = value.Texture;
+                if (texture == null)
+                {
+                    texture = RenderTexture.GetTemporary((int)(Screen.width / data.XRatio), (int)(Screen.height / data.YRatio), 24);
+                    value.Texture = texture;
+                }
+
+                Shader.SetGlobalTexture(data.PropertyId, texture);
             }
 
             // blit all passes
-            int?[] sucessfulPasses = new int?[TEXTURECOUNT];
-            int? last = null;
-            for (int i = 0; i < TEXTURECOUNT; i++)
+            bool cameraTargeted = false;
+            IEnumerable<MaterialData> sortedDatas = PostProcessingMaterial.OrderBy(n => n.Priority).Reverse();
+            foreach (MaterialData materialData in sortedDatas)
             {
-                MaterialData? materialData = PostProcessingMaterial[i];
-                if (materialData == null)
+                Material? material = materialData.Material;
+
+                foreach (string materialDataTarget in materialData.Targets)
                 {
-                    continue;
-                }
-
-                Material material = materialData.Material;
-
-                int id = _tempPassPropertyID[i];
-                _commandBuffer.GetTemporaryRT(id, -1, -1, 24, FilterMode.Point, RenderTextureFormat.ARGB32);
-                _commandBuffer.Blit(_tempMainTexPropertyID, id, material);
-                _commandBuffer.SetGlobalTexture(_passPropertyID[i], id);
-                last = id;
-
-                sucessfulPasses[i] = id;
-            }
-
-            // save previous frames
-            for (int i = 0; i < TEXTURECOUNT; i++)
-            {
-                if (sucessfulPasses[i].HasValue)
-                {
-                    if (_previousFrames[i] == null)
+                    if (materialDataTarget == CAMERA_TARGET)
                     {
-                        _previousFrames[i] = RenderTexture.GetTemporary(Screen.width, Screen.height, 24);
+                        if (material == null)
+                        {
+                            continue;
+                        }
+
+                        Graphics.Blit(src, dst, material, materialData.Pass);
+                        cameraTargeted = true;
                     }
-
-                    _commandBuffer.Blit(sucessfulPasses[i]!.Value, _previousFrames[i]);
-                }
-                else
-                {
-                    RenderTexture.ReleaseTemporary(_previousFrames[i]);
-                    _previousFrames[i] = null;
+                    else
+                    {
+                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder value))
+                        {
+                            if (material != null)
+                            {
+                                Graphics.Blit(src, value.Texture, material, materialData.Pass);
+                            }
+                            else
+                            {
+                                Graphics.Blit(src, value.Texture);
+                            }
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"Unable to find target [{materialDataTarget}].");
+                        }
+                    }
                 }
             }
 
-            // blit to camera target
-            if (last.HasValue)
+            if (!cameraTargeted)
             {
-                _commandBuffer.Blit(last.Value, BuiltinRenderTextureType.CameraTarget);
+                Graphics.Blit(src, dst);
             }
+
+            // Release Culling masks
+            _cullingTextures.Do(RenderTexture.ReleaseTemporary);
+            _cullingTextures.Clear();
         }
 
         private void Update()
@@ -234,8 +222,6 @@ namespace Vivify.PostProcessing
         private void Start()
         {
             _camera = GetComponent<Camera>();
-            _commandBuffer = new CommandBuffer { name = "PostProcessingBuffer" };
-            _camera.AddCommandBuffer(CameraEvent.AfterImageEffects, _commandBuffer);
 
             _cullingObject = new GameObject("CullingCamera");
             _cullingObject.SetActive(false);
@@ -277,24 +263,12 @@ namespace Vivify.PostProcessing
                 Destroy(_cullingObject);
             }
 
-            if (_camera != null)
-            {
-                _camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
-            }
-
-            _commandBuffer.Dispose();
-
-            foreach (RenderTexture? t in _previousFrames)
-            {
-                RenderTexture.ReleaseTemporary(t);
-            }
-
             if (_cullingCameraTexture != null)
             {
                 _cullingCameraTexture.Release();
             }
 
-            _cullingTextures.ForEach(n =>
+            _cullingTextures.Do(n =>
             {
                 if (n != null)
                 {
@@ -302,5 +276,24 @@ namespace Vivify.PostProcessing
                 }
             });
         }
+    }
+
+    internal class MaterialData
+    {
+        internal MaterialData(Material? material, int priority, string[]? targets, int? pass)
+        {
+            Material = material;
+            Priority = priority;
+            Targets = targets ?? new[] { "_Camera" };
+            Pass = pass ?? -1;
+        }
+
+        internal Material? Material { get; }
+
+        internal int Priority { get; }
+
+        internal string[] Targets { get; }
+
+        internal int Pass { get; }
     }
 }

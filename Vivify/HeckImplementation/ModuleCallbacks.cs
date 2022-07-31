@@ -9,6 +9,8 @@ namespace Vivify
 {
     internal class ModuleCallbacks
     {
+        private const string BUNDLE = "bundle";
+
         [ModuleCondition]
         private static bool Condition(
             Capabilities capabilities,
@@ -22,14 +24,14 @@ namespace Vivify
                 return false;
             }
 
-            string path = Path.Combine(customPreviewBeatmapLevel.customLevelPath, "bundle");
+            string path = Path.Combine(customPreviewBeatmapLevel.customLevelPath, BUNDLE);
 
             if (File.Exists(path))
             {
                 return AssetBundleController.SetNewBundle(path);
             }
 
-            Log.Logger.Log("bundle not found!", Logger.Level.Error);
+            Log.Logger.Log($"[{BUNDLE}] not found!", Logger.Level.Error);
             return false;
         }
 

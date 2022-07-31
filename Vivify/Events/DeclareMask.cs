@@ -15,6 +15,7 @@ namespace Vivify.Events
 
             string name = heckData.Name;
             MaskController maskController = new(heckData.Tracks);
+            _disposables.Add(maskController);
             PostProcessingController.Masks.Add(name, maskController);
             Log.Logger.Log($"Created mask [{name}].");
         }

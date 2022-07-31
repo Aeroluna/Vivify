@@ -10,8 +10,6 @@ namespace Vivify.Events
 {
     internal partial class EventController
     {
-        private static readonly Coroutine?[] _activeCoroutine = new Coroutine[PostProcessingController.TEXTURECOUNT];
-
         internal void ApplyPostProcessing(CustomEventData customEventData)
         {
             if (!_deserializedData.Resolve(customEventData, out ApplyPostProcessingData? heckData))
@@ -20,24 +18,28 @@ namespace Vivify.Events
             }
 
             float duration = 60f * heckData.Duration / _bpmController.currentBpm; // Convert to real time;
-            int pass = heckData.Pass;
-            string assetName = heckData.Asset;
-            if (!AssetBundleController.Assets.TryGetValue(assetName, out Object gameObject))
+            string? assetName = heckData.Asset;
+            Material? material = null;
+            if (assetName != null)
             {
-                Log.Logger.Log($"Could not find material [{assetName}].", Logger.Level.Error);
-                return;
-            }
+                if (!AssetBundleController.Assets.TryGetValue(assetName, out Object gameObject))
+                {
+                    Log.Logger.Log($"Could not find material [{assetName}].", Logger.Level.Error);
+                    return;
+                }
 
-            if (gameObject is not Material material)
-            {
-                Log.Logger.Log($"Found [{assetName}], but was not material!", Logger.Level.Error);
-                return;
-            }
+                if (gameObject is not Material casted)
+                {
+                    Log.Logger.Log($"Found [{assetName}], but was not material!", Logger.Level.Error);
+                    return;
+                }
 
-            List<MaterialProperty>? properties = heckData.Properties;
-            if (properties != null)
-            {
-                SetMaterialProperties(material, properties, duration, heckData.Easing, customEventData.time);
+                material = casted;
+                List<MaterialProperty>? properties = heckData.Properties;
+                if (properties != null)
+                {
+                    SetMaterialProperties(material, properties, duration, heckData.Easing, customEventData.time);
+                }
             }
 
             if (duration == 0 || _audioTimeSource.songTime > customEventData.time + duration)
@@ -45,30 +47,29 @@ namespace Vivify.Events
                 return;
             }
 
-            MaterialData materialData = AssetBundleController.MaterialData[material];
-            PostProcessingController.PostProcessingMaterial[pass] = materialData;
-
-            if (_activeCoroutine[pass] != null)
-            {
-                _coroutineDummy.StopCoroutine(_activeCoroutine[pass]);
-            }
-
+            MaterialData materialData = new(material, heckData.Priority, heckData.Target, heckData.Pass);
+            PostProcessingController.PostProcessingMaterial.Add(materialData);
             Log.Logger.Log($"Applied post processing material [{assetName}] for [{duration}] seconds.");
-            _activeCoroutine[pass] = _coroutineDummy.StartCoroutine(KillPostProcessingCoroutine(pass, duration, customEventData.time));
+            _coroutineDummy.StartCoroutine(KillPostProcessingCoroutine(materialData, duration, customEventData.time));
         }
 
-        internal IEnumerator KillPostProcessingCoroutine(int pass, float duration, float startTime)
+        internal IEnumerator KillPostProcessingCoroutine(MaterialData data, float duration, float startTime)
         {
             while (true)
             {
                 float elapsedTime = _audioTimeSource.songTime - startTime;
+                if (elapsedTime < 0)
+                {
+                    break;
+                }
+
                 if (elapsedTime < duration)
                 {
                     yield return null;
                 }
                 else
                 {
-                    PostProcessingController.PostProcessingMaterial[pass] = null;
+                    PostProcessingController.PostProcessingMaterial.Remove(data);
                     break;
                 }
             }

@@ -63,6 +63,10 @@ namespace Vivify
                             dictionary.Add(customEventData, new DeclareMaskData(data, tracks));
                             break;
 
+                        case DECLARE_TEXTURE:
+                            dictionary.Add(customEventData, new DeclareRenderTextureData(data));
+                            break;
+
                         case DESTROY_PREFAB:
                             dictionary.Add(customEventData, new DestroyPrefabData(data));
                             break;

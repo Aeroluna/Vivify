@@ -10,8 +10,6 @@ namespace Vivify
 
         internal static Dictionary<string, Object> Assets { get; private set; } = new();
 
-        internal static Dictionary<Material, MaterialData> MaterialData { get; private set; } = new();
-
         internal static Dictionary<string, GameObject> InstantiatedPrefabs { get; private set; } = new();
 
         internal static T? TryGetAsset<T>(string assetName)
@@ -53,7 +51,6 @@ namespace Vivify
             }
 
             Assets = new Dictionary<string, Object>();
-            MaterialData = new Dictionary<Material, MaterialData>();
             InstantiatedPrefabs = new Dictionary<string, GameObject>();
 
             string[] assetnames = _mainBundle.GetAllAssetNames();
@@ -62,24 +59,9 @@ namespace Vivify
                 Log.Logger.Log($"Loaded [{name}]");
                 Object asset = _mainBundle.LoadAsset(name);
                 Assets.Add(name, asset);
-
-                if (asset is Material mat)
-                {
-                    MaterialData.Add(mat, new MaterialData(mat));
-                }
             }
 
             return true;
         }
-    }
-
-    internal class MaterialData
-    {
-        internal MaterialData(Material material)
-        {
-            Material = material;
-        }
-
-        internal Material Material { get; }
     }
 }

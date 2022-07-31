@@ -5,6 +5,7 @@ using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.Animation;
 using Heck.Animation.Transform;
+using UnityEngine;
 using static Heck.HeckController;
 using static Vivify.VivifyController;
 
@@ -50,8 +51,10 @@ namespace Vivify
         {
             Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
             Duration = customData.GetRequired<float>(DURATION);
-            Pass = customData.Get<int?>(PASS) ?? 0;
-            Asset = customData.GetRequired<string>(ASSET);
+            Priority = customData.Get<int?>(PRIORITY) ?? 0;
+            Target = customData.Get<List<object>?>(TARGET)?.Cast<string>().ToArray();
+            Asset = customData.Get<string?>(ASSET);
+            Pass = customData.Get<int?>(PASS);
             List<object>? properties = customData.Get<List<object>>(PROPERTIES);
             if (properties != null)
             {
@@ -65,9 +68,13 @@ namespace Vivify
 
         internal float Duration { get; }
 
-        internal int Pass { get; }
+        internal int Priority { get; }
 
-        internal string Asset { get; }
+        internal string[]? Target { get; }
+
+        internal string? Asset { get; }
+
+        internal int? Pass { get; }
 
         internal List<MaterialProperty>? Properties { get; }
     }
@@ -124,6 +131,25 @@ namespace Vivify
         internal string Name { get; }
 
         internal IEnumerable<Track> Tracks { get; }
+    }
+
+    internal class DeclareRenderTextureData : ICustomEventCustomData
+    {
+        internal DeclareRenderTextureData(CustomData customData)
+        {
+            Name = customData.GetRequired<string>(NAME);
+            XRatio = customData.Get<float?>(XRATIO) ?? 1;
+            YRatio = customData.Get<float?>(YRATIO) ?? 1;
+            PropertyId = Shader.PropertyToID(Name);
+        }
+
+        internal int PropertyId { get; }
+
+        internal string Name { get; }
+
+        internal float XRatio { get; }
+
+        internal float YRatio { get; }
     }
 
     internal class DestroyPrefabData : ICustomEventCustomData
