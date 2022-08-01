@@ -31,7 +31,7 @@ namespace Vivify
         internal const string INSTANTIATE_PREFAB = "InstantiatePrefab";
         internal const string SET_MATERIAL_PROPERTY = "SetMaterialProperty";
 
-        internal const string CAMERA_TARGET = "_Camera";
+        internal const string CAMERA_TARGET = "_Main";
 
         internal const string CAPABILITY = "Vivify";
         internal const string ID = "Vivify";

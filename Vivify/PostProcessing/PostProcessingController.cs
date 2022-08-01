@@ -53,33 +53,6 @@ namespace Vivify.PostProcessing
 
         private void OnRenderImage(RenderTexture src, RenderTexture dst)
         {
-            // Set mask texturesd
-            /*foreach ((string key, MaskController controller) in Masks)
-            {
-                int id = Shader.PropertyToID("_TempMask" + key);
-                _commandBuffer.GetTemporaryRT(id, -1, -1, 24, FilterMode.Point, RenderTextureFormat.Depth);
-                _commandBuffer.SetRenderTarget(id);
-                _commandBuffer.ClearRenderTarget(true, true, new Color(0, 0, 0, 0));
-
-                foreach (MaskRenderer maskRenderer in controller.MaskRenderers)
-                {
-                    if (maskRenderer == null || !maskRenderer.isActiveAndEnabled)
-                    {
-                        continue;
-                    }
-
-                    foreach (Renderer renderer in maskRenderer.ChildRenderers)
-                    {
-                        if (renderer.enabled)
-                        {
-                            _commandBuffer.DrawRenderer(renderer, renderer.material);
-                        }
-                    }
-                }
-
-                _commandBuffer.SetGlobalTexture(key, id);
-            }*/
-
             // cache mirrors
             // the textures for mirrors has already been made, so we cache the mirror textures,
             // do our rendering on the second camera (which will change the textures of the mirror), than swap our original textures back on
@@ -161,7 +134,8 @@ namespace Vivify.PostProcessing
             }
 
             // blit all passes
-            bool cameraTargeted = false;
+            RenderTexture main = RenderTexture.GetTemporary(src.descriptor);
+            Graphics.Blit(src, main);
             IEnumerable<MaterialData> sortedDatas = PostProcessingMaterial.OrderBy(n => n.Priority).Reverse();
             foreach (MaterialData materialData in sortedDatas)
             {
@@ -176,8 +150,10 @@ namespace Vivify.PostProcessing
                             continue;
                         }
 
-                        Graphics.Blit(src, dst, material, materialData.Pass);
-                        cameraTargeted = true;
+                        RenderTexture temp = RenderTexture.GetTemporary(main.descriptor);
+                        Graphics.Blit(main, temp, material, materialData.Pass);
+                        RenderTexture.ReleaseTemporary(main);
+                        main = temp;
                     }
                     else
                     {
@@ -185,11 +161,11 @@ namespace Vivify.PostProcessing
                         {
                             if (material != null)
                             {
-                                Graphics.Blit(src, value.Texture, material, materialData.Pass);
+                                Graphics.Blit(main, value.Texture, material, materialData.Pass);
                             }
                             else
                             {
-                                Graphics.Blit(src, value.Texture);
+                                Graphics.Blit(main, value.Texture);
                             }
                         }
                         else
@@ -200,10 +176,8 @@ namespace Vivify.PostProcessing
                 }
             }
 
-            if (!cameraTargeted)
-            {
-                Graphics.Blit(src, dst);
-            }
+            Graphics.Blit(main, dst);
+            RenderTexture.ReleaseTemporary(main);
 
             // Release Culling masks
             _cullingTextures.Do(RenderTexture.ReleaseTemporary);
@@ -281,7 +255,7 @@ namespace Vivify.PostProcessing
         {
             Material = material;
             Priority = priority;
-            Targets = targets ?? new[] { "_Camera" };
+            Targets = targets ?? new[] { CAMERA_TARGET };
             Pass = pass ?? -1;
         }
 
