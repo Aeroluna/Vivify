@@ -39,6 +39,16 @@ namespace Vivify
             }
         }
 
+        internal static void DestroyAllPrefabs()
+        {
+            foreach (KeyValuePair<string, GameObject> keyValuePair in InstantiatedPrefabs)
+            {
+                Object.Destroy(keyValuePair.Value);
+            }
+
+            InstantiatedPrefabs.Clear();
+        }
+
         internal static bool SetNewBundle(string path)
         {
             ClearBundle();

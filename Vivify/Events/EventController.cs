@@ -47,6 +47,7 @@ namespace Vivify.Events
             if (reLoader != null)
             {
                 reLoader.Rewinded += PostProcessingController.ResetMaterial;
+                reLoader.Rewinded += AssetBundleController.DestroyAllPrefabs;
             }
 
             _callbackWrapper = callbacksController.AddBeatmapCallback<CustomEventData>(HandleCallback);
@@ -58,6 +59,7 @@ namespace Vivify.Events
             if (_reLoader != null)
             {
                 _reLoader.Rewinded -= PostProcessingController.ResetMaterial;
+                _reLoader.Rewinded -= AssetBundleController.DestroyAllPrefabs;
             }
 
             _disposables.Do(n => n.Dispose());

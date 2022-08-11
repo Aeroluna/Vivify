@@ -36,12 +36,6 @@ namespace Vivify.Events
             foreach (MaterialProperty property in properties)
             {
                 PointDefinition? points = property.PointDefinition;
-                if (points == null)
-                {
-                    Log.Logger.Log("Unable to get point definition.", Logger.Level.Error);
-                    return;
-                }
-
                 string name = property.Name;
                 MaterialPropertyType type = property.Type;
                 object value = property.Value;
@@ -61,6 +55,12 @@ namespace Vivify.Events
                     case MaterialPropertyType.Color:
                         if (value is List<object>)
                         {
+                            if (points == null)
+                            {
+                                Log.Logger.Log("Unable to get point definition.", Logger.Level.Error);
+                                return;
+                            }
+
                             if (noDuration)
                             {
                                 material.SetColor(name, points.InterpolateVector4(1));
@@ -81,6 +81,12 @@ namespace Vivify.Events
                     case MaterialPropertyType.Float:
                         if (value is List<object>)
                         {
+                            if (points == null)
+                            {
+                                Log.Logger.Log("Unable to get point definition.", Logger.Level.Error);
+                                return;
+                            }
+
                             if (noDuration)
                             {
                                 material.SetFloat(name, points.InterpolateLinear(1));
@@ -119,28 +125,29 @@ namespace Vivify.Events
             while (true)
             {
                 float elapsedTime = _audioTimeSource.songTime - startTime;
-                float time = Easings.Interpolate(Mathf.Min(elapsedTime / duration, 1f), easing);
-                switch (type)
-                {
-                    case MaterialPropertyType.Color:
-                        material.SetColor(name, points.InterpolateVector4(time));
-                        break;
-
-                    case MaterialPropertyType.Float:
-                        material.SetFloat(name, points.InterpolateLinear(time));
-                        break;
-
-                    case MaterialPropertyType.Vector:
-                        material.SetVector(name, points.InterpolateVector4(time));
-                        break;
-
-                    default:
-                        Log.Logger.Log($"[{type.ToString()}] not supported yet.");
-                        goto notSupported;
-                }
 
                 if (elapsedTime < duration)
                 {
+                    float time = Easings.Interpolate(Mathf.Min(elapsedTime / duration, 1f), easing);
+                    switch (type)
+                    {
+                        case MaterialPropertyType.Color:
+                            material.SetColor(name, points.InterpolateVector4(time));
+                            break;
+
+                        case MaterialPropertyType.Float:
+                            material.SetFloat(name, points.InterpolateLinear(time));
+                            break;
+
+                        case MaterialPropertyType.Vector:
+                            material.SetVector(name, points.InterpolateVector4(time));
+                            break;
+
+                        default:
+                            Log.Logger.Log($"[{type.ToString()}] not supported yet.");
+                            goto notSupported;
+                    }
+
                     yield return null;
                 }
                 else

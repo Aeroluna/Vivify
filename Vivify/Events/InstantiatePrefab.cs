@@ -42,7 +42,9 @@ namespace Vivify.Events
             }
             else
             {
-                Log.Logger.Log($"Created [{assetName}] without an id.");
+                string genericId = gameObject.GetHashCode().ToString();
+                Log.Logger.Log($"Created [{assetName}] without id.");
+                AssetBundleController.InstantiatedPrefabs.Add(genericId, gameObject);
             }
         }
     }
