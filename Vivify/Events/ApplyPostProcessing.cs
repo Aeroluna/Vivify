@@ -42,7 +42,14 @@ namespace Vivify.Events
                 }
             }
 
-            if (duration == 0 || _audioTimeSource.songTime > customEventData.time + duration)
+            if (duration == 0 && _audioTimeSource.songTime > customEventData.time + 1)
+            {
+                PostProcessingController.PostProcessingMaterial.Add(new MaterialData(material, heckData.Priority, heckData.Target, heckData.Pass, Time.frameCount));
+                Log.Logger.Log($"Applied post processing material [{assetName}] for single frame.");
+                return;
+            }
+
+            if (duration <= 0 || _audioTimeSource.songTime > customEventData.time + duration)
             {
                 return;
             }

@@ -23,6 +23,8 @@ namespace Vivify
 
         internal const string XRATIO = "xRatio";
         internal const string YRATIO = "yRatio";
+        internal const string WIDTH = "width";
+        internal const string HEIGHT = "height";
 
         internal const string APPLY_POST_PROCESSING = "ApplyPostProcessing";
         internal const string DECLARE_CULLING_MASK = "DeclareCullingMask";

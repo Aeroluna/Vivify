@@ -127,6 +127,8 @@ namespace Vivify
             Name = customData.GetRequired<string>(NAME);
             XRatio = customData.Get<float?>(XRATIO) ?? 1;
             YRatio = customData.Get<float?>(YRATIO) ?? 1;
+            Width = customData.Get<int?>(WIDTH);
+            Height = customData.Get<int?>(HEIGHT);
             PropertyId = Shader.PropertyToID(Name);
         }
 
@@ -137,6 +139,10 @@ namespace Vivify
         internal float XRatio { get; }
 
         internal float YRatio { get; }
+
+        internal int? Width { get; }
+
+        internal int? Height { get; }
     }
 
     internal class DestroyPrefabData : ICustomEventCustomData

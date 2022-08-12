@@ -21,8 +21,6 @@ namespace Vivify.PostProcessing.TrackGameObject
 
         internal bool Whitelist { get; }
 
-        // TODO: implement depthtexture
-        [PublicAPI]
         internal bool DepthTexture { get; }
 
         internal GameObject[] GameObjects { get; private set; } = Array.Empty<GameObject>();
