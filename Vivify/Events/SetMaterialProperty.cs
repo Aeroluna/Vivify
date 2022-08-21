@@ -35,7 +35,6 @@ namespace Vivify.Events
         {
             foreach (MaterialProperty property in properties)
             {
-                PointDefinition? points = property.PointDefinition;
                 string name = property.Name;
                 MaterialPropertyType type = property.Type;
                 object value = property.Value;
@@ -53,21 +52,15 @@ namespace Vivify.Events
                         break;
 
                     case MaterialPropertyType.Color:
-                        if (value is List<object>)
+                        if (property is AnimatedMaterialProperty<Vector4> colorAnimated)
                         {
-                            if (points == null)
-                            {
-                                Log.Logger.Log("Unable to get point definition.", Logger.Level.Error);
-                                return;
-                            }
-
                             if (noDuration)
                             {
-                                material.SetColor(name, points.InterpolateVector4(1));
+                                material.SetColor(name, colorAnimated.PointDefinition.Interpolate(1));
                             }
                             else
                             {
-                                StartCoroutine(points, material, name, MaterialPropertyType.Color, duration, startTime, easing);
+                                StartCoroutine(colorAnimated.PointDefinition, material, name, MaterialPropertyType.Color, duration, startTime, easing);
                             }
                         }
                         else
@@ -79,21 +72,15 @@ namespace Vivify.Events
                         break;
 
                     case MaterialPropertyType.Float:
-                        if (value is List<object>)
+                        if (property is AnimatedMaterialProperty<float> floatAnimated)
                         {
-                            if (points == null)
-                            {
-                                Log.Logger.Log("Unable to get point definition.", Logger.Level.Error);
-                                return;
-                            }
-
                             if (noDuration)
                             {
-                                material.SetFloat(name, points.InterpolateLinear(1));
+                                material.SetFloat(name, floatAnimated.PointDefinition.Interpolate(1));
                             }
                             else
                             {
-                                StartCoroutine(points, material, name, MaterialPropertyType.Float, duration, startTime, easing);
+                                StartCoroutine(floatAnimated.PointDefinition, material, name, MaterialPropertyType.Float, duration, startTime, easing);
                             }
                         }
                         else
@@ -111,16 +98,19 @@ namespace Vivify.Events
             }
         }
 
-        private void StartCoroutine(
-            PointDefinition points,
+        private void StartCoroutine<T>(
+            PointDefinition<T> points,
             Material material,
             string name,
             MaterialPropertyType type,
             float duration,
             float startTime,
-            Functions easing) => _coroutineDummy.StartCoroutine(AnimatePropertyCoroutine(points, material, name, type, duration, startTime, easing));
+            Functions easing)
+            where T : struct
+            => _coroutineDummy.StartCoroutine(AnimatePropertyCoroutine(points, material, name, type, duration, startTime, easing));
 
-        private IEnumerator AnimatePropertyCoroutine(PointDefinition points, Material material, string name, MaterialPropertyType type, float duration, float startTime, Functions easing)
+        private IEnumerator AnimatePropertyCoroutine<T>(PointDefinition<T> points, Material material, string name, MaterialPropertyType type, float duration, float startTime, Functions easing)
+            where T : struct
         {
             while (true)
             {
@@ -132,15 +122,16 @@ namespace Vivify.Events
                     switch (type)
                     {
                         case MaterialPropertyType.Color:
-                            material.SetColor(name, points.InterpolateVector4(time));
+                            // TODO: i probably should fix this in heck
+                            material.SetColor(name, (points as PointDefinition<Vector4>)!.Interpolate(time));
                             break;
 
                         case MaterialPropertyType.Float:
-                            material.SetFloat(name, points.InterpolateLinear(time));
+                            material.SetFloat(name, (points as PointDefinition<float>)!.Interpolate(time));
                             break;
 
                         case MaterialPropertyType.Vector:
-                            material.SetVector(name, points.InterpolateVector4(time));
+                            material.SetVector(name, (points as PointDefinition<Vector3>)!.Interpolate(time));
                             break;
 
                         default:

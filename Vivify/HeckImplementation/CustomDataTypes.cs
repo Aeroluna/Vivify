@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CustomJSONData;
 using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.Animation;
@@ -24,16 +25,29 @@ namespace Vivify
         VectorArray
     }
 
-    internal readonly struct MaterialProperty
+    internal class AnimatedMaterialProperty<T> : MaterialProperty
+        where T : struct
     {
-        internal MaterialProperty(CustomData rawData, Dictionary<string, PointDefinition> pointDefinitions)
+        internal AnimatedMaterialProperty(
+            CustomData rawData,
+            MaterialPropertyType materialPropertyType,
+            object value,
+            Dictionary<string, List<object>> pointDefinitions)
+            : base(rawData, materialPropertyType, value)
+        {
+            PointDefinition = rawData.GetPointData<T>(VALUE, pointDefinitions) ?? throw new JsonNotDefinedException(VALUE);
+        }
+
+        internal PointDefinition<T> PointDefinition { get; }
+    }
+
+    internal class MaterialProperty
+    {
+        internal MaterialProperty(CustomData rawData, MaterialPropertyType materialPropertyType, object value)
         {
             Name = rawData.GetRequired<string>(NAME);
-            Type = (MaterialPropertyType)Enum.Parse(
-                typeof(MaterialPropertyType),
-                rawData.GetRequired<string>(TYPE));
-            Value = rawData.GetRequired<object>(VALUE);
-            PointDefinition = Value is List<object> ? rawData.GetPointData(VALUE, pointDefinitions) : null;
+            Type = materialPropertyType;
+            Value = value;
         }
 
         internal string Name { get; }
@@ -42,12 +56,27 @@ namespace Vivify
 
         internal object Value { get; }
 
-        internal PointDefinition? PointDefinition { get; }
+        internal static MaterialProperty CreateMaterialProperty(CustomData rawData, Dictionary<string, List<object>> pointDefinitions)
+        {
+            MaterialPropertyType type = rawData.GetStringToEnumRequired<MaterialPropertyType>(TYPE);
+            object value = rawData.GetRequired<object>(VALUE);
+            if (value is List<object>)
+            {
+                return type switch
+                {
+                    MaterialPropertyType.Color => new AnimatedMaterialProperty<Vector4>(rawData, type, value, pointDefinitions),
+                    MaterialPropertyType.Float => new AnimatedMaterialProperty<float>(rawData, type, value, pointDefinitions),
+                    _ => throw new InvalidOperationException()
+                };
+            }
+
+            return new MaterialProperty(rawData, type, value);
+        }
     }
 
     internal class ApplyPostProcessingData : ICustomEventCustomData
     {
-        internal ApplyPostProcessingData(CustomData customData, Dictionary<string, PointDefinition> pointDefinitions)
+        internal ApplyPostProcessingData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)
         {
             Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
             Duration = customData.GetRequired<float>(DURATION);
@@ -59,7 +88,7 @@ namespace Vivify
             if (properties != null)
             {
                 Properties = properties
-                    .Select(n => new MaterialProperty((CustomData)n, pointDefinitions))
+                    .Select(n => MaterialProperty.CreateMaterialProperty((CustomData)n, pointDefinitions))
                     .ToList();
             }
         }
@@ -81,14 +110,14 @@ namespace Vivify
 
     internal class SetMaterialPropertyData : ICustomEventCustomData
     {
-        internal SetMaterialPropertyData(CustomData customData, Dictionary<string, PointDefinition> pointDefinitions)
+        internal SetMaterialPropertyData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)
         {
             Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
             Duration = customData.Get<float?>(DURATION) ?? 0f;
             Asset = customData.GetRequired<string>(ASSET);
             Properties = customData
                 .GetRequired<List<object>>(PROPERTIES)
-                .Select(n => new MaterialProperty((CustomData)n, pointDefinitions))
+                .Select(n => MaterialProperty.CreateMaterialProperty((CustomData)n, pointDefinitions))
                 .ToList();
         }
 
