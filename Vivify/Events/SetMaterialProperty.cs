@@ -21,7 +21,7 @@ namespace Vivify.Events
             float duration = heckData.Duration;
             duration = 60f * duration / _bpmController.currentBpm; // Convert to real time;
 
-            Material? material = AssetBundleController.TryGetAsset<Material>(heckData.Asset);
+            Material? material = _assetBundleController.TryGetAsset<Material>(heckData.Asset);
             if (material == null)
             {
                 return;
@@ -43,7 +43,7 @@ namespace Vivify.Events
                 {
                     case MaterialPropertyType.Texture:
                         string texValue = Convert.ToString(value);
-                        Texture? texture = AssetBundleController.TryGetAsset<Texture>(texValue);
+                        Texture? texture = _assetBundleController.TryGetAsset<Texture>(texValue);
                         if (texture != null)
                         {
                             material.SetTexture(name, texture);

@@ -1,38 +1,16 @@
-﻿using System.IO;
-using System.Linq;
-using CustomJSONData.CustomBeatmap;
+﻿using System.Linq;
 using Heck;
-using IPA.Logging;
 using static Vivify.VivifyController;
 
 namespace Vivify
 {
     internal class ModuleCallbacks
     {
-        private const string BUNDLE = "bundle";
-
         [ModuleCondition]
         private static bool Condition(
-            Capabilities capabilities,
-            IDifficultyBeatmap difficultyBeatmap,
-            IPreviewBeatmapLevel previewBeatmapLevel)
+            Capabilities capabilities)
         {
-            if (!capabilities.Requirements.Contains(CAPABILITY)
-                || previewBeatmapLevel is not CustomPreviewBeatmapLevel customPreviewBeatmapLevel
-                || difficultyBeatmap is not CustomDifficultyBeatmap { beatmapSaveData: CustomBeatmapSaveData { version2_6_0AndEarlier: false } })
-            {
-                return false;
-            }
-
-            string path = Path.Combine(customPreviewBeatmapLevel.customLevelPath, BUNDLE);
-
-            if (File.Exists(path))
-            {
-                return AssetBundleController.SetNewBundle(path);
-            }
-
-            Log.Logger.Log($"[{BUNDLE}] not found!", Logger.Level.Error);
-            return false;
+            return capabilities.Requirements.Contains(CAPABILITY);
         }
 
         [ModuleCallback]

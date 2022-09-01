@@ -16,7 +16,7 @@ namespace Vivify.Events
 
             string id = heckData.Id;
 
-            if (!AssetBundleController.InstantiatedPrefabs.ContainsKey(id))
+            if (!_assetBundleController.InstantiatedPrefabs.ContainsKey(id))
             {
                 Log.Logger.Log($"No prefab with id [{id}] detected.", Logger.Level.Error);
                 return;
@@ -24,9 +24,9 @@ namespace Vivify.Events
 
             Log.Logger.Log($"Destroying [{id}].");
 
-            GameObject gameObject = AssetBundleController.InstantiatedPrefabs[id];
+            GameObject gameObject = _assetBundleController.InstantiatedPrefabs[id];
             Object.Destroy(gameObject);
-            AssetBundleController.InstantiatedPrefabs.Remove(id);
+            _assetBundleController.InstantiatedPrefabs.Remove(id);
         }
     }
 }

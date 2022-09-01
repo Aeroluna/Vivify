@@ -15,6 +15,7 @@ namespace Vivify.Events
     {
         private readonly IInstantiator _instantiator;
         private readonly BeatmapCallbacksController _callbacksController;
+        private readonly AssetBundleController _assetBundleController;
         private readonly DeserializedData _deserializedData;
         private readonly IAudioTimeSource _audioTimeSource;
         private readonly IBpmController _bpmController;
@@ -29,6 +30,7 @@ namespace Vivify.Events
         private EventController(
             IInstantiator instantiator,
             BeatmapCallbacksController callbacksController,
+            AssetBundleController assetBundleController,
             [Inject(Id = ID)] DeserializedData deserializedData,
             IAudioTimeSource audioTimeSource,
             IBpmController bpmController,
@@ -38,6 +40,7 @@ namespace Vivify.Events
         {
             _instantiator = instantiator;
             _callbacksController = callbacksController;
+            _assetBundleController = assetBundleController;
             _deserializedData = deserializedData;
             _audioTimeSource = audioTimeSource;
             _bpmController = bpmController;
@@ -47,7 +50,7 @@ namespace Vivify.Events
             if (reLoader != null)
             {
                 reLoader.Rewinded += PostProcessingController.ResetMaterial;
-                reLoader.Rewinded += AssetBundleController.DestroyAllPrefabs;
+                reLoader.Rewinded += _assetBundleController.DestroyAllPrefabs;
             }
 
             _callbackWrapper = callbacksController.AddBeatmapCallback<CustomEventData>(HandleCallback);
@@ -59,7 +62,7 @@ namespace Vivify.Events
             if (_reLoader != null)
             {
                 _reLoader.Rewinded -= PostProcessingController.ResetMaterial;
-                _reLoader.Rewinded -= AssetBundleController.DestroyAllPrefabs;
+                _reLoader.Rewinded -= _assetBundleController.DestroyAllPrefabs;
             }
 
             _disposables.Do(n => n.Dispose());

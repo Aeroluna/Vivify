@@ -62,7 +62,6 @@ namespace Vivify
             }
 
             PostProcessingController.ResetMaterial();
-            AssetBundleController.ClearBundle();
         }
     }
 }

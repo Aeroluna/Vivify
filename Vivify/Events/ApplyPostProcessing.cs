@@ -22,7 +22,7 @@ namespace Vivify.Events
             Material? material = null;
             if (assetName != null)
             {
-                if (!AssetBundleController.Assets.TryGetValue(assetName, out Object gameObject))
+                if (!_assetBundleController.Assets.TryGetValue(assetName, out Object gameObject))
                 {
                     Log.Logger.Log($"Could not find material [{assetName}].", Logger.Level.Error);
                     return;

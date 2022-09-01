@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Heck.Animation;
-using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Vivify.PostProcessing.TrackGameObject

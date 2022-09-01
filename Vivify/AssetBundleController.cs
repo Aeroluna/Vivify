@@ -1,18 +1,64 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using JetBrains.Annotations;
 using UnityEngine;
 using Logger = IPA.Logging.Logger;
+using Object = UnityEngine.Object;
 
 namespace Vivify
 {
-    internal static class AssetBundleController
+    internal class AssetBundleController : IDisposable
     {
-        private static AssetBundle? _mainBundle;
+        private const string BUNDLE = "bundle";
 
-        internal static Dictionary<string, Object> Assets { get; private set; } = new();
+        private readonly AssetBundle _mainBundle;
 
-        internal static Dictionary<string, GameObject> InstantiatedPrefabs { get; private set; } = new();
+        [UsedImplicitly]
+        private AssetBundleController(IDifficultyBeatmap difficultyBeatmap)
+        {
+            if (difficultyBeatmap is not CustomDifficultyBeatmap { level: CustomBeatmapLevel customBeatmapLevel })
+            {
+                throw new ArgumentException(
+                    $"Was not correct type. Expected: {nameof(CustomDifficultyBeatmap)}, was: {difficultyBeatmap.GetType().Name}.",
+                    nameof(difficultyBeatmap));
+            }
 
-        internal static T? TryGetAsset<T>(string assetName)
+            string path = Path.Combine(customBeatmapLevel.customLevelPath, BUNDLE);
+
+            if (!File.Exists(path))
+            {
+                throw new InvalidOperationException($"[{BUNDLE}] not found!");
+            }
+
+            _mainBundle = AssetBundle.LoadFromFile(path);
+            if (_mainBundle == null)
+            {
+                throw new InvalidOperationException($"Failed to load [{path}]");
+            }
+
+            string[] assetnames = _mainBundle.GetAllAssetNames();
+            foreach (string name in assetnames)
+            {
+                Log.Logger.Log($"Loaded [{name}].");
+                Object asset = _mainBundle.LoadAsset(name);
+                Assets.Add(name, asset);
+            }
+        }
+
+        internal Dictionary<string, Object> Assets { get; } = new();
+
+        internal Dictionary<string, GameObject> InstantiatedPrefabs { get; } = new();
+
+        public void Dispose()
+        {
+            if (_mainBundle != null)
+            {
+                _mainBundle.Unload(true);
+            }
+        }
+
+        internal T? TryGetAsset<T>(string assetName)
         {
             if (Assets.TryGetValue(assetName, out Object gameObject))
             {
@@ -31,15 +77,7 @@ namespace Vivify
             return default;
         }
 
-        internal static void ClearBundle()
-        {
-            if (_mainBundle != null)
-            {
-                _mainBundle.Unload(true);
-            }
-        }
-
-        internal static void DestroyAllPrefabs()
+        internal void DestroyAllPrefabs()
         {
             foreach (KeyValuePair<string, GameObject> keyValuePair in InstantiatedPrefabs)
             {
@@ -47,31 +85,6 @@ namespace Vivify
             }
 
             InstantiatedPrefabs.Clear();
-        }
-
-        internal static bool SetNewBundle(string path)
-        {
-            ClearBundle();
-
-            _mainBundle = AssetBundle.LoadFromFile(path);
-            if (_mainBundle == null)
-            {
-                Log.Logger.Log($"Failed to load [{path}]", Logger.Level.Error);
-                return false;
-            }
-
-            Assets = new Dictionary<string, Object>();
-            InstantiatedPrefabs = new Dictionary<string, GameObject>();
-
-            string[] assetnames = _mainBundle.GetAllAssetNames();
-            foreach (string name in assetnames)
-            {
-                Log.Logger.Log($"Loaded [{name}]");
-                Object asset = _mainBundle.LoadAsset(name);
-                Assets.Add(name, asset);
-            }
-
-            return true;
         }
     }
 }
