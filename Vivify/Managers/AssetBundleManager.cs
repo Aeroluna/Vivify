@@ -1,21 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using JetBrains.Annotations;
 using UnityEngine;
 using Logger = IPA.Logging.Logger;
 using Object = UnityEngine.Object;
 
-namespace Vivify
+namespace Vivify.Managers
 {
-    internal class AssetBundleController : IDisposable
+    internal class AssetBundleManager : IDisposable
     {
         private const string BUNDLE = "bundle";
+
+        private readonly Dictionary<string, Object> _assets = new();
 
         private readonly AssetBundle _mainBundle;
 
         [UsedImplicitly]
-        private AssetBundleController(IDifficultyBeatmap difficultyBeatmap)
+        private AssetBundleManager(IDifficultyBeatmap difficultyBeatmap)
         {
             if (difficultyBeatmap is not CustomDifficultyBeatmap { level: CustomBeatmapLevel customBeatmapLevel })
             {
@@ -42,13 +45,9 @@ namespace Vivify
             {
                 Log.Logger.Log($"Loaded [{name}].");
                 Object asset = _mainBundle.LoadAsset(name);
-                Assets.Add(name, asset);
+                _assets.Add(name, asset);
             }
         }
-
-        internal Dictionary<string, Object> Assets { get; } = new();
-
-        internal Dictionary<string, GameObject> InstantiatedPrefabs { get; } = new();
 
         public void Dispose()
         {
@@ -58,33 +57,25 @@ namespace Vivify
             }
         }
 
-        internal T? TryGetAsset<T>(string assetName)
+        internal bool TryGetAsset<T>(string assetName, [NotNullWhen(true)] out T? asset)
         {
-            if (Assets.TryGetValue(assetName, out Object gameObject))
+            if (_assets.TryGetValue(assetName, out Object gameObject))
             {
                 if (gameObject is T t)
                 {
-                    return t;
+                    asset = t;
+                    return true;
                 }
 
-                Log.Logger.Log($"Found {assetName}, but was null or not {typeof(T).FullName}!", Logger.Level.Error);
+                Log.Logger.Log($"Found {assetName}, but was null or not [{typeof(T).FullName}]!", Logger.Level.Error);
             }
             else
             {
-                Log.Logger.Log($"Could not find {typeof(T).FullName} {assetName}", Logger.Level.Error);
+                Log.Logger.Log($"Could not find {typeof(T).FullName} [{assetName}].", Logger.Level.Error);
             }
 
-            return default;
-        }
-
-        internal void DestroyAllPrefabs()
-        {
-            foreach (KeyValuePair<string, GameObject> keyValuePair in InstantiatedPrefabs)
-            {
-                Object.Destroy(keyValuePair.Value);
-            }
-
-            InstantiatedPrefabs.Clear();
+            asset = default;
+            return false;
         }
     }
 }

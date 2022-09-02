@@ -16,8 +16,7 @@ namespace Vivify.Events
             }
 
             string assetName = heckData.Asset;
-            GameObject? prefab = _assetBundleController.TryGetAsset<GameObject>(assetName);
-            if (prefab == null)
+            if (!_assetBundleManager.TryGetAsset(assetName, out GameObject? prefab))
             {
                 return;
             }
@@ -38,13 +37,13 @@ namespace Vivify.Events
             if (id != null)
             {
                 Log.Logger.Log($"Created [{assetName}] with id [{id}].");
-                _assetBundleController.InstantiatedPrefabs.Add(id, gameObject);
+                _prefabManager.Add(id, gameObject);
             }
             else
             {
                 string genericId = gameObject.GetHashCode().ToString();
                 Log.Logger.Log($"Created [{assetName}] without id.");
-                _assetBundleController.InstantiatedPrefabs.Add(genericId, gameObject);
+                _prefabManager.Add(genericId, gameObject);
             }
         }
     }

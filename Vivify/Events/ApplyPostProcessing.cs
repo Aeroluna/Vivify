@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using CustomJSONData.CustomBeatmap;
 using UnityEngine;
 using Vivify.PostProcessing;
-using Logger = IPA.Logging.Logger;
-using Object = UnityEngine.Object;
 
 namespace Vivify.Events
 {
@@ -22,19 +20,11 @@ namespace Vivify.Events
             Material? material = null;
             if (assetName != null)
             {
-                if (!_assetBundleController.Assets.TryGetValue(assetName, out Object gameObject))
+                if (!_assetBundleManager.TryGetAsset(assetName, out material))
                 {
-                    Log.Logger.Log($"Could not find material [{assetName}].", Logger.Level.Error);
                     return;
                 }
 
-                if (gameObject is not Material casted)
-                {
-                    Log.Logger.Log($"Found [{assetName}], but was not material!", Logger.Level.Error);
-                    return;
-                }
-
-                material = casted;
                 List<MaterialProperty>? properties = heckData.Properties;
                 if (properties != null)
                 {

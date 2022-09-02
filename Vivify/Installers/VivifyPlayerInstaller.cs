@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Vivify.Events;
+using Vivify.Managers;
 using Zenject;
 
 namespace Vivify.Installers
@@ -14,7 +15,8 @@ namespace Vivify.Installers
                 return;
             }
 
-            Container.BindInterfacesAndSelfTo<AssetBundleController>().AsSingle();
+            Container.BindInterfacesAndSelfTo<AssetBundleManager>().AsSingle();
+            Container.BindInterfacesAndSelfTo<PrefabManager>().AsSingle();
 
             // Events
             Container.BindInterfacesTo<EventController>().AsSingle();
