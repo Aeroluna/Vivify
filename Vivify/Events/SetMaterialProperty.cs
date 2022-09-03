@@ -134,7 +134,7 @@ namespace Vivify.Events
 
                         default:
                             Log.Logger.Log($"[{type.ToString()}] not supported yet.");
-                            goto notSupported;
+                            yield break;
                     }
 
                     yield return null;
@@ -144,9 +144,6 @@ namespace Vivify.Events
                     break;
                 }
             }
-
-            notSupported:
-            yield return null;
         }
     }
 }

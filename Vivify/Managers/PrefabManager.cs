@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Heck;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -39,9 +40,8 @@ namespace Vivify.Managers
 
         internal void Destroy(string id)
         {
-            if (!_prefabs.TryGetValue(id, out InstantiatedPrefab? prefab))
+            if (!TryGetPrefab(id, out InstantiatedPrefab? prefab))
             {
-                Log.Logger.Log($"No prefab with id [{id}] detected.", Logger.Level.Error);
                 return;
             }
 
@@ -49,6 +49,17 @@ namespace Vivify.Managers
 
             Object.Destroy(prefab.GameObject);
             _prefabs.Remove(id);
+        }
+
+        internal bool TryGetPrefab(string id, [NotNullWhen(true)] out InstantiatedPrefab? prefab)
+        {
+            bool result = _prefabs.TryGetValue(id, out prefab);
+            if (!result)
+            {
+                Log.Logger.Log($"No prefab with id [{id}] detected.", Logger.Level.Error);
+            }
+
+            return result;
         }
 
         private void DestroyAllPrefabs()

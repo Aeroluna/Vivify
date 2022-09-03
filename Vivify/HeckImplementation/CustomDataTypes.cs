@@ -25,6 +25,14 @@ namespace Vivify
         VectorArray
     }
 
+    internal enum AnimatorPropertyType
+    {
+        Bool,
+        Float,
+        Integer,
+        Trigger
+    }
+
     internal class AnimatedMaterialProperty<T> : MaterialProperty
         where T : struct
     {
@@ -71,6 +79,55 @@ namespace Vivify
             }
 
             return new MaterialProperty(rawData, type, value);
+        }
+    }
+
+    internal class AnimatedAnimatorProperty : AnimatorProperty
+    {
+        internal AnimatedAnimatorProperty(
+            CustomData rawData,
+            AnimatorPropertyType animatorPropertyType,
+            object value,
+            Dictionary<string, List<object>> pointDefinitions)
+            : base(rawData, animatorPropertyType, value)
+        {
+            PointDefinition = rawData.GetPointData<float>(VALUE, pointDefinitions) ?? throw new JsonNotDefinedException(VALUE);
+        }
+
+        internal PointDefinition<float> PointDefinition { get; }
+    }
+
+    internal class AnimatorProperty
+    {
+        internal AnimatorProperty(CustomData rawData, AnimatorPropertyType animatorPropertyType, object value)
+        {
+            Name = rawData.GetRequired<string>(NAME);
+            Type = animatorPropertyType;
+            Value = value;
+        }
+
+        internal string Name { get; }
+
+        internal AnimatorPropertyType Type { get; }
+
+        internal object Value { get; }
+
+        internal static AnimatorProperty CreateAnimatorProperty(CustomData rawData, Dictionary<string, List<object>> pointDefinitions)
+        {
+            AnimatorPropertyType type = rawData.GetStringToEnumRequired<AnimatorPropertyType>(TYPE);
+            object value;
+            if (type == AnimatorPropertyType.Trigger)
+            {
+                value = rawData.Get<object>(VALUE) ?? true;
+            }
+            else
+            {
+                value = rawData.GetRequired<object>(VALUE);
+            }
+
+            return value is List<object>
+                ? new AnimatedAnimatorProperty(rawData, type, value, pointDefinitions)
+                : new AnimatorProperty(rawData, type, value);
         }
     }
 
@@ -128,6 +185,28 @@ namespace Vivify
         internal string Asset { get; }
 
         internal List<MaterialProperty> Properties { get; }
+    }
+
+    internal class SetAnimatorPropertyData : ICustomEventCustomData
+    {
+        internal SetAnimatorPropertyData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)
+        {
+            Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
+            Duration = customData.Get<float?>(DURATION) ?? 0f;
+            Id = customData.GetRequired<string>(PREFAB_ID);
+            Properties = customData
+                .GetRequired<List<object>>(PROPERTIES)
+                .Select(n => AnimatorProperty.CreateAnimatorProperty((CustomData)n, pointDefinitions))
+                .ToList();
+        }
+
+        internal Functions Easing { get; }
+
+        internal float Duration { get; }
+
+        internal string Id { get; }
+
+        internal List<AnimatorProperty> Properties { get; }
     }
 
     internal class DeclareCullingMaskData : ICustomEventCustomData
