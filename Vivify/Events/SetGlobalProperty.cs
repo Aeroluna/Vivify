@@ -11,9 +11,9 @@ namespace Vivify.Events
 {
     internal partial class EventController
     {
-        internal void SetMaterialProperty(CustomEventData customEventData)
+        internal void SetGlobalProperty(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out SetMaterialPropertyData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out SetGlobalPropertyData? heckData))
             {
                 return;
             }
@@ -21,16 +21,11 @@ namespace Vivify.Events
             float duration = heckData.Duration;
             duration = 60f * duration / _bpmController.currentBpm; // Convert to real time;
 
-            if (!_assetBundleManager.TryGetAsset(heckData.Asset, out Material? material))
-            {
-                return;
-            }
-
             List<MaterialProperty> properties = heckData.Properties;
-            SetMaterialProperties(material, properties, duration, heckData.Easing, customEventData.time);
+            SetGlobalProperties(properties, duration, heckData.Easing, customEventData.time);
         }
 
-        internal void SetMaterialProperties(Material material, List<MaterialProperty> properties, float duration, Functions easing, float startTime)
+        internal void SetGlobalProperties(List<MaterialProperty> properties, float duration, Functions easing, float startTime)
         {
             foreach (MaterialProperty property in properties)
             {
@@ -44,7 +39,7 @@ namespace Vivify.Events
                         string texValue = Convert.ToString(value);
                         if (_assetBundleManager.TryGetAsset(texValue, out Texture? texture))
                         {
-                            material.SetTexture(name, texture);
+                            Shader.SetGlobalTexture(name, texture);
                         }
 
                         break;
@@ -54,17 +49,17 @@ namespace Vivify.Events
                         {
                             if (noDuration)
                             {
-                                material.SetColor(name, colorAnimated.PointDefinition.Interpolate(1));
+                                Shader.SetGlobalColor(name, colorAnimated.PointDefinition.Interpolate(1));
                             }
                             else
                             {
-                                StartCoroutine(colorAnimated.PointDefinition, material, name, MaterialPropertyType.Color, duration, startTime, easing);
+                                StartCoroutine(colorAnimated.PointDefinition, name, MaterialPropertyType.Color, duration, startTime, easing);
                             }
                         }
                         else
                         {
                             List<float> color = ((List<object>)value).Select(Convert.ToSingle).ToList();
-                            material.SetColor(name, new Color(color[0], color[1], color[2], color.Count > 3 ? color[3] : 1));
+                            Shader.SetGlobalColor(name, new Color(color[0], color[1], color[2], color.Count > 3 ? color[3] : 1));
                         }
 
                         break;
@@ -74,22 +69,21 @@ namespace Vivify.Events
                         {
                             if (noDuration)
                             {
-                                material.SetFloat(name, floatAnimated.PointDefinition.Interpolate(1));
+                                Shader.SetGlobalFloat(name, floatAnimated.PointDefinition.Interpolate(1));
                             }
                             else
                             {
-                                StartCoroutine(floatAnimated.PointDefinition, material, name, MaterialPropertyType.Float, duration, startTime, easing);
+                                StartCoroutine(floatAnimated.PointDefinition, name, MaterialPropertyType.Float, duration, startTime, easing);
                             }
                         }
                         else
                         {
-                            material.SetFloat(name, Convert.ToSingle(value));
+                            Shader.SetGlobalFloat(name, Convert.ToSingle(value));
                         }
 
                         break;
 
                     default:
-                        // im lazy, shoot me
                         Log.Logger.Log($"{type} not currently supported", Logger.Level.Warning);
                         break;
                 }
@@ -98,16 +92,15 @@ namespace Vivify.Events
 
         private void StartCoroutine<T>(
             PointDefinition<T> points,
-            Material material,
             int name,
             MaterialPropertyType type,
             float duration,
             float startTime,
             Functions easing)
             where T : struct
-            => _coroutineDummy.StartCoroutine(AnimatePropertyCoroutine(points, material, name, type, duration, startTime, easing));
+            => _coroutineDummy.StartCoroutine(AnimateGlobalPropertyCoroutine(points, name, type, duration, startTime, easing));
 
-        private IEnumerator AnimatePropertyCoroutine<T>(PointDefinition<T> points, Material material, int name, MaterialPropertyType type, float duration, float startTime, Functions easing)
+        private IEnumerator AnimateGlobalPropertyCoroutine<T>(PointDefinition<T> points, int name, MaterialPropertyType type, float duration, float startTime, Functions easing)
             where T : struct
         {
             while (true)
@@ -120,16 +113,15 @@ namespace Vivify.Events
                     switch (type)
                     {
                         case MaterialPropertyType.Color:
-                            // TODO: i probably should fix this in heck
-                            material.SetColor(name, (points as PointDefinition<Vector4>)!.Interpolate(time));
+                            Shader.SetGlobalColor(name, (points as PointDefinition<Vector4>)!.Interpolate(time));
                             break;
 
                         case MaterialPropertyType.Float:
-                            material.SetFloat(name, (points as PointDefinition<float>)!.Interpolate(time));
+                            Shader.SetGlobalFloat(name, (points as PointDefinition<float>)!.Interpolate(time));
                             break;
 
                         case MaterialPropertyType.Vector:
-                            material.SetVector(name, (points as PointDefinition<Vector3>)!.Interpolate(time));
+                            Shader.SetGlobalVector(name, (points as PointDefinition<Vector3>)!.Interpolate(time));
                             break;
 
                         default:

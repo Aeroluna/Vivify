@@ -75,6 +75,10 @@ namespace Vivify
                             dictionary.Add(customEventData, new SetMaterialPropertyData(data, pointDefinitions));
                             break;
 
+                        case SET_GLOBAL_PROPERTY:
+                            dictionary.Add(customEventData, new SetGlobalPropertyData(data, pointDefinitions));
+                            break;
+
                         case SET_ANIMATOR_PROPERTY:
                             dictionary.Add(customEventData, new SetAnimatorPropertyData(data, pointDefinitions));
                             break;

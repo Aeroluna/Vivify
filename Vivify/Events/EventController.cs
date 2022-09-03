@@ -101,6 +101,10 @@ namespace Vivify.Events
                 case SET_ANIMATOR_PROPERTY:
                     SetAnimatorProperty(customEventData);
                     break;
+
+                case SET_GLOBAL_PROPERTY:
+                    SetGlobalProperty(customEventData);
+                    break;
             }
         }
     }

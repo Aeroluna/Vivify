@@ -53,12 +53,12 @@ namespace Vivify
     {
         internal MaterialProperty(CustomData rawData, MaterialPropertyType materialPropertyType, object value)
         {
-            Name = rawData.GetRequired<string>(NAME);
+            Name = Shader.PropertyToID(rawData.GetRequired<string>(NAME));
             Type = materialPropertyType;
             Value = value;
         }
 
-        internal string Name { get; }
+        internal int Name { get; }
 
         internal MaterialPropertyType Type { get; }
 
@@ -183,6 +183,25 @@ namespace Vivify
         internal float Duration { get; }
 
         internal string Asset { get; }
+
+        internal List<MaterialProperty> Properties { get; }
+    }
+
+    internal class SetGlobalPropertyData : ICustomEventCustomData
+    {
+        internal SetGlobalPropertyData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)
+        {
+            Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
+            Duration = customData.Get<float?>(DURATION) ?? 0f;
+            Properties = customData
+                .GetRequired<List<object>>(PROPERTIES)
+                .Select(n => MaterialProperty.CreateMaterialProperty((CustomData)n, pointDefinitions))
+                .ToList();
+        }
+
+        internal Functions Easing { get; }
+
+        internal float Duration { get; }
 
         internal List<MaterialProperty> Properties { get; }
     }
