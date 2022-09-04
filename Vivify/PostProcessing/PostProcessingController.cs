@@ -128,7 +128,7 @@ namespace Vivify.PostProcessing
 
                 // TODO: clean better
                 RenderTexture? texture = value.Texture;
-                if (texture == null || !texture.IsCreated())
+                if (texture == null)
                 {
                     RenderTextureDescriptor descripter = src.descriptor;
                     descripter.width = (int)((data.Width ?? Screen.width) / data.XRatio);
@@ -243,6 +243,8 @@ namespace Vivify.PostProcessing
             {
                 Destroy(_cullingObject);
             }
+
+            _declaredTextures.Values.Do(n => RenderTexture.ReleaseTemporary(n.Texture));
         }
     }
 
