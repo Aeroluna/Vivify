@@ -1,6 +1,7 @@
 ﻿using CustomJSONData.CustomBeatmap;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.Video;
 using Vivify.Controllers;
 using Object = UnityEngine.Object;
 
@@ -33,6 +34,7 @@ namespace Vivify.Events
 
             gameObject.GetComponentsInChildren<Animator>().Do(n => _instantiator.InstantiateComponent<AnimatorSyncController>(n.gameObject, new object[] { customEventData.time }));
             gameObject.GetComponentsInChildren<ParticleSystem>().Do(n => _instantiator.InstantiateComponent<ParticleSystemSyncController>(n.gameObject, new object[] { customEventData.time }));
+            gameObject.GetComponentsInChildren<VideoPlayer>().Do(n => _instantiator.InstantiateComponent<VideoPlayerSyncController>(n.gameObject, new object[] { customEventData.time }));
 
             string? id = heckData.Id;
             if (id != null)
