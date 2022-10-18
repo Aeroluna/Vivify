@@ -14,7 +14,8 @@ namespace Vivify
         internal const string VALUE = "value";
         internal const string PASS = "pass";
         internal const string PRIORITY = "priority";
-        internal const string TARGET = "target";
+        internal const string SOURCE = "source";
+        internal const string DESTINATION = "destination";
         internal const string ASSET = "asset";
         internal const string PROPERTIES = "properties";
         internal const string WHITELIST = "whitelist";
@@ -25,6 +26,8 @@ namespace Vivify
         internal const string YRATIO = "yRatio";
         internal const string WIDTH = "width";
         internal const string HEIGHT = "height";
+        internal const string FORMAT = "colorFormat";
+        internal const string FILTER = "filterMode";
 
         internal const string APPLY_POST_PROCESSING = "ApplyPostProcessing";
         internal const string DECLARE_CULLING_MASK = "DeclareCullingMask";

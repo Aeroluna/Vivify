@@ -9,6 +9,7 @@ using Heck.Animation.Transform;
 using UnityEngine;
 using static Heck.HeckController;
 using static Vivify.VivifyController;
+using Logger = IPA.Logging.Logger;
 
 namespace Vivify
 {
@@ -138,7 +139,8 @@ namespace Vivify
             Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
             Duration = customData.GetRequired<float>(DURATION);
             Priority = customData.Get<int?>(PRIORITY) ?? 0;
-            Target = customData.Get<List<object>?>(TARGET)?.Cast<string>().ToArray();
+            Source = customData.Get<string?>(SOURCE);
+            Target = customData.Get<List<object>?>(DESTINATION)?.Cast<string>().ToArray();
             Asset = customData.Get<string?>(ASSET);
             Pass = customData.Get<int?>(PASS);
             List<object>? properties = customData.Get<List<object>>(PROPERTIES);
@@ -155,6 +157,8 @@ namespace Vivify
         internal float Duration { get; }
 
         internal int Priority { get; }
+
+        internal string? Source { get; }
 
         internal string[]? Target { get; }
 
@@ -252,11 +256,17 @@ namespace Vivify
         internal DeclareRenderTextureData(CustomData customData)
         {
             Name = customData.GetRequired<string>(NAME);
+            PropertyId = Shader.PropertyToID(Name);
             XRatio = customData.Get<float?>(XRATIO) ?? 1;
             YRatio = customData.Get<float?>(YRATIO) ?? 1;
             Width = customData.Get<int?>(WIDTH);
             Height = customData.Get<int?>(HEIGHT);
-            PropertyId = Shader.PropertyToID(Name);
+            Format = customData.GetStringToEnum<RenderTextureFormat?>(FORMAT);
+            FilterMode = customData.GetStringToEnum<FilterMode?>(FILTER);
+            if (Format.HasValue && !SystemInfo.SupportsRenderTextureFormat(Format.Value))
+            {
+                Log.Logger.Log($"Current graphics card does not support [{Format.Value}].", Logger.Level.Warning);
+            }
         }
 
         internal int PropertyId { get; }
@@ -270,6 +280,10 @@ namespace Vivify
         internal int? Width { get; }
 
         internal int? Height { get; }
+
+        internal RenderTextureFormat? Format { get; }
+
+        internal FilterMode? FilterMode { get; }
     }
 
     internal class DestroyPrefabData : ICustomEventCustomData

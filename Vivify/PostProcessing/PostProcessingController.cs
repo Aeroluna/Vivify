@@ -7,6 +7,7 @@ using IPA.Utilities;
 using UnityEngine;
 using Vivify.PostProcessing.TrackGameObject;
 using static Vivify.VivifyController;
+using Logger = IPA.Logging.Logger;
 
 namespace Vivify.PostProcessing
 {
@@ -74,7 +75,6 @@ namespace Vivify.PostProcessing
                 Shader.SetGlobalTexture(key, renderTexture);
                 _cullingTextures.Add(renderTexture);
 
-                // DOES NOT WORK WILL FIX LATER
                 if (controller.DepthTexture)
                 {
                     RenderTexture depthTexture = RenderTexture.GetTemporary(descripterDepth);
@@ -122,7 +122,7 @@ namespace Vivify.PostProcessing
             }
 
             // set up declared textures
-            foreach ((string _, RenderTextureHolder value) in _declaredTextures)
+            foreach ((string name, RenderTextureHolder value) in _declaredTextures)
             {
                 DeclareRenderTextureData data = value.Data;
 
@@ -131,10 +131,23 @@ namespace Vivify.PostProcessing
                 if (texture == null)
                 {
                     RenderTextureDescriptor descripter = src.descriptor;
-                    descripter.width = (int)((data.Width ?? Screen.width) / data.XRatio);
-                    descripter.height = (int)((data.Height ?? Screen.height) / data.YRatio);
+                    descripter.width = (int)((data.Width ?? descripter.width) / data.XRatio);
+                    descripter.height = (int)((data.Height ?? descripter.height) / data.YRatio);
+
+                    if (data.Format.HasValue)
+                    {
+                        RenderTextureFormat format = data.Format.Value;
+                        descripter.colorFormat = format;
+                    }
+
                     texture = RenderTexture.GetTemporary(descripter);
+                    if (data.FilterMode.HasValue)
+                    {
+                        texture.filterMode = data.FilterMode.Value;
+                    }
+
                     value.Texture = texture;
+                    Log.Logger.Log($"Created: {name}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}.");
                 }
 
                 Shader.SetGlobalTexture(data.PropertyId, texture);
@@ -154,38 +167,93 @@ namespace Vivify.PostProcessing
 
                 Material? material = materialData.Material;
 
-                foreach (string materialDataTarget in materialData.Targets)
+                static void Blit(RenderTexture? blitsrc, RenderTexture? blitdst, Material? blitmat, int blitpass)
                 {
-                    if (materialDataTarget == CAMERA_TARGET)
+                    if (blitdst == null || blitsrc == null)
                     {
-                        if (material == null)
-                        {
-                            continue;
-                        }
+                        return;
+                    }
 
-                        RenderTexture temp = RenderTexture.GetTemporary(main.descriptor);
-                        Graphics.Blit(main, temp, material, materialData.Pass);
-                        RenderTexture.ReleaseTemporary(main);
-                        main = temp;
+                    if (blitmat != null)
+                    {
+                        Graphics.Blit(blitsrc, blitdst, blitmat, blitpass);
                     }
                     else
                     {
-                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder value))
+                        Graphics.Blit(blitsrc, blitdst);
+                    }
+                }
+
+                if (materialData.Source == CAMERA_TARGET)
+                {
+                    foreach (string materialDataTarget in materialData.Targets)
+                    {
+                        if (materialDataTarget == CAMERA_TARGET)
                         {
-                            if (material != null)
+                            if (material == null)
                             {
-                                Graphics.Blit(main, value.Texture, material, materialData.Pass);
+                                continue;
                             }
-                            else
-                            {
-                                Graphics.Blit(main, value.Texture);
-                            }
+
+                            RenderTexture temp = RenderTexture.GetTemporary(main.descriptor);
+                            Graphics.Blit(main, temp, material, materialData.Pass);
+                            RenderTexture.ReleaseTemporary(main);
+                            main = temp;
                         }
                         else
                         {
-                            throw new InvalidOperationException($"Unable to find target [{materialDataTarget}].");
+                            if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder value))
+                            {
+                                Blit(main, value.Texture, material, materialData.Pass);
+                            }
+                            else
+                            {
+                                Log.Logger.Log($"Unable to find destination [{materialDataTarget}].", Logger.Level.Error);
+                            }
                         }
                     }
+                }
+                else if (_declaredTextures.TryGetValue(materialData.Source, out RenderTextureHolder sourceHolder))
+                {
+                    foreach (string materialDataTarget in materialData.Targets)
+                    {
+                        RenderTexture? source = sourceHolder.Texture;
+                        if (materialDataTarget == CAMERA_TARGET)
+                        {
+                            Blit(source, main, material, materialData.Pass);
+                        }
+                        else
+                        {
+                            if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder))
+                            {
+                                if (sourceHolder == targetHolder)
+                                {
+                                    if (material == null)
+                                    {
+                                        return;
+                                    }
+
+                                    RenderTexture temp = RenderTexture.GetTemporary(source!.descriptor);
+                                    temp.filterMode = source.filterMode;
+                                    Graphics.Blit(source, temp, material, materialData.Pass);
+                                    Graphics.Blit(temp, targetHolder.Texture);
+                                    RenderTexture.ReleaseTemporary(temp);
+                                }
+                                else
+                                {
+                                    Blit(source, targetHolder.Texture, material, materialData.Pass);
+                                }
+                            }
+                            else
+                            {
+                                Log.Logger.Log($"Unable to find destination [{materialDataTarget}].", Logger.Level.Error);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    Log.Logger.Log($"Unable to find source [{materialData.Source}].", Logger.Level.Error);
                 }
             }
 
@@ -250,10 +318,11 @@ namespace Vivify.PostProcessing
 
     internal class MaterialData
     {
-        internal MaterialData(Material? material, int priority, string[]? targets, int? pass, int? frame = null)
+        internal MaterialData(Material? material, int priority, string? source, string[]? targets, int? pass, int? frame = null)
         {
             Material = material;
             Priority = priority;
+            Source = source ?? CAMERA_TARGET;
             Targets = targets ?? new[] { CAMERA_TARGET };
             Pass = pass ?? -1;
             Frame = frame;
@@ -262,6 +331,8 @@ namespace Vivify.PostProcessing
         internal Material? Material { get; }
 
         internal int Priority { get; }
+
+        internal string Source { get; }
 
         internal string[] Targets { get; }
 

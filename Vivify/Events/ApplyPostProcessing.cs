@@ -32,10 +32,10 @@ namespace Vivify.Events
                 }
             }
 
-            if (duration == 0 && _audioTimeSource.songTime > customEventData.time + 1)
+            if (duration == 0)
             {
-                PostProcessingController.PostProcessingMaterial.Add(new MaterialData(material, heckData.Priority, heckData.Target, heckData.Pass, Time.frameCount));
-                Log.Logger.Log($"Applied post processing material [{assetName}] for single frame.");
+                PostProcessingController.PostProcessingMaterial.Add(new MaterialData(material, heckData.Priority, heckData.Source, heckData.Target, heckData.Pass, Time.frameCount));
+                Log.Logger.Log($"Applied material [{assetName}] for single frame.");
                 return;
             }
 
@@ -44,9 +44,9 @@ namespace Vivify.Events
                 return;
             }
 
-            MaterialData materialData = new(material, heckData.Priority, heckData.Target, heckData.Pass);
+            MaterialData materialData = new(material, heckData.Priority, heckData.Source, heckData.Target, heckData.Pass);
             PostProcessingController.PostProcessingMaterial.Add(materialData);
-            Log.Logger.Log($"Applied post processing material [{assetName}] for [{duration}] seconds.");
+            Log.Logger.Log($"Applied material [{assetName}] for [{duration}] seconds.");
             _coroutineDummy.StartCoroutine(KillPostProcessingCoroutine(materialData, duration, customEventData.time));
         }
 
