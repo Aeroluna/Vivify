@@ -29,6 +29,7 @@ namespace Vivify.Events
 
             if (heckData.Track != null)
             {
+                heckData.Track.AddGameObject(gameObject);
                 _transformControllerFactory.Create(gameObject, heckData.Track);
             }
 
@@ -40,13 +41,13 @@ namespace Vivify.Events
             if (id != null)
             {
                 Log.Logger.Log($"Created [{assetName}] with id [{id}].");
-                _prefabManager.Add(id, gameObject);
+                _prefabManager.Add(id, gameObject, heckData.Track);
             }
             else
             {
                 string genericId = gameObject.GetHashCode().ToString();
                 Log.Logger.Log($"Created [{assetName}] without id.");
-                _prefabManager.Add(genericId, gameObject);
+                _prefabManager.Add(genericId, gameObject, heckData.Track);
             }
         }
     }

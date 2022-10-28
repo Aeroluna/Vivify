@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Heck;
+using Heck.Animation;
+using IPA.Utilities;
 using JetBrains.Annotations;
 using UnityEngine;
 using Zenject;
@@ -33,9 +35,9 @@ namespace Vivify.Managers
             }
         }
 
-        internal void Add(string id, GameObject prefab)
+        internal void Add(string id, GameObject prefab, Track? track)
         {
-            _prefabs.Add(id, new InstantiatedPrefab(prefab));
+            _prefabs.Add(id, new InstantiatedPrefab(prefab, track));
         }
 
         internal void Destroy(string id)
@@ -46,6 +48,8 @@ namespace Vivify.Managers
             }
 
             Log.Logger.Log($"Destroying [{id}].");
+
+            prefab.Track?.RemoveGameObject(prefab.GameObject);
 
             Object.Destroy(prefab.GameObject);
             _prefabs.Remove(id);
@@ -64,9 +68,10 @@ namespace Vivify.Managers
 
         private void DestroyAllPrefabs()
         {
-            foreach (KeyValuePair<string, InstantiatedPrefab> keyValuePair in _prefabs)
+            foreach ((string _, InstantiatedPrefab prefab) in _prefabs)
             {
-                Object.Destroy(keyValuePair.Value.GameObject);
+                prefab.Track?.RemoveGameObject(prefab.GameObject);
+                Object.Destroy(prefab.GameObject);
             }
 
             _prefabs.Clear();
@@ -75,13 +80,16 @@ namespace Vivify.Managers
 
     internal class InstantiatedPrefab
     {
-        internal InstantiatedPrefab(GameObject gameObject)
+        internal InstantiatedPrefab(GameObject gameObject, Track? track)
         {
             GameObject = gameObject;
+            Track = track;
             Animators = gameObject.GetComponentsInChildren<Animator>();
         }
 
         internal GameObject GameObject { get; }
+
+        internal Track? Track { get; }
 
         internal Animator[] Animators { get; }
     }
