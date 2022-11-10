@@ -74,6 +74,26 @@ Allows setting material properties, e.g. Texture, Float, Color.
   }
 }
 ```
+
+# SetGlobalProperty
+Allows setting global properties, e.g. Texture, Float, Color. These will persist even after the map ends, do not rely on their default value.
+
+```js
+{
+  "b": float, // Time in beats.
+  "t": "SetGlobalProperty",
+  "d": {
+    "duration": float, // The length of the event in beats (defaults to 0).
+    "easing": string, // An easing for the animation to follow (defaults to easeLinear).
+    "properties": [{
+      "name": string, // Name of the property.
+      "type": string, // Type of the property (Texture, Float, Color).
+      "value": ? // What to set the property to, type varies depending on property type.
+    }]
+  }
+}
+```
+
 ## Property types
 - Texture: Must be a string that is a direct path file to a texture.
 - Float: May either be a direct value (`"value": 10.4`) or a point definition (`"value": [[0,0], [10, 1]]`).
@@ -112,7 +132,8 @@ Allows setting material properties, e.g. Texture, Float, Color.
     "asset": string, // File path to the desired material.
     "priority": int, // (Optional) Which order to run current active post processing effects. Higher priority will run first. Default = 0
     "pass": int, // (Optional) Which pass in the shader to use. Will use all passes if not defined.
-    "target": string, // (Optional) Which render texture to save to. "_Main" is reserved for the camera. Default = "_Main"
+    "source": string, // (Optional) Which texture to pass to the shader as "_MainTex". "_Main" is reserved for the camera. Default = "_Main"
+    "destination": string[], // (Optional) Which render texture to save to. "_Main" is reserved for the camera. Default = "_Main"
     "duration": float, // (Optional) How long will this material be applied. Default = 0
     "easing": string, // See SetMaterialProperty.
     "properties": ? // See SetMaterialProperty.
@@ -142,7 +163,7 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
 }
 ```
 
-Note: Camera depth mode is always set to `DepthTextureMode.Depth` and can be grabbed through by declaring a sampler called `_CameraDepthTexture` (See https://docs.unity3d.com/Manual/SL-CameraDepthTexture.html for more info.)
+Note: Camera depth mode always has the flags `DepthTextureMode.Depth` and `DepthTextureMode.MotionVectors` and can be grabbed through by declaring a sampler called `_CameraDepthTexture` (See https://docs.unity3d.com/Manual/SL-CameraDepthTexture.html for more info.)
 
 # DeclareCullingMask
 ```js
@@ -152,7 +173,8 @@ Note: Camera depth mode is always set to `DepthTextureMode.Depth` and can be gra
   "d": {
     "name": string // Name of the culling mask, this is what you must name your sampler in your shader.
     "track": string/string[] // Name(s) of your track(s). Everything on the track(s) will be added to this mask.
-    "whitelist": bool // Optional. When true, will cull everything but the selected tracks. Default = false.
+    "whitelist": bool // (Optional) When true, will cull everything but the selected tracks. Default = false.
+    "depthTexture": bool // (Optional) When true, write depth texture to "'name'_Depth". Default = false.
   }
 }
 ```
@@ -194,10 +216,12 @@ fixed4 frag(v2f i) : SV_Target
   "t": "DeclareRenderTexture",
   "d": {
     "name": string, // Name of the depth texture
-    "xRatio": float, // Number to divide width by, i.e. on a 1920x1080 screen, an xRatio of 2 will give you a 960x1080 texture
-    "yRatio": float, // Number to divide height by
-    "width": int, // Exact width for the texture.
-    "height": int // Exact height for the texture.
+    "xRatio": float, // (Optional) Number to divide width by, i.e. on a 1920x1080 screen, an xRatio of 2 will give you a 960x1080 texture
+    "yRatio": float, // (Optional) Number to divide height by
+    "width": int, // (Optional) Exact width for the texture.
+    "height": int, // (Optional) Exact height for the texture.
+    "colorFormat": string, // (Optional) https://docs.unity3d.com/ScriptReference/RenderTextureFormat.html
+    "filterMode": string // (Optional) https://docs.unity3d.com/ScriptReference/FilterMode.html
   }
 }
 ```
@@ -212,11 +236,11 @@ fixed4 frag(v2f i) : SV_Target
     "asset": string, // File path to the desired prefab.
     "id": string, // (Optional) Unique id for referencing prefab later. Random id will be given by default.
     "track": string, // (Optional) Track to animate prefab transform.
-    "position": vector3, // Optionally, set position.
-    "localPosition": vector3, // Optionally, set localPosition.
-    "rotation": vector3, // Optionally, set rotation (in euler angles).
-    "localRotation": vector3. // Optionally, set localRotation (in euler angles).
-    "scale": vector3 // Optionally, set scale.
+    "position": vector3, // (Optional) Set position.
+    "localPosition": vector3, // (Optional) Set localPosition.
+    "rotation": vector3, // (Optional) Set rotation (in euler angles).
+    "localRotation": vector3. // (Optional) Set localRotation (in euler angles).
+    "scale": vector3 //(Optional) Set scale.
   }
 }
 ```
@@ -233,3 +257,29 @@ fixed4 frag(v2f i) : SV_Target
 }
 ```
 `DestroyPrefab` will instantiate a your prefab in the scene.
+
+# SetAnimatorProperty
+Allows setting animator properties. This will search the prefab for all Animator components.
+
+```js
+{
+  "b": float, // Time in beats.
+  "t": "SetAnimatorProperty",
+  "d": {
+    "id": string, // Id assigned to prefab.
+    "duration": float, // (Optional) The length of the event in beats. Defaults to 0.
+    "easing": string, // (Optional) An easing for the animation to follow. Defaults to "easeLinear".
+    "properties": [{
+      "name": string, // Name of the property.
+      "type": string, // Type of the property (Bool, Float, Trigger).
+      "value": ? // What to set the property to, type varies depending on property type.
+    }]
+  }
+}
+```
+
+## Property types
+- Bool: May either be a direct value (`"value": true`) or a point definition (`"value": [[0,0], [1, 1]]`). Any value greater than or equal to 1 is true.
+- Float: May either be a direct value (`"value": 10.4`) or a point definition (`"value": [[0,0], [10, 1]]`).
+- Integer: May either be a direct value (`"value": 10`) or a point definition (`"value": [[0,0], [10, 1]]`). Value will be rounded.
+- Trigger: Must be `true` to set trigger or `false` to reset trigger.
