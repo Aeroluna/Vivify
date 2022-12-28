@@ -61,6 +61,7 @@ namespace Vivify.PostProcessing
 
             RenderTextureDescriptor descripterDepth = src.descriptor;
             descripterDepth.colorFormat = RenderTextureFormat.Depth;
+            descripterDepth.depthBufferBits = 24; // subject to change
             foreach ((string key, CullingMaskController controller) in CullingMasks)
             {
                 // Set renderers to culling layer
@@ -75,28 +76,33 @@ namespace Vivify.PostProcessing
                 Shader.SetGlobalTexture(key, renderTexture);
                 _cullingTextures.Add(renderTexture);
 
+                // flip culling mask when whitelist mode enabled
+                int cachedMask = _cullingCamera.cullingMask;
+                if (controller.Whitelist)
+                {
+                    _cullingCamera.cullingMask = 1 << CULLINGLAYER;
+                }
+
+                // render
+                _cullingCamera.targetTexture = renderTexture;
+                _cullingCamera.Render();
+
+                // double render for depth texture
+                // if someone knows a better way to do this... PLEASE LET ME KNOW!!
                 if (controller.DepthTexture)
                 {
                     RenderTexture depthTexture = RenderTexture.GetTemporary(descripterDepth);
                     Shader.SetGlobalTexture(key + "_Depth", depthTexture);
                     _cullingTextures.Add(depthTexture);
-                    _cullingCamera.SetTargetBuffers(renderTexture.colorBuffer, depthTexture.depthBuffer);
-                }
-                else
-                {
-                    _cullingCamera.SetTargetBuffers(renderTexture.colorBuffer, renderTexture.depthBuffer);
+
+                    _cullingCamera.targetTexture = depthTexture;
+                    _cullingCamera.Render();
                 }
 
+                // reset culling mask
                 if (controller.Whitelist)
                 {
-                    int cachedMask = _cullingCamera.cullingMask;
-                    _cullingCamera.cullingMask = 1 << CULLINGLAYER;
-                    _cullingCamera.Render();
                     _cullingCamera.cullingMask = cachedMask;
-                }
-                else
-                {
-                    _cullingCamera.Render();
                 }
 
                 // reset renderer layers
@@ -122,7 +128,7 @@ namespace Vivify.PostProcessing
             }
 
             // set up declared textures
-            foreach ((string name, RenderTextureHolder value) in _declaredTextures)
+            foreach ((string textureName, RenderTextureHolder value) in _declaredTextures)
             {
                 DeclareRenderTextureData data = value.Data;
 
@@ -147,7 +153,7 @@ namespace Vivify.PostProcessing
                     }
 
                     value.Texture = texture;
-                    Log.Logger.Log($"Created: {name}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}.");
+                    Log.Logger.Log($"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}.");
                 }
 
                 Shader.SetGlobalTexture(data.PropertyId, texture);
