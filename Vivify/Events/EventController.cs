@@ -4,6 +4,7 @@ using CustomJSONData.CustomBeatmap;
 using HarmonyLib;
 using Heck;
 using Heck.Animation.Transform;
+using Heck.ReLoad;
 using JetBrains.Annotations;
 using Vivify.Managers;
 using Vivify.PostProcessing;
