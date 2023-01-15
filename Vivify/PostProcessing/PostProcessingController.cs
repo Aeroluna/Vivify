@@ -11,6 +11,7 @@ using Logger = IPA.Logging.Logger;
 
 namespace Vivify.PostProcessing
 {
+    [RequireComponent(typeof(Camera))]
     internal class PostProcessingController : MonoBehaviour
     {
         private static readonly int _mirrorTexPropertyID = Shader.PropertyToID("_ReflectionTex");

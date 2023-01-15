@@ -79,6 +79,10 @@ namespace Vivify
                             dictionary.Add(customEventData, new SetGlobalPropertyData(data, pointDefinitions));
                             break;
 
+                        case SET_CAMERA_PROPERTY:
+                            dictionary.Add(customEventData, new SetCameraPropertyData(data));
+                            break;
+
                         case SET_ANIMATOR_PROPERTY:
                             dictionary.Add(customEventData, new SetAnimatorPropertyData(data, pointDefinitions));
                             break;

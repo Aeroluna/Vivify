@@ -69,6 +69,8 @@ namespace Vivify.Events
             }
 
             _disposables.Do(n => n.Dispose());
+
+            CameraPropertyController.ResetProperties();
         }
 
         private void HandleCallback(CustomEventData customEventData)
@@ -105,6 +107,10 @@ namespace Vivify.Events
 
                 case SET_GLOBAL_PROPERTY:
                     SetGlobalProperty(customEventData);
+                    break;
+
+                case SET_CAMERA_PROPERTY:
+                    SetCameraProperty(customEventData);
                     break;
             }
         }

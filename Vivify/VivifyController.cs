@@ -29,6 +29,8 @@ namespace Vivify
         internal const string FORMAT = "colorFormat";
         internal const string FILTER = "filterMode";
 
+        internal const string CAMERA_DEPTH_TEXTURE_MODE = "depthTextureMode";
+
         internal const string APPLY_POST_PROCESSING = "ApplyPostProcessing";
         internal const string DECLARE_CULLING_MASK = "DeclareCullingMask";
         internal const string DECLARE_TEXTURE = "DeclareRenderTexture";
@@ -37,6 +39,7 @@ namespace Vivify
         internal const string SET_MATERIAL_PROPERTY = "SetMaterialProperty";
         internal const string SET_ANIMATOR_PROPERTY = "SetAnimatorProperty";
         internal const string SET_GLOBAL_PROPERTY = "SetGlobalProperty";
+        internal const string SET_CAMERA_PROPERTY = "SetCameraProperty";
 
         internal const string CAMERA_TARGET = "_Main";
 

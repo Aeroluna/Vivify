@@ -210,6 +210,21 @@ namespace Vivify
         internal List<MaterialProperty> Properties { get; }
     }
 
+    internal class SetCameraPropertyData : ICustomEventCustomData
+    {
+        internal SetCameraPropertyData(CustomData customData)
+        {
+            List<object>? depthTextureModeStrings = customData.Get<List<object>?>(CAMERA_DEPTH_TEXTURE_MODE);
+            if (depthTextureModeStrings != null)
+            {
+                DepthTextureMode = depthTextureModeStrings.Aggregate(UnityEngine.DepthTextureMode.None, (current, depthTextureModeString) =>
+                    current | (DepthTextureMode)Enum.Parse(typeof(DepthTextureMode), (string)depthTextureModeString));
+            }
+        }
+
+        internal DepthTextureMode? DepthTextureMode { get; }
+    }
+
     internal class SetAnimatorPropertyData : ICustomEventCustomData
     {
         internal SetAnimatorPropertyData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)

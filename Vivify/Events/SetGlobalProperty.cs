@@ -22,11 +22,9 @@ namespace Vivify.Events
             duration = 60f * duration / _bpmController.currentBpm; // Convert to real time;
 
             List<MaterialProperty> properties = heckData.Properties;
-            SetGlobalProperties(properties, duration, heckData.Easing, customEventData.time);
-        }
+            Functions easing = heckData.Easing;
+            float startTime = customEventData.time;
 
-        internal void SetGlobalProperties(List<MaterialProperty> properties, float duration, Functions easing, float startTime)
-        {
             foreach (MaterialProperty property in properties)
             {
                 int name = property.Name;
