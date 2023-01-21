@@ -3,24 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using Heck.Animation;
 using UnityEngine;
+using Vivify.PostProcessing;
 
-namespace Vivify.PostProcessing.TrackGameObject
+namespace Vivify.Controllers.TrackGameObject
 {
     internal sealed class CullingMaskController : TrackGameObjectController
     {
         private readonly HashSet<MaskRenderer> _maskRenderers = new();
 
-        internal CullingMaskController(IEnumerable<Track> tracks, bool whitelist, bool depthTexture)
+        internal CullingMaskController(IEnumerable<Track> tracks, bool whitelist, bool depthTexture, Color backgroundColor)
             : base(tracks)
         {
             Whitelist = whitelist;
             DepthTexture = depthTexture;
+            BackgroundColor = backgroundColor;
             UpdateGameObjects();
         }
 
         internal bool Whitelist { get; }
 
         internal bool DepthTexture { get; }
+
+        internal Color BackgroundColor { get; }
 
         internal GameObject[] GameObjects { get; private set; } = Array.Empty<GameObject>();
 

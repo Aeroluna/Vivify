@@ -10,7 +10,7 @@ namespace Vivify.PostProcessing
 
         internal event Action? OnTransformChanged;
 
-        internal List<Renderer> ChildRenderers { get; } = new();
+        internal Renderer[] ChildRenderers { get; private set; } = Array.Empty<Renderer>();
 
         private void OnEnable()
         {
@@ -30,26 +30,7 @@ namespace Vivify.PostProcessing
 
         private void UpdateChildRenderers()
         {
-            ChildRenderers.Clear();
-            FindRenderers(transform);
-        }
-
-        private void FindRenderers(Transform target)
-        {
-            Renderer renderer = target.GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                ChildRenderers.Add(renderer);
-            }
-
-            // include children
-            foreach (Transform child in target)
-            {
-                if (child.GetComponent<MaskRenderer>() == null)
-                {
-                    FindRenderers(child);
-                }
-            }
+            ChildRenderers = transform.GetComponentsInChildren<Renderer>(true);
         }
     }
 }

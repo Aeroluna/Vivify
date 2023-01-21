@@ -4,7 +4,7 @@ using System.Linq;
 using Heck.Animation;
 using UnityEngine;
 
-namespace Vivify.PostProcessing.TrackGameObject
+namespace Vivify.Controllers.TrackGameObject
 {
     internal abstract class TrackGameObjectController : IDisposable
     {

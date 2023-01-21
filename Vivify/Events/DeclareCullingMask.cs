@@ -1,6 +1,6 @@
 ﻿using CustomJSONData.CustomBeatmap;
+using Vivify.Controllers.TrackGameObject;
 using Vivify.PostProcessing;
-using Vivify.PostProcessing.TrackGameObject;
 
 namespace Vivify.Events
 {
@@ -14,7 +14,7 @@ namespace Vivify.Events
             }
 
             string name = heckData.Name;
-            CullingMaskController maskController = new(heckData.Tracks, heckData.Whitelist, heckData.DepthTexture);
+            CullingMaskController maskController = new(heckData.Tracks, heckData.Whitelist, heckData.DepthTexture, heckData.BackgroundColor);
             _disposables.Add(maskController);
             PostProcessingController.CullingMasks.Add(name, maskController);
             Log.Logger.Log($"Created culling mask [{name}].");

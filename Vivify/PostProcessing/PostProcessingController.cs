@@ -5,7 +5,7 @@ using System.Reflection;
 using HarmonyLib;
 using IPA.Utilities;
 using UnityEngine;
-using Vivify.PostProcessing.TrackGameObject;
+using Vivify.Controllers.TrackGameObject;
 using static Vivify.VivifyController;
 using Logger = IPA.Logging.Logger;
 
@@ -60,54 +60,58 @@ namespace Vivify.PostProcessing
             Material[] mirrorMaterials = MirrorsController.EnabledMirrors.Select(n => _mirrorMeshRenderer(ref n).sharedMaterial).ToArray();
             Texture[] cachedTexture = mirrorMaterials.Select(n => n.GetTexture(_mirrorTexPropertyID)).ToArray();
 
-            RenderTextureDescriptor descripterDepth = src.descriptor;
-            descripterDepth.colorFormat = RenderTextureFormat.Depth;
-            descripterDepth.depthBufferBits = 24; // subject to change
+            _cullingCamera.CopyFrom(_camera);
+            RenderTextureDescriptor descriptor = src.descriptor;
+            descriptor.depthBufferBits = 32;
+            RenderTextureDescriptor descriptorDepth = descriptor;
+            descriptorDepth.colorFormat = RenderTextureFormat.Depth;
             foreach ((string key, CullingMaskController controller) in CullingMasks)
             {
                 // Set renderers to culling layer
                 GameObject[] gameObjects = controller.GameObjects;
-                int[] cachedLayers = gameObjects.Select(n => n.layer).ToArray();
-                foreach (GameObject renderer in gameObjects)
+                int length = gameObjects.Length;
+                int[] cachedLayers = new int[length];
+                for (int i = 0; i < length; i++)
                 {
+                    GameObject renderer = gameObjects[i];
+                    cachedLayers[i] = renderer.layer;
                     renderer.layer = CULLINGLAYER;
                 }
 
-                RenderTexture renderTexture = RenderTexture.GetTemporary(src.descriptor);
+                RenderTexture renderTexture = RenderTexture.GetTemporary(descriptor);
                 Shader.SetGlobalTexture(key, renderTexture);
                 _cullingTextures.Add(renderTexture);
 
                 // flip culling mask when whitelist mode enabled
-                int cachedMask = _cullingCamera.cullingMask;
                 if (controller.Whitelist)
                 {
                     _cullingCamera.cullingMask = 1 << CULLINGLAYER;
                 }
 
                 // render
+                _cullingCamera.backgroundColor = controller.BackgroundColor;
                 _cullingCamera.targetTexture = renderTexture;
                 _cullingCamera.Render();
+                Graphics.Blit(_cullingCamera.targetTexture, renderTexture);
 
                 // double render for depth texture
                 // if someone knows a better way to do this... PLEASE LET ME KNOW!!
                 if (controller.DepthTexture)
                 {
-                    RenderTexture depthTexture = RenderTexture.GetTemporary(descripterDepth);
+                    RenderTexture depthTexture = RenderTexture.GetTemporary(descriptorDepth);
                     Shader.SetGlobalTexture(key + "_Depth", depthTexture);
                     _cullingTextures.Add(depthTexture);
-
                     _cullingCamera.targetTexture = depthTexture;
+
+                    _cullingCamera.cullingMask &= ~(1 << 15); // Something on layer 15 is cursed and cant have its depth rendered
                     _cullingCamera.Render();
                 }
 
                 // reset culling mask
-                if (controller.Whitelist)
-                {
-                    _cullingCamera.cullingMask = cachedMask;
-                }
+                _cullingCamera.cullingMask = _camera.cullingMask;
 
                 // reset renderer layers
-                for (int i = 0; i < cachedLayers.Length; i++)
+                for (int i = 0; i < length; i++)
                 {
                     gameObjects[i].layer = cachedLayers[i];
                 }
