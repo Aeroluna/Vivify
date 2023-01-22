@@ -61,6 +61,7 @@ namespace Vivify.PostProcessing
             Texture[] cachedTexture = mirrorMaterials.Select(n => n.GetTexture(_mirrorTexPropertyID)).ToArray();
 
             _cullingCamera.CopyFrom(_camera);
+            _cullingCamera.depthTextureMode = DepthTextureMode.None;
             RenderTextureDescriptor descriptor = src.descriptor;
             descriptor.depthBufferBits = 32;
             RenderTextureDescriptor descriptorDepth = descriptor;
