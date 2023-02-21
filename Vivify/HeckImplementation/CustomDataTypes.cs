@@ -280,6 +280,22 @@ namespace Vivify
         }
     }
 
+    internal class DestroyTextureData : ICustomEventCustomData
+    {
+        internal DestroyTextureData(CustomData customData)
+        {
+            object nameRaw = customData.GetRequired<object>(NAME);
+            Name = nameRaw switch
+            {
+                string nameString => new[] { nameString },
+                List<object> nameArray => nameArray.Select(n => (string)n).ToArray(),
+                _ => throw new InvalidCastException($"[{NAME}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
+            };
+        }
+
+        internal string[] Name { get; }
+    }
+
     internal class DeclareRenderTextureData : ICustomEventCustomData
     {
         internal DeclareRenderTextureData(CustomData customData)

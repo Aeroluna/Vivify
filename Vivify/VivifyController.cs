@@ -35,6 +35,7 @@ namespace Vivify
         internal const string APPLY_POST_PROCESSING = "ApplyPostProcessing";
         internal const string DECLARE_CULLING_MASK = "DeclareCullingMask";
         internal const string DECLARE_TEXTURE = "DeclareRenderTexture";
+        internal const string DESTROY_TEXTURE = "DestroyTexture";
         internal const string DESTROY_PREFAB = "DestroyPrefab";
         internal const string INSTANTIATE_PREFAB = "InstantiatePrefab";
         internal const string SET_MATERIAL_PROPERTY = "SetMaterialProperty";

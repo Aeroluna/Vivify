@@ -89,6 +89,10 @@ namespace Vivify.Events
                     DeclareRenderTexture(customEventData);
                     break;
 
+                case DESTROY_TEXTURE:
+                    DestroyTexture(customEventData);
+                    break;
+
                 case DESTROY_PREFAB:
                     DestroyPrefab(customEventData);
                     break;
