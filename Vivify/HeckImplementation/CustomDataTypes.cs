@@ -335,10 +335,16 @@ namespace Vivify
     {
         internal DestroyPrefabData(CustomData customData)
         {
-            Id = customData.GetRequired<string>(PREFAB_ID);
+            object nameRaw = customData.GetRequired<object>(PREFAB_ID);
+            Id = nameRaw switch
+            {
+                string nameString => new[] { nameString },
+                List<object> nameArray => nameArray.Select(n => (string)n).ToArray(),
+                _ => throw new InvalidCastException($"[{PREFAB_ID}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
+            };
         }
 
-        internal string Id { get; }
+        internal string[] Id { get; }
     }
 
     internal class InstantiatePrefabData : ICustomEventCustomData

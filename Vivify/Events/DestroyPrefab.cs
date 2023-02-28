@@ -1,4 +1,5 @@
 ﻿using CustomJSONData.CustomBeatmap;
+using HarmonyLib;
 
 namespace Vivify.Events
 {
@@ -11,8 +12,7 @@ namespace Vivify.Events
                 return;
             }
 
-            string id = heckData.Id;
-            _prefabManager.Destroy(id);
+            heckData.Id.Do(_prefabManager.Destroy);
         }
     }
 }
