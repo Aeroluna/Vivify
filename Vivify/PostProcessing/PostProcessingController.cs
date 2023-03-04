@@ -22,6 +22,7 @@ namespace Vivify.PostProcessing
         private Camera _camera = null!;
         private GameObject _cullingObject = null!;
         private Camera _cullingCamera = null!;
+        private MainEffectRenderer _mainEffectRenderer = null!;
 
         internal static Dictionary<string, CullingMaskController> CullingMasks { get; private set; } = new();
 
@@ -37,11 +38,14 @@ namespace Vivify.PostProcessing
             PostProcessingMaterial = new HashSet<MaterialData>();
         }
 
-        private static void CopyComponent<T>(T original, GameObject destination)
-            where T : Component
+        // Cool method for copying serialized fields
+        // if i was smart, i would've used this for chroma components
+        private static void CopyComponent<T, TDerived>(T original, GameObject destination)
+            where T : MonoBehaviour
+            where TDerived : T
         {
-            Type type = original.GetType();
-            Component copy = destination.AddComponent(type);
+            Type type = typeof(T);
+            MonoBehaviour copy = destination.AddComponent<TDerived>();
             FieldInfo[] fields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
             foreach (FieldInfo field in fields)
             {
@@ -63,7 +67,7 @@ namespace Vivify.PostProcessing
             _cullingCamera.CopyFrom(_camera);
             _cullingCamera.depthTextureMode = DepthTextureMode.None;
             RenderTextureDescriptor descriptor = src.descriptor;
-            descriptor.depthBufferBits = 32;
+            descriptor.depthBufferBits = 16;
             RenderTextureDescriptor descriptorDepth = descriptor;
             descriptorDepth.colorFormat = RenderTextureFormat.Depth;
             foreach ((string key, CullingMaskController controller) in CullingMasks)
@@ -79,6 +83,7 @@ namespace Vivify.PostProcessing
                     renderer.layer = CULLINGLAYER;
                 }
 
+                // setup color render texture
                 RenderTexture renderTexture = RenderTexture.GetTemporary(descriptor);
                 Shader.SetGlobalTexture(key, renderTexture);
                 _cullingTextures.Add(renderTexture);
@@ -89,24 +94,26 @@ namespace Vivify.PostProcessing
                     _cullingCamera.cullingMask = 1 << CULLINGLAYER;
                 }
 
-                // render
-                _cullingCamera.backgroundColor = controller.BackgroundColor;
-                _cullingCamera.targetTexture = renderTexture;
-                _cullingCamera.Render();
-                Graphics.Blit(_cullingCamera.targetTexture, renderTexture);
-
-                // double render for depth texture
-                // if someone knows a better way to do this... PLEASE LET ME KNOW!!
+                // Setup targets
+                RenderTexture preEffect = RenderTexture.GetTemporary(descriptor);
                 if (controller.DepthTexture)
                 {
                     RenderTexture depthTexture = RenderTexture.GetTemporary(descriptorDepth);
                     Shader.SetGlobalTexture(key + "_Depth", depthTexture);
                     _cullingTextures.Add(depthTexture);
-                    _cullingCamera.targetTexture = depthTexture;
-
-                    _cullingCamera.cullingMask &= ~(1 << 15); // Something on layer 15 is cursed and cant have its depth rendered
-                    _cullingCamera.Render();
+                    _cullingCamera.SetTargetBuffers(preEffect.colorBuffer, depthTexture.depthBuffer);
                 }
+                else
+                {
+                    _cullingCamera.SetTargetBuffers(preEffect.colorBuffer, preEffect.depthBuffer);
+                }
+
+                // render
+                _cullingCamera.Render();
+
+                // Apply main effect because OnRenderImage does not work when using SetTargetBuffers
+                _mainEffectRenderer.Render(preEffect, renderTexture);
+                RenderTexture.ReleaseTemporary(preEffect);
 
                 // reset culling mask
                 _cullingCamera.cullingMask = _camera.cullingMask;
@@ -294,8 +301,8 @@ namespace Vivify.PostProcessing
             _cullingCamera.enabled = false;
             ////CopyComponent(gameObject.GetComponent<BloomPrePass>(), _cullingObject);
             _cullingObject.SetActive(true);
-
-            CopyComponent(gameObject.GetComponent<MainEffectController>(), _cullingObject);
+            _mainEffectRenderer = new MainEffectRenderer(gameObject.GetComponent<MainEffectController>());
+            CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), _cullingObject);
 
             MirrorsController.UpdateMirrors();
 

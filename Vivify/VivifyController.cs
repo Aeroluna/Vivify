@@ -20,7 +20,6 @@ namespace Vivify
         internal const string PROPERTIES = "properties";
         internal const string WHITELIST = "whitelist";
         internal const string DEPTH_TEXTURE = "depthTexture";
-        internal const string BACKGROUND_COLOR = "backgroundColor";
         internal const string PREFAB_ID = "id";
 
         internal const string XRATIO = "xRatio";

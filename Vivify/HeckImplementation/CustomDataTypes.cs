@@ -255,7 +255,6 @@ namespace Vivify
             Tracks = customData.GetTrackArray(tracks, false);
             Whitelist = customData.Get<bool?>(WHITELIST) ?? false;
             DepthTexture = customData.Get<bool?>(DEPTH_TEXTURE) ?? false;
-            BackgroundColor = GetColorFromData(customData, BACKGROUND_COLOR) ?? Color.clear;
         }
 
         internal string Name { get; }
@@ -265,19 +264,6 @@ namespace Vivify
         internal bool Whitelist { get; }
 
         internal bool DepthTexture { get; }
-
-        internal Color BackgroundColor { get; }
-
-        private static Color? GetColorFromData(CustomData data, string member)
-        {
-            List<float>? color = data.Get<List<object>>(member)?.Select(Convert.ToSingle).ToList();
-            if (color == null)
-            {
-                return null;
-            }
-
-            return new Color(color[0], color[1], color[2], color[3]);
-        }
     }
 
     internal class DestroyTextureData : ICustomEventCustomData

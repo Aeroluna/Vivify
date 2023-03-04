@@ -14,7 +14,7 @@ namespace Vivify.Events
             }
 
             string name = heckData.Name;
-            CullingMaskController maskController = new(heckData.Tracks, heckData.Whitelist, heckData.DepthTexture, heckData.BackgroundColor);
+            CullingMaskController maskController = new(heckData.Tracks, heckData.Whitelist, heckData.DepthTexture);
             _disposables.Add(maskController);
             PostProcessingController.CullingMasks.Add(name, maskController);
             Log.Logger.Log($"Created culling mask [{name}].");
