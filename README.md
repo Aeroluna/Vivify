@@ -7,11 +7,15 @@ This documentation assumes basic understanding of custom events and tracks.
 
 ## Event Types
 - [`SetMaterialProperty`](#SetMaterialProperty)
+- [`SetGlobalProperty`](#SetGlobalProperty)
 - [`ApplyPostProcessing`](#ApplyPostProcessing)
 - [`DeclareCullingMask`](#DeclareCullingMask)
+- [`DestroyTexture`](#DestroyTexture)
 - [`DeclareRenderTexture`](#DeclareRenderTexture)
 - [`InstantiatePrefab`](#InstantiatePrefab)
 - [`DestroyPrefab`](#DestroyPrefab)
+- [`SetAnimatorProperty`](#SetAnimatorProperty)
+- [`SetCameraProperty`](#SetCameraProperty)
 
 # Setting up Unity
 First, you should to download the Unity Hub at https://unity3d.com/get-unity/download and follow the on-screen instructions until you get to the projects page, while skipping the recommended Unity Editor. Install a version of Unity (Installs > Install Editor) and for maximum compatibility, Beat Saber uses version 2019.4.28f1 found in the [archive](https://unity3d.com/get-unity/download/archive).
@@ -163,8 +167,6 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
 }
 ```
 
-Note: Camera depth mode always has the flags `DepthTextureMode.Depth` and `DepthTextureMode.MotionVectors` and can be grabbed through by declaring a sampler called `_CameraDepthTexture` (See https://docs.unity3d.com/Manual/SL-CameraDepthTexture.html for more info.)
-
 # DeclareCullingMask
 ```js
 {
@@ -209,6 +211,18 @@ fixed4 frag(v2f i) : SV_Target
 }
 ```
 
+# DestroyTexture
+```js
+{
+  "b": float, // Time in beats.
+  "t": "DestroyTexture",
+  "d": {
+    "name": string or string[], // Names(s) of textures to destroy.
+  }
+}
+```
+`DestroyTexture` will destroy a texture. It is important to destroy any textures created through `DeclareCullingMask` because the scene will have to be rendered again for each active culling mask.
+
 # DeclareRenderTexture
 ```js
 {
@@ -225,7 +239,7 @@ fixed4 frag(v2f i) : SV_Target
   }
 }
 ```
-`DeclareRenderTexture` declare a RenderTexture to be used anywhere. They are set as a global variable and can be accessed by declaring a sampler named what you put in "name". Depth texture can be obtained by adding the suffix `_Depth` to your sampler.
+`DeclareRenderTexture` declare a RenderTexture to be used anywhere. They are set as a global variable and can be accessed by declaring a sampler named what you put in "name".
 
 # InstantiatePrefab
 ```js
@@ -252,11 +266,11 @@ fixed4 frag(v2f i) : SV_Target
   "b": float, // Time in beats.
   "t": "DestroyPrefab",
   "d": {
-    "id": string, // Id of prefab to destroy.
+    "id": string or string[], // Id(s) of prefab to destroy.
   }
 }
 ```
-`DestroyPrefab` will instantiate a your prefab in the scene.
+`DestroyPrefab` will destroy a your prefab in the scene.
 
 # SetAnimatorProperty
 Allows setting animator properties. This will search the prefab for all Animator components.
@@ -283,3 +297,18 @@ Allows setting animator properties. This will search the prefab for all Animator
 - Float: May either be a direct value (`"value": 10.4`) or a point definition (`"value": [[0,0], [10, 1]]`).
 - Integer: May either be a direct value (`"value": 10`) or a point definition (`"value": [[0,0], [10, 1]]`). Value will be rounded.
 - Trigger: Must be `true` to set trigger or `false` to reset trigger.
+
+# SetCameraProperty
+Allows setting animator properties. This will search the prefab for all Animator components.
+
+```js
+{
+  "b": float, // Time in beats.
+  "t": "SetCameraProperty",
+  "d": {
+    "depthTextureMode": [] // Sets the depth texture mode on the camera. Can be [Depth, DepthNormals, MotionVectors].
+  }
+}
+```
+
+Rememeber to clear the `depthTextureMode` to `[]` after you are done using it as rendering a depth texture can impact performance. See https://docs.unity3d.com/Manual/SL-CameraDepthTexture.html for more info. Note: if the player has the Smoke option enabled, the `depthTextureMode` will always have `Depth`.
