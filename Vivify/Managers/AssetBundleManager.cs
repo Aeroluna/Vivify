@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using CustomJSONData.CustomBeatmap;
 using JetBrains.Annotations;
 using UnityEngine;
+using static Vivify.VivifyController;
 using Logger = IPA.Logging.Logger;
 using Object = UnityEngine.Object;
 
@@ -11,30 +13,30 @@ namespace Vivify.Managers
 {
     internal class AssetBundleManager : IDisposable
     {
-        private const string BUNDLE = "bundle";
-
         private readonly Dictionary<string, Object> _assets = new();
 
         private readonly AssetBundle _mainBundle;
 
         [UsedImplicitly]
-        private AssetBundleManager(IDifficultyBeatmap difficultyBeatmap)
+        private AssetBundleManager(IDifficultyBeatmap difficultyBeatmap, Config config)
         {
-            if (difficultyBeatmap is not CustomDifficultyBeatmap { level: CustomBeatmapLevel customBeatmapLevel })
+            if (difficultyBeatmap is not CustomDifficultyBeatmap customDifficultyBeatmap)
             {
                 throw new ArgumentException(
                     $"Was not correct type. Expected: {nameof(CustomDifficultyBeatmap)}, was: {difficultyBeatmap.GetType().Name}.",
                     nameof(difficultyBeatmap));
             }
 
-            string path = Path.Combine(customBeatmapLevel.customLevelPath, BUNDLE);
+            CustomData levelCustomData = ((CustomBeatmapSaveData)customDifficultyBeatmap.beatmapSaveData).levelCustomData;
+            uint assetBundleChecksum = levelCustomData.GetRequired<uint>(ASSET_BUNDLE);
 
+            string path = Path.Combine(((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath, BUNDLE);
             if (!File.Exists(path))
             {
-                throw new InvalidOperationException($"[{BUNDLE}] not found!");
+                throw new InvalidOperationException($"[{BUNDLE}] not found!"); // TODO: Figure out a way to not just obliterate everything
             }
 
-            _mainBundle = AssetBundle.LoadFromFile(path);
+            _mainBundle = Heck.HeckController.DebugMode ? AssetBundle.LoadFromFile(path) : AssetBundle.LoadFromFile(path, assetBundleChecksum);
             if (_mainBundle == null)
             {
                 throw new InvalidOperationException($"Failed to load [{path}]");

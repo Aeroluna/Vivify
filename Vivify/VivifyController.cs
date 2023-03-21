@@ -44,6 +44,9 @@ namespace Vivify
 
         internal const string CAMERA_TARGET = "_Main";
 
+        internal const string ASSET_BUNDLE = "_assetBundle";
+        internal const string BUNDLE = "bundle";
+
         internal const string CAPABILITY = "Vivify";
         internal const string ID = "Vivify";
         internal const string HARMONY_ID = "aeroluna.Vivify";
@@ -57,7 +60,7 @@ namespace Vivify
         internal static DataDeserializer Deserializer { get; } = DeserializerManager.Register<CustomDataManager>(ID);
 
         internal static Module FeaturesModule { get; } = ModuleManager.Register<ModuleCallbacks>(
-            "Vivify",
+            CAPABILITY,
             2,
             RequirementType.Condition,
             null,

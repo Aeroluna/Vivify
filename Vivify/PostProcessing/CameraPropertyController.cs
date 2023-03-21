@@ -1,6 +1,5 @@
 ﻿using System;
 using HarmonyLib;
-using IPA.Utilities;
 using UnityEngine;
 
 namespace Vivify.PostProcessing

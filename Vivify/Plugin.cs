@@ -1,5 +1,6 @@
 ﻿using Heck;
 using IPA;
+using IPA.Config.Stores;
 using IPA.Logging;
 using JetBrains.Annotations;
 using SiraUtil.Zenject;
@@ -15,11 +16,13 @@ namespace Vivify
     {
         [UsedImplicitly]
         [Init]
-        public Plugin(Logger pluginLogger, Zenjector zenjector)
+        public Plugin(Logger pluginLogger, IPA.Config.Config conf, Zenjector zenjector)
         {
             Log.Logger = new HeckLogger(pluginLogger);
 
+            zenjector.Install<VivifyAppInstaller>(Location.App, conf.Generated<Config>());
             zenjector.Install<VivifyPlayerInstaller>(Location.Player);
+            zenjector.Install<VivifyMenuInstaller>(Location.Menu);
         }
 
 #pragma warning disable CA1822
