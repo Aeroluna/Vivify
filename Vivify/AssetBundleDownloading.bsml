@@ -1,14 +1,14 @@
 <bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
     <vertical id='tos' anchor-max-y='0.8' child-expand-height='false' child-control-height='false'>
-        <text text='In order to play Vivify maps, you must have the required asset bundle downloaded.&#xA;Press Enable to allow Vivify to automatically download necessary asset bundles.' align='Center' font-size='4' size-delta-y='20'/>
+        <text text='To play Vivify maps, the required assets must be downloaded.&#xA;Press Enable to allow Vivify to automatically download necessary assets.' align='Center' font-size='5' size-delta-y='20'/>
         <primary-button text='enable' on-click='accept-click' preferred-height='10' preferred-width='24'/>
     </vertical>
     <vertical id='downloading' anchor-max-y='0.9' child-expand-height='false' child-control-height='false'>
-        <text text='Downloading asset bundle for current map...&#xA;You may cancel this download at any time by pressing the back button.' align='Center' font-size='4' size-delta-y='20'/>
-        <text text='0%' align='Center' font-size='8' id='percentage' size-delta-y='10'/>
+        <text text='Downloading map assets...&#xA;Press the back button to cancel.' align='Center' font-size='5' size-delta-y='20'/>
+        <text text='0%' align='Center' font-size='6' id='percentage' size-delta-y='8'/>
         <vertical id='loadingbar' min-width='100' spacing='-8' child-expand-height='false' child-control-height='false'/>
     </vertical>
     <vertical id='error' anchor-max-y='0.8' child-expand-height='false' child-control-height='false'>
-        <text text='error' id='errortext' align='Center' font-size='4' size-delta-y='20'/>
+        <text text='error' id='errortext' align='Center' font-size='5' size-delta-y='20'/>
     </vertical>
 </bg>
