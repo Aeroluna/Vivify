@@ -7,6 +7,7 @@ using SiraUtil.Zenject;
 using SongCore;
 using UnityEngine.SceneManagement;
 using Vivify.Installers;
+using Vivify.Managers;
 using static Vivify.VivifyController;
 
 namespace Vivify
@@ -20,6 +21,7 @@ namespace Vivify
         {
             Log.Logger = new HeckLogger(pluginLogger);
 
+            InternalBundleManager.LoadFromMemory();
             zenjector.Install<VivifyAppInstaller>(Location.App, conf.Generated<Config>());
             zenjector.Install<VivifyPlayerInstaller>(Location.Player);
             zenjector.Install<VivifyMenuInstaller>(Location.Menu);

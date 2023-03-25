@@ -36,14 +36,15 @@
     <Reference Include="UnityEngine.UIModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UIModule.dll" />
     <Reference Include="UnityEngine.UnityWebRequestModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestModule.dll" />
     <Reference Include="UnityEngine.VideoModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.VideoModule.dll" />
+    <Reference Include="UnityEngine.VRModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.VRModule.dll" />
     <Reference Include="Zenject" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Zenject.dll" />
     <Reference Include="Zenject-usage" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Zenject-usage.dll" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
-    <None Remove="AssetBundleDownloading.bsml" />
     <EmbeddedResource Include="AssetBundleDownloading.bsml" />
+    <EmbeddedResource Include="vivifybundle" />
   </ItemGroup>
 
   <ItemGroup>

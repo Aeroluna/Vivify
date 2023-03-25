@@ -27,16 +27,23 @@ namespace Vivify.Managers
                     nameof(difficultyBeatmap));
             }
 
-            CustomData levelCustomData = ((CustomBeatmapSaveData)customDifficultyBeatmap.beatmapSaveData).levelCustomData;
-            uint assetBundleChecksum = levelCustomData.GetRequired<uint>(ASSET_BUNDLE);
-
             string path = Path.Combine(((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath, BUNDLE);
             if (!File.Exists(path))
             {
                 throw new InvalidOperationException($"[{BUNDLE}] not found!"); // TODO: Figure out a way to not just obliterate everything
             }
 
-            _mainBundle = Heck.HeckController.DebugMode ? AssetBundle.LoadFromFile(path) : AssetBundle.LoadFromFile(path, assetBundleChecksum);
+            if (Heck.HeckController.DebugMode)
+            {
+                _mainBundle = AssetBundle.LoadFromFile(path);
+            }
+            else
+            {
+                CustomData levelCustomData = ((CustomBeatmapSaveData)customDifficultyBeatmap.beatmapSaveData).levelCustomData;
+                uint assetBundleChecksum = levelCustomData.GetRequired<uint>(ASSET_BUNDLE);
+                _mainBundle = AssetBundle.LoadFromFile(path, assetBundleChecksum);
+            }
+
             if (_mainBundle == null)
             {
                 throw new InvalidOperationException($"Failed to load [{path}]");

@@ -22,7 +22,7 @@ namespace Vivify.PostProcessing
         private Camera _camera = null!;
         private GameObject _cullingObject = null!;
         private Camera _cullingCamera = null!;
-        private MainEffectRenderer _mainEffectRenderer = null!;
+        private CameraCullingMaskController _cameraCullingMaskController = null!;
 
         internal static Dictionary<string, CullingMaskController> CullingMasks { get; private set; } = new();
 
@@ -56,74 +56,21 @@ namespace Vivify.PostProcessing
             }
         }
 
+        private void OnPreRender()
+        {
+            _cullingCamera.CopyFrom(_camera);
+            _cullingTextures.UnionWith(_cameraCullingMaskController.RenderCullingMasks(CullingMasks));
+        }
+
         private void OnRenderImage(RenderTexture src, RenderTexture dst)
         {
+            _cameraCullingMaskController.Descriptor = src.descriptor;
+
             // cache mirrors
             // the textures for mirrors has already been made, so we cache the mirror textures,
             // do our rendering on the second camera (which will change the textures of the mirror), than swap our original textures back on
             Material[] mirrorMaterials = MirrorsController.EnabledMirrors.Select(n => _mirrorMeshRenderer(ref n).sharedMaterial).ToArray();
             Texture[] cachedTexture = mirrorMaterials.Select(n => n.GetTexture(_mirrorTexPropertyID)).ToArray();
-
-            _cullingCamera.CopyFrom(_camera);
-            _cullingCamera.depthTextureMode = DepthTextureMode.None;
-            RenderTextureDescriptor descriptor = src.descriptor;
-            descriptor.depthBufferBits = 16;
-            RenderTextureDescriptor descriptorDepth = descriptor;
-            descriptorDepth.colorFormat = RenderTextureFormat.Depth;
-            foreach ((string key, CullingMaskController controller) in CullingMasks)
-            {
-                // Set renderers to culling layer
-                GameObject[] gameObjects = controller.GameObjects;
-                int length = gameObjects.Length;
-                int[] cachedLayers = new int[length];
-                for (int i = 0; i < length; i++)
-                {
-                    GameObject renderer = gameObjects[i];
-                    cachedLayers[i] = renderer.layer;
-                    renderer.layer = CULLINGLAYER;
-                }
-
-                // setup color render texture
-                RenderTexture renderTexture = RenderTexture.GetTemporary(descriptor);
-                Shader.SetGlobalTexture(key, renderTexture);
-                _cullingTextures.Add(renderTexture);
-
-                // flip culling mask when whitelist mode enabled
-                if (controller.Whitelist)
-                {
-                    _cullingCamera.cullingMask = 1 << CULLINGLAYER;
-                }
-
-                // Setup targets
-                RenderTexture preEffect = RenderTexture.GetTemporary(descriptor);
-                if (controller.DepthTexture)
-                {
-                    RenderTexture depthTexture = RenderTexture.GetTemporary(descriptorDepth);
-                    Shader.SetGlobalTexture(key + "_Depth", depthTexture);
-                    _cullingTextures.Add(depthTexture);
-                    _cullingCamera.SetTargetBuffers(preEffect.colorBuffer, depthTexture.depthBuffer);
-                }
-                else
-                {
-                    _cullingCamera.SetTargetBuffers(preEffect.colorBuffer, preEffect.depthBuffer);
-                }
-
-                // render
-                _cullingCamera.Render();
-
-                // Apply main effect because OnRenderImage does not work when using SetTargetBuffers
-                _mainEffectRenderer.Render(preEffect, renderTexture);
-                RenderTexture.ReleaseTemporary(preEffect);
-
-                // reset culling mask
-                _cullingCamera.cullingMask = _camera.cullingMask;
-
-                // reset renderer layers
-                for (int i = 0; i < length; i++)
-                {
-                    gameObjects[i].layer = cachedLayers[i];
-                }
-            }
 
             // clean mirrors
             for (int i = 0; i < mirrorMaterials.Length; i++)
@@ -284,11 +231,6 @@ namespace Vivify.PostProcessing
             _cullingTextures.Clear();
         }
 
-        private void Update()
-        {
-            _cullingCamera.CopyFrom(_camera);
-        }
-
         private void Start()
         {
             _camera = GetComponent<Camera>();
@@ -299,9 +241,9 @@ namespace Vivify.PostProcessing
             _cullingCamera = _cullingObject.AddComponent<Camera>();
             _cullingCamera.CopyFrom(_camera);
             _cullingCamera.enabled = false;
+            _cameraCullingMaskController = _cullingObject.AddComponent<CameraCullingMaskController>();
             ////CopyComponent(gameObject.GetComponent<BloomPrePass>(), _cullingObject);
             _cullingObject.SetActive(true);
-            _mainEffectRenderer = new MainEffectRenderer(gameObject.GetComponent<MainEffectController>());
             CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), _cullingObject);
 
             MirrorsController.UpdateMirrors();
