@@ -1,11 +1,16 @@
+---
+hide:
+  - navigation
+---
+
 # Vivify
 Bring your map to life.
 
-#### If you use any of these features, you MUST add "Vivify" as a requirement for your map for them to function, you can go [Here](https://github.com/Kylemc1413/SongCore/blob/master/README.md) to see how adding suggestions/requirements to the info.dat works. Also, Vivify will only load on v3 maps.
+If you use any of these features, you MUST add "Vivify" as a requirement for your map for them to function, you can go [Here](https://github.com/Kylemc1413/SongCore/blob/master/README.md) to see how adding suggestions/requirements to the info.dat works. Also, Vivify will only load on v3 maps.
 
 This documentation assumes basic understanding of custom events and tracks.
 
-## Event Types
+### Event Types
 - [`SetMaterialProperty`](#SetMaterialProperty)
 - [`SetGlobalProperty`](#SetGlobalProperty)
 - [`ApplyPostProcessing`](#ApplyPostProcessing)
@@ -17,12 +22,18 @@ This documentation assumes basic understanding of custom events and tracks.
 - [`SetAnimatorProperty`](#SetAnimatorProperty)
 - [`SetCameraProperty`](#SetCameraProperty)
 
-# Setting up Unity
-First, you should to download the Unity Hub at https://unity3d.com/get-unity/download and follow the on-screen instructions until you get to the projects page, while skipping the recommended Unity Editor. Install a version of Unity (Installs > Install Editor) and for maximum compatibility, Beat Saber uses version 2019.4.28f1 found in the [archive](https://unity3d.com/get-unity/download/archive).
+## Setting up Unity
+First, you should to download the Unity Hub at https://unity3d.com/get-unity/download and follow the on-screen instructions until you get to the projects page, while skipping the recommended Unity Editor. Install a version of Unity (Installs > Install Editor) and for maximum compatibility, Beat Saber uses version 2021.3.16f1 found in the [archive](https://unity3d.com/get-unity/download/archive).
 
 Now, you can create your own Unity project or use a specially made template for Vivify (coming soon).
 
-If you're using screen space shaders, make sure you have `Virtual Reality Supported` enabled in your project and your stereo rendering mode is set to `Single Pass`. (Edit > Project Settings > Player > XR Settings > Deprecated Settings > Virtual Reality Supported) If you're using Oculus, select the `Oculus` SDK. If you have anything else, use the `OpenVR` SDK.
+If you want to test your shaders, make sure you enable `XR Plugin Management` enabled in your project. (Edit > Project Settings > XR Plugin Management > Install XR Plugin Management) After that installs, select your approriate Plug-in Provider. Enabling the Unity Mock HMD allows you to preview in vr without a hmd.
+
+## Writing VR shaders
+
+Beat Saber uses Single Pass Instanced rendering. Any incompatible shaders will only appear in the left eye. To make your shader compatible with this vr rendering method, add instancing support to your shader. See https://docs.unity3d.com/Manual/SinglePassInstancing.html for how to add instancing support. Look under "Post-Processing shaders" to see how to sample a screen space texture.
+
+A tip for writing shaders, there are many commonly used structs/functions in UnityCG.cginc. As a few examples, `appdata_base`, `appdata_img`, `appdata_full`, and `v2f_img` can usually be used instead of writing your own structs and since most image effect shaders use the same vertex function, the include file has a `vert_img` that can be used with `#pragma vertex vert_img`.
 
 ### Creating an asset bundle
 Visit https://learn.unity.com/tutorial/introduction-to-asset-bundles for a basic introduction to creating asset bundles. Even if you are using a template it is still useful to at least read through these instructions.
@@ -40,26 +51,20 @@ Map Folder
 ```
 When referencing an asset's file path in an event, remember to write in all lower case. You can use the above Asset Bundle Browser tool to see the path of specific assets.
 
-# Writing screen space shaders
-
-There a few quirks to take note of when writing screen space shaders.
-
-### Stereo UV
-
-> Dev note: add fucked screenshot for examples.
-
-Beat Saber uses Single Pass Stereo renderering (See https://docs.unity3d.com/Manual/SinglePassStereoRendering.html for more info). Use the unity built-in function `UnityStereoScreenSpaceUVAdjust` to fix your shaders in vr.
-```csharp
-sampler2D _MainTex;
-half4 _MainTex_ST;
-
-fixed4 frag (v2f i) : SV_Target
-{
-  return tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv, _MainTex_ST));
-}
+By default when Vivify will check against a checksum when loading an asset bundle, but this checksum check can be disabled by enabling debug mode using the "-aerolunaisthebestmodder" launch parameter. You can add the checksum to the map by using the `"_assetBundle"` field in the info.dat.
+```js
+  ...
+  "_environmentName" : "DefaultEnvironment",
+  "_allDirectionsEnvironmentName" : "GlassDesertEnvironment",
+  "_customData" : {
+    "_assetBundle": 1414251160
+  },
+  "_difficultyBeatmapSets" : [
+    {
+  ...
 ```
 
-# SetMaterialProperty
+## SetMaterialProperty
 Allows setting material properties, e.g. Texture, Float, Color.
 
 ```js
@@ -79,7 +84,7 @@ Allows setting material properties, e.g. Texture, Float, Color.
 }
 ```
 
-# SetGlobalProperty
+## SetGlobalProperty
 Allows setting global properties, e.g. Texture, Float, Color. These will persist even after the map ends, do not rely on their default value.
 
 ```js
@@ -98,7 +103,7 @@ Allows setting global properties, e.g. Texture, Float, Color. These will persist
 }
 ```
 
-## Property types
+### Property types
 - Texture: Must be a string that is a direct path file to a texture.
 - Float: May either be a direct value (`"value": 10.4`) or a point definition (`"value": [[0,0], [10, 1]]`).
 - Color: May either be a RGBA array (`"value": [0, 1, 0]`) or a point definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
@@ -127,7 +132,7 @@ Allows setting global properties, e.g. Texture, Float, Color. These will persist
 }
 ```
 
-# ApplyPostProcessing
+## ApplyPostProcessing
 ```js
 {
   "b": float, // Time in beats.
@@ -167,7 +172,7 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
 }
 ```
 
-# DeclareCullingMask
+## DeclareCullingMask
 ```js
 {
   "b": float, // Time in beats.
@@ -211,7 +216,7 @@ fixed4 frag(v2f i) : SV_Target
 }
 ```
 
-# DestroyTexture
+## DestroyTexture
 ```js
 {
   "b": float, // Time in beats.
@@ -223,7 +228,7 @@ fixed4 frag(v2f i) : SV_Target
 ```
 `DestroyTexture` will destroy a texture. It is important to destroy any textures created through `DeclareCullingMask` because the scene will have to be rendered again for each active culling mask.
 
-# DeclareRenderTexture
+## DeclareRenderTexture
 ```js
 {
   "b": float, // Time in beats.
@@ -241,7 +246,7 @@ fixed4 frag(v2f i) : SV_Target
 ```
 `DeclareRenderTexture` declare a RenderTexture to be used anywhere. They are set as a global variable and can be accessed by declaring a sampler named what you put in "name".
 
-# InstantiatePrefab
+## InstantiatePrefab
 ```js
 {
   "b": float, // Time in beats.
@@ -260,7 +265,7 @@ fixed4 frag(v2f i) : SV_Target
 ```
 `InstantiatePrefab` will instantiate your prefab in the scene.
 
-# DestroyPrefab
+## DestroyPrefab
 ```js
 {
   "b": float, // Time in beats.
@@ -272,7 +277,7 @@ fixed4 frag(v2f i) : SV_Target
 ```
 `DestroyPrefab` will destroy a your prefab in the scene.
 
-# SetAnimatorProperty
+## SetAnimatorProperty
 Allows setting animator properties. This will search the prefab for all Animator components.
 
 ```js
@@ -292,13 +297,13 @@ Allows setting animator properties. This will search the prefab for all Animator
 }
 ```
 
-## Property types
+### Property types
 - Bool: May either be a direct value (`"value": true`) or a point definition (`"value": [[0,0], [1, 1]]`). Any value greater than or equal to 1 is true.
 - Float: May either be a direct value (`"value": 10.4`) or a point definition (`"value": [[0,0], [10, 1]]`).
 - Integer: May either be a direct value (`"value": 10`) or a point definition (`"value": [[0,0], [10, 1]]`). Value will be rounded.
 - Trigger: Must be `true` to set trigger or `false` to reset trigger.
 
-# SetCameraProperty
+## SetCameraProperty
 Allows setting animator properties. This will search the prefab for all Animator components.
 
 ```js
