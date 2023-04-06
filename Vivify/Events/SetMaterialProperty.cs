@@ -88,9 +88,29 @@ namespace Vivify.Events
 
                         break;
 
+                    case MaterialPropertyType.Vector:
+                        if (property is AnimatedMaterialProperty<Vector4> vectorAnimated)
+                        {
+                            if (noDuration)
+                            {
+                                material.SetVector(name, vectorAnimated.PointDefinition.Interpolate(1));
+                            }
+                            else
+                            {
+                                StartCoroutine(vectorAnimated.PointDefinition, material, name, MaterialPropertyType.Vector, duration, startTime, easing);
+                            }
+                        }
+                        else
+                        {
+                            List<float> vector = ((List<object>)value).Select(Convert.ToSingle).ToList();
+                            material.SetVector(name, new Color(vector[0], vector[1], vector[2], vector[3]));
+                        }
+
+                        break;
+
                     default:
                         // im lazy, shoot me
-                        Log.Logger.Log($"{type} not currently supported", Logger.Level.Warning);
+                        Log.Logger.Log($"[{type}] not currently supported", Logger.Level.Warning);
                         break;
                 }
             }
@@ -129,7 +149,7 @@ namespace Vivify.Events
                             break;
 
                         case MaterialPropertyType.Vector:
-                            material.SetVector(name, (points as PointDefinition<Vector3>)!.Interpolate(time));
+                            material.SetVector(name, (points as PointDefinition<Vector4>)!.Interpolate(time));
                             break;
 
                         default:
