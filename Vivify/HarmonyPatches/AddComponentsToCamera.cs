@@ -6,10 +6,10 @@ using Vivify.PostProcessing;
 namespace Vivify.HarmonyPatches
 {
     [HeckPatch]
-    [HarmonyPatch(typeof(MainCamera))]
+    [HarmonyPatch(typeof(MainEffectController))]
     internal static class AddComponentsToCamera
     {
-        private static void SafeAddComponent<T>(GameObject gameObject)
+        private static void YeetComponent<T>(GameObject gameObject)
             where T : Component
         {
             T[] existing = gameObject.GetComponents<T>();
@@ -17,17 +17,31 @@ namespace Vivify.HarmonyPatches
             {
                 Object.Destroy(postProcessingController);
             }
+        }
 
+        private static void SafeAddComponent<T>(GameObject gameObject)
+            where T : Component
+        {
+            YeetComponent<T>(gameObject);
             gameObject.AddComponent<T>();
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(nameof(MainCamera.Awake))]
-        private static void Postfix(MainCamera __instance)
+        [HarmonyPatch("OnEnable")]
+        private static void AddComponents(MainEffectController __instance)
         {
             GameObject gameObject = __instance.gameObject;
             SafeAddComponent<PostProcessingController>(gameObject);
             SafeAddComponent<CameraPropertyController>(gameObject);
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch("OnDisable")]
+        private static void Yeet(MainEffectController __instance)
+        {
+            GameObject gameObject = __instance.gameObject;
+            YeetComponent<PostProcessingController>(gameObject);
+            YeetComponent<CameraPropertyController>(gameObject);
         }
     }
 }
