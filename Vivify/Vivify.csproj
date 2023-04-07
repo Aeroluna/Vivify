@@ -44,7 +44,7 @@
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
     <EmbeddedResource Include="AssetBundleDownloading.bsml" />
-    <EmbeddedResource Include="vivifybundle" />
+    <EmbeddedResource Include="Managers\DepthBlitShaders" />
   </ItemGroup>
 
   <ItemGroup>
