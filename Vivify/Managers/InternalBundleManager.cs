@@ -15,16 +15,16 @@ namespace Vivify.Managers
         {
             byte[] bytes;
 
-            using (Stream stream = typeof(AssetBundleManager).Assembly.GetManifestResourceStream(PATH)!)
+            using (Stream stream = typeof(InternalBundleManager).Assembly.GetManifestResourceStream(PATH)!)
             using (MemoryStream memoryStream = new())
             {
                 stream.CopyTo(memoryStream);
                 bytes = memoryStream.ToArray();
             }
 
-            AssetBundle bundle = AssetBundle.LoadFromMemory(bytes, 699710125);
-            DepthMaterial = new Material(bundle.LoadAsset<Shader>("assets/depthblit.shader"));
-            DepthArrayMaterial = new Material(bundle.LoadAsset<Shader>("assets/depthblitarrayslice.shader"));
+            AssetBundle bundle = AssetBundle.LoadFromMemory(bytes, 1737660153);
+            DepthMaterial = bundle.LoadAsset<Material>("assets/depthblit.mat");
+            DepthArrayMaterial = bundle.LoadAsset<Material>("assets/depthblitarrayslice.mat");
         }
     }
 }

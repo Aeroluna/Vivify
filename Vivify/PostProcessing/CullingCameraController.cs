@@ -37,6 +37,7 @@ namespace Vivify.PostProcessing
             _key = key;
             _cullingMaskController = cullingMaskController;
             _camera.CopyFrom(_postProcessingController.Camera);
+            _camera.depthTextureMode = cullingMaskController.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
             _camera.depth -= 1;
 
             // flip culling mask when whitelist mode enabled
@@ -62,12 +63,6 @@ namespace Vivify.PostProcessing
                 GameObject renderedObject = gameObjects[i];
                 _cachedLayers[i] = renderedObject.layer;
                 renderedObject.layer = CULLINGLAYER;
-            }
-
-            // flip culling mask when whitelist mode enabled
-            if (_cullingMaskController.Whitelist)
-            {
-                _camera.cullingMask = 1 << CULLINGLAYER;
             }
         }
 
@@ -96,9 +91,7 @@ namespace Vivify.PostProcessing
 
             if (_renderTexture == null)
             {
-                RenderTextureDescriptor descriptor = src.descriptor;
-                descriptor.depthBufferBits = 16;
-                _renderTexture = new RenderTexture(descriptor);
+                _renderTexture = new RenderTexture(src.descriptor);
             }
 
             Shader.SetGlobalTexture(_key, _renderTexture);
@@ -111,23 +104,22 @@ namespace Vivify.PostProcessing
 
             if (_renderTextureDepth == null)
             {
-                RenderTextureDescriptor descriptor = src.descriptor;
-                descriptor.depthBufferBits = 16;
-                _renderTextureDepth = new RenderTexture(descriptor);
+                _renderTextureDepth = new RenderTexture(src.descriptor);
             }
 
             Shader.SetGlobalTexture(_key + "_Depth", _renderTextureDepth);
             if (_renderTextureDepth.dimension == TextureDimension.Tex2DArray)
             {
                 Material sliceMaterial = InternalBundleManager.DepthArrayMaterial;
+                Log.Logger.Log(sliceMaterial.shader.name);
                 sliceMaterial.SetFloat(_arraySliceIndex, 0);
-                Graphics.Blit(src, _renderTextureDepth, sliceMaterial, -1, 0);
+                Graphics.Blit(null, _renderTextureDepth, sliceMaterial, -1, 0);
                 sliceMaterial.SetFloat(_arraySliceIndex, 1);
-                Graphics.Blit(src, _renderTextureDepth, sliceMaterial, -1, 1);
+                Graphics.Blit(null, _renderTextureDepth, sliceMaterial, -1, 1);
             }
             else
             {
-                Graphics.Blit(src, _renderTextureDepth, InternalBundleManager.DepthMaterial);
+                Graphics.Blit(null, _renderTextureDepth, InternalBundleManager.DepthMaterial);
             }
         }
 
