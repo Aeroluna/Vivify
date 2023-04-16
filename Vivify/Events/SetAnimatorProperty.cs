@@ -13,21 +13,21 @@ namespace Vivify.Events
     {
         internal void SetAnimatorProperty(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out SetAnimatorPropertyData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out SetAnimatorPropertyData? data))
             {
                 return;
             }
 
-            float duration = heckData.Duration;
+            float duration = data.Duration;
             duration = 60f * duration / _bpmController.currentBpm; // Convert to real time;
 
-            if (!_prefabManager.TryGetPrefab(heckData.Id, out InstantiatedPrefab? instantiatedPrefab))
+            if (!_prefabManager.TryGetPrefab(data.Id, out InstantiatedPrefab? instantiatedPrefab))
             {
                 return;
             }
 
-            List<AnimatorProperty> properties = heckData.Properties;
-            SetAnimatorProperties(instantiatedPrefab.Animators, properties, duration, heckData.Easing, customEventData.time);
+            List<AnimatorProperty> properties = data.Properties;
+            SetAnimatorProperties(instantiatedPrefab.Animators, properties, duration, data.Easing, customEventData.time);
         }
 
         internal void SetAnimatorProperties(Animator[] animators, List<AnimatorProperty> properties, float duration, Functions easing, float startTime)

@@ -10,13 +10,13 @@ namespace Vivify.Events
     {
         internal void ApplyPostProcessing(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out ApplyPostProcessingData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out ApplyPostProcessingData? data))
             {
                 return;
             }
 
-            float duration = 60f * heckData.Duration / _bpmController.currentBpm; // Convert to real time;
-            string? assetName = heckData.Asset;
+            float duration = 60f * data.Duration / _bpmController.currentBpm; // Convert to real time;
+            string? assetName = data.Asset;
             Material? material = null;
             if (assetName != null)
             {
@@ -25,16 +25,16 @@ namespace Vivify.Events
                     return;
                 }
 
-                List<MaterialProperty>? properties = heckData.Properties;
+                List<MaterialProperty>? properties = data.Properties;
                 if (properties != null)
                 {
-                    SetMaterialProperties(material, properties, duration, heckData.Easing, customEventData.time);
+                    SetMaterialProperties(material, properties, duration, data.Easing, customEventData.time);
                 }
             }
 
             if (duration == 0)
             {
-                PostProcessingController.PostProcessingMaterial.Add(new MaterialData(material, heckData.Priority, heckData.Source, heckData.Target, heckData.Pass, Time.frameCount));
+                PostProcessingController.PostProcessingMaterial.Add(new MaterialData(material, data.Priority, data.Source, data.Target, data.Pass, Time.frameCount));
                 Log.Logger.Log($"Applied material [{assetName}] for single frame.");
                 return;
             }
@@ -44,7 +44,7 @@ namespace Vivify.Events
                 return;
             }
 
-            MaterialData materialData = new(material, heckData.Priority, heckData.Source, heckData.Target, heckData.Pass);
+            MaterialData materialData = new(material, data.Priority, data.Source, data.Target, data.Pass);
             PostProcessingController.PostProcessingMaterial.Add(materialData);
             Log.Logger.Log($"Applied material [{assetName}] for [{duration}] seconds.");
             _coroutineDummy.StartCoroutine(KillPostProcessingCoroutine(materialData, duration, customEventData.time));

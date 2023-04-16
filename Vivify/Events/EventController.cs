@@ -24,6 +24,7 @@ namespace Vivify.Events
         private readonly IBpmController _bpmController;
         private readonly CoroutineDummy _coroutineDummy;
         private readonly TransformControllerFactory _transformControllerFactory;
+        private readonly BeatmapObjectPrefabManager _beatmapObjectPrefabManager;
         private readonly ReLoader? _reLoader;
         private readonly BeatmapDataCallbackWrapper _callbackWrapper;
 
@@ -40,6 +41,7 @@ namespace Vivify.Events
             IBpmController bpmController,
             CoroutineDummy coroutineDummy,
             TransformControllerFactory transformControllerFactory,
+            BeatmapObjectPrefabManager beatmapObjectPrefabManager,
             [InjectOptional] ReLoader? reLoader)
         {
             _instantiator = instantiator;
@@ -51,6 +53,7 @@ namespace Vivify.Events
             _bpmController = bpmController;
             _coroutineDummy = coroutineDummy;
             _transformControllerFactory = transformControllerFactory;
+            _beatmapObjectPrefabManager = beatmapObjectPrefabManager;
             _reLoader = reLoader;
             if (reLoader != null)
             {
@@ -79,6 +82,10 @@ namespace Vivify.Events
             {
                 case APPLY_POST_PROCESSING:
                     ApplyPostProcessing(customEventData);
+                    break;
+
+                case ASSIGN_TRACK_PREFAB:
+                    AssignTrackPrefab(customEventData);
                     break;
 
                 case DECLARE_CULLING_MASK:

@@ -11,12 +11,12 @@ namespace Vivify.Events
     {
         internal void InstantiatePrefab(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out InstantiatePrefabData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out InstantiatePrefabData? data))
             {
                 return;
             }
 
-            string assetName = heckData.Asset;
+            string assetName = data.Asset;
             if (!_assetBundleManager.TryGetAsset(assetName, out GameObject? prefab))
             {
                 return;
@@ -25,29 +25,29 @@ namespace Vivify.Events
             GameObject gameObject = Object.Instantiate(prefab);
 
             Transform transform = gameObject.transform;
-            heckData.TransformData.Apply(transform, false);
+            data.TransformData.Apply(transform, false);
 
-            if (heckData.Track != null)
+            if (data.Track != null)
             {
-                heckData.Track.AddGameObject(gameObject);
-                _transformControllerFactory.Create(gameObject, heckData.Track);
+                data.Track.AddGameObject(gameObject);
+                _transformControllerFactory.Create(gameObject, data.Track);
             }
 
             gameObject.GetComponentsInChildren<Animator>().Do(n => _instantiator.InstantiateComponent<AnimatorSyncController>(n.gameObject, new object[] { customEventData.time }));
             gameObject.GetComponentsInChildren<ParticleSystem>().Do(n => _instantiator.InstantiateComponent<ParticleSystemSyncController>(n.gameObject, new object[] { customEventData.time }));
             gameObject.GetComponentsInChildren<VideoPlayer>().Do(n => _instantiator.InstantiateComponent<VideoPlayerSyncController>(n.gameObject, new object[] { customEventData.time }));
 
-            string? id = heckData.Id;
+            string? id = data.Id;
             if (id != null)
             {
                 Log.Logger.Log($"Created [{assetName}] with id [{id}].");
-                _prefabManager.Add(id, gameObject, heckData.Track);
+                _prefabManager.Add(id, gameObject, data.Track);
             }
             else
             {
                 string genericId = gameObject.GetHashCode().ToString();
                 Log.Logger.Log($"Created [{assetName}] without id.");
-                _prefabManager.Add(genericId, gameObject, heckData.Track);
+                _prefabManager.Add(genericId, gameObject, data.Track);
             }
         }
     }

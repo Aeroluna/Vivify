@@ -36,6 +36,31 @@ namespace Vivify
             }
         }
 
+        [ObjectsDeserializer]
+        internal static Dictionary<BeatmapObjectData, IObjectCustomData> DeserializeObjects(
+            CustomBeatmapData beatmapData,
+            Dictionary<string, Track> beatmapTracks,
+            IReadOnlyList<BeatmapObjectData> beatmapObjectDatas)
+        {
+            bool v2 = beatmapData.version2_6_0AndEarlier;
+            Dictionary<BeatmapObjectData, IObjectCustomData> dictionary = new();
+
+            foreach (BeatmapObjectData beatmapObjectData in beatmapObjectDatas)
+            {
+                try
+                {
+                    CustomData customData = ((ICustomData)beatmapObjectData).customData;
+                    dictionary.Add(beatmapObjectData, new VivifyObjectData(customData, beatmapTracks, v2));
+                }
+                catch (Exception e)
+                {
+                    Log.Logger.LogFailure(e, beatmapObjectData);
+                }
+            }
+
+            return dictionary;
+        }
+
         [CustomEventsDeserializer]
         private static Dictionary<CustomEventData, ICustomEventCustomData> DeserializeCustomEvents(
             CustomBeatmapData beatmapData,
@@ -53,6 +78,10 @@ namespace Vivify
                     {
                         case APPLY_POST_PROCESSING:
                             dictionary.Add(customEventData, new ApplyPostProcessingData(data, pointDefinitions));
+                            break;
+
+                        case ASSIGN_TRACK_PREFAB:
+                            dictionary.Add(customEventData, new AssignTrackPrefabData(data, tracks));
                             break;
 
                         case DECLARE_CULLING_MASK:

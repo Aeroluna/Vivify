@@ -8,13 +8,13 @@ namespace Vivify.Events
     {
         internal void DeclareCullingMask(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out DeclareCullingMaskData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out DeclareCullingMaskData? data))
             {
                 return;
             }
 
-            string name = heckData.Name;
-            CullingMaskController maskController = new(heckData.Tracks, heckData.Whitelist, heckData.DepthTexture);
+            string name = data.Name;
+            CullingMaskController maskController = new(data.Tracks, data.Whitelist, data.DepthTexture);
             _disposables.Add(maskController);
             PostProcessingController.CullingMasks.Add(name, maskController);
             Log.Logger.Log($"Created culling mask [{name}].");

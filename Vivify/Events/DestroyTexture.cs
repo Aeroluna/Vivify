@@ -8,12 +8,12 @@ namespace Vivify.Events
     {
         internal void DestroyTexture(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out DestroyTextureData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out DestroyTextureData? data))
             {
                 return;
             }
 
-            string[] names = heckData.Name;
+            string[] names = data.Name;
             foreach (string name in names)
             {
                 if (PostProcessingController.CullingMasks.TryGetValue(name, out CullingMaskController? active))

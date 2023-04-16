@@ -7,13 +7,13 @@ namespace Vivify.Events
     {
         internal void DeclareRenderTexture(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out DeclareRenderTextureData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out DeclareRenderTextureData? data))
             {
                 return;
             }
 
-            PostProcessingController.DeclaredTextureDatas.Add(heckData);
-            Log.Logger.Log($"Created texture [{heckData.Name}].");
+            PostProcessingController.DeclaredTextureDatas.Add(data);
+            Log.Logger.Log($"Created texture [{data.Name}].");
         }
     }
 }

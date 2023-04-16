@@ -18,6 +18,8 @@ namespace Vivify.Installers
             Container.BindInterfacesAndSelfTo<AssetBundleManager>().AsSingle();
             Container.BindInterfacesAndSelfTo<PrefabManager>().AsSingle();
 
+            Container.BindInterfacesAndSelfTo<BeatmapObjectPrefabManager>().AsSingle();
+
             // Events
             Container.BindInterfacesTo<EventController>().AsSingle();
         }

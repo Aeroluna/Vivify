@@ -13,21 +13,21 @@ namespace Vivify.Events
     {
         internal void SetMaterialProperty(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out SetMaterialPropertyData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out SetMaterialPropertyData? data))
             {
                 return;
             }
 
-            float duration = heckData.Duration;
+            float duration = data.Duration;
             duration = 60f * duration / _bpmController.currentBpm; // Convert to real time;
 
-            if (!_assetBundleManager.TryGetAsset(heckData.Asset, out Material? material))
+            if (!_assetBundleManager.TryGetAsset(data.Asset, out Material? material))
             {
                 return;
             }
 
-            List<MaterialProperty> properties = heckData.Properties;
-            SetMaterialProperties(material, properties, duration, heckData.Easing, customEventData.time);
+            List<MaterialProperty> properties = data.Properties;
+            SetMaterialProperties(material, properties, duration, data.Easing, customEventData.time);
         }
 
         internal void SetMaterialProperties(Material material, List<MaterialProperty> properties, float duration, Functions easing, float startTime)

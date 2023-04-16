@@ -7,14 +7,14 @@ namespace Vivify.Events
     {
         internal void SetCameraProperty(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out SetCameraPropertyData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out SetCameraPropertyData? data))
             {
                 return;
             }
 
-            if (heckData.DepthTextureMode.HasValue)
+            if (data.DepthTextureMode.HasValue)
             {
-                CameraPropertyController.DepthTextureMode = heckData.DepthTextureMode.Value;
+                CameraPropertyController.DepthTextureMode = data.DepthTextureMode.Value;
             }
         }
     }

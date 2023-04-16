@@ -13,16 +13,16 @@ namespace Vivify.Events
     {
         internal void SetGlobalProperty(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out SetGlobalPropertyData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out SetGlobalPropertyData? data))
             {
                 return;
             }
 
-            float duration = heckData.Duration;
+            float duration = data.Duration;
             duration = 60f * duration / _bpmController.currentBpm; // Convert to real time;
 
-            List<MaterialProperty> properties = heckData.Properties;
-            Functions easing = heckData.Easing;
+            List<MaterialProperty> properties = data.Properties;
+            Functions easing = data.Easing;
             float startTime = customEventData.time;
 
             foreach (MaterialProperty property in properties)

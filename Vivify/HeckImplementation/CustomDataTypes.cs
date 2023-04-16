@@ -34,6 +34,19 @@ namespace Vivify
         Trigger
     }
 
+    internal class VivifyObjectData : IObjectCustomData
+    {
+        internal VivifyObjectData(
+            CustomData customData,
+            Dictionary<string, Track> beatmapTracks,
+            bool v2)
+        {
+            Track = customData.GetNullableTrackArray(beatmapTracks, v2)?.ToList();
+        }
+
+        internal List<Track>? Track { get; }
+    }
+
     internal class AnimatedMaterialProperty<T> : MaterialProperty
         where T : struct
     {
@@ -352,5 +365,20 @@ namespace Vivify
         internal string? Id { get; }
 
         internal Track? Track { get; }
+    }
+
+    internal class AssignTrackPrefabData : ICustomEventCustomData
+    {
+        internal AssignTrackPrefabData(
+            CustomData customData,
+            Dictionary<string, Track> beatmapTracks)
+        {
+            Track = customData.GetTrack(beatmapTracks, false);
+            NoteAsset = customData.Get<string>(NOTE_PREFAB);
+        }
+
+        internal Track Track { get; }
+
+        internal string? NoteAsset { get; }
     }
 }

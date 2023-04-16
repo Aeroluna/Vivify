@@ -31,7 +31,11 @@ namespace Vivify
 
         internal const string CAMERA_DEPTH_TEXTURE_MODE = "depthTextureMode";
 
+        internal const string NOTE_PREFAB = "note";
+        internal const string BOMB_PREFAB = "bomb";
+
         internal const string APPLY_POST_PROCESSING = "ApplyPostProcessing";
+        internal const string ASSIGN_TRACK_PREFAB = "AssignTrackPrefab";
         internal const string DECLARE_CULLING_MASK = "DeclareCullingMask";
         internal const string DECLARE_TEXTURE = "DeclareRenderTexture";
         internal const string DESTROY_TEXTURE = "DestroyTexture";

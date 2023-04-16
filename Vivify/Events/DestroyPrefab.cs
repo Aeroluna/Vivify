@@ -7,12 +7,12 @@ namespace Vivify.Events
     {
         internal void DestroyPrefab(CustomEventData customEventData)
         {
-            if (!_deserializedData.Resolve(customEventData, out DestroyPrefabData? heckData))
+            if (!_deserializedData.Resolve(customEventData, out DestroyPrefabData? data))
             {
                 return;
             }
 
-            heckData.Id.Do(_prefabManager.Destroy);
+            data.Id.Do(_prefabManager.Destroy);
         }
     }
 }
