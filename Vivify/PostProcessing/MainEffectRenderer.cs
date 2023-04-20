@@ -12,21 +12,33 @@ namespace Vivify.PostProcessing
             MethodAccessor<MainEffectController, Action<MainEffectController, RenderTexture, RenderTexture>>
             .GetDelegate("ImageEffectControllerCallback");
 
+        private readonly FieldAccessor<MainEffectController, MainEffectContainerSO>.Accessor _mainEffectContainerAccessor =
+            FieldAccessor<MainEffectController, MainEffectContainerSO>.GetAccessor("_mainEffectContainer");
+
         private readonly Action<MainEffectController> _onPreRender = MethodAccessor<MainEffectController, Action<MainEffectController>>.GetDelegate("OnPreRender");
         private readonly Action<MainEffectController> _onPostRender = MethodAccessor<MainEffectController, Action<MainEffectController>>.GetDelegate("OnPostRender");
 
         private readonly MainEffectController _mainEffectController;
+        private readonly MainEffectContainerSO _mainEffectContainer;
 
         internal MainEffectRenderer(MainEffectController mainEffectController)
         {
             _mainEffectController = mainEffectController;
+            _mainEffectContainer = _mainEffectContainerAccessor(ref mainEffectController);
         }
 
         internal void Render(RenderTexture src, RenderTexture dest)
         {
-            _onPreRender(_mainEffectController);
-            _onPostRender(_mainEffectController);
-            _imageEffectControllerCallback(_mainEffectController, src, dest);
+            if (_mainEffectContainer.mainEffect.hasPostProcessEffect)
+            {
+                _onPreRender(_mainEffectController);
+                _onPostRender(_mainEffectController);
+                _imageEffectControllerCallback(_mainEffectController, src, dest);
+            }
+            else
+            {
+                Graphics.Blit(src, dest);
+            }
         }
     }
 }
