@@ -11,16 +11,17 @@ If you use any of these features, you MUST add "Vivify" as a requirement for you
 This documentation assumes basic understanding of custom events and tracks.
 
 ### Event Types
-- [`SetMaterialProperty`](#SetMaterialProperty)
-- [`SetGlobalProperty`](#SetGlobalProperty)
-- [`ApplyPostProcessing`](#ApplyPostProcessing)
-- [`DeclareCullingMask`](#DeclareCullingMask)
-- [`DestroyTexture`](#DestroyTexture)
-- [`DeclareRenderTexture`](#DeclareRenderTexture)
-- [`InstantiatePrefab`](#InstantiatePrefab)
-- [`DestroyPrefab`](#DestroyPrefab)
-- [`SetAnimatorProperty`](#SetAnimatorProperty)
-- [`SetCameraProperty`](#SetCameraProperty)
+- [`SetMaterialProperty`](#setmaterialproperty)
+- [`SetGlobalProperty`](#setglobalproperty)
+- [`ApplyPostProcessing`](#applypostprocessing)
+- [`DeclareCullingTexture`](#declarecullingtexture)
+- [`DeclareRenderTexture`](#declarerendertexture)
+- [`DestroyTexture`](#destroytexture)
+- [`InstantiatePrefab`](#instantiateprefab)
+- [`DestroyPrefab`](#destroyprefab)
+- [`SetAnimatorProperty`](#setanimatorproperty)
+- [`SetCameraProperty`](#setcameraproperty)
+- [`AssignTrackPrefab`](#assigntrackprefab)
 
 ## Setting up Unity
 First, you should to download the Unity Hub at https://unity3d.com/get-unity/download and follow the on-screen instructions until you get to the projects page, while skipping the recommended Unity Editor. Install a version of Unity (Installs > Install Editor) and for maximum compatibility, Beat Saber uses version 2021.3.16f1 found in the [archive](https://unity3d.com/get-unity/download/archive).
@@ -65,8 +66,6 @@ By default when Vivify will check against a checksum when loading an asset bundl
 ```
 
 ## SetMaterialProperty
-Allows setting material properties, e.g. Texture, Float, Color.
-
 ```js
 {
   "b": float, // Time in beats.
@@ -84,9 +83,9 @@ Allows setting material properties, e.g. Texture, Float, Color.
 }
 ```
 
-## SetGlobalProperty
-Allows setting global properties, e.g. Texture, Float, Color. These will persist even after the map ends, do not rely on their default value.
+Allows setting material properties, e.g. Texture, Float, Color.
 
+## SetGlobalProperty
 ```js
 {
   "b": float, // Time in beats.
@@ -103,10 +102,13 @@ Allows setting global properties, e.g. Texture, Float, Color. These will persist
 }
 ```
 
+Allows setting global properties, e.g. Texture, Float, Color. These will persist even after the map ends, do not rely on their default value.
+
 ### Property types
 - Texture: Must be a string that is a direct path file to a texture.
 - Float: May either be a direct value (`"value": 10.4`) or a point definition (`"value": [[0,0], [10, 1]]`).
 - Color: May either be a RGBA array (`"value": [0, 1, 0]`) or a point definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
+- Vector: May either be an array (`"value": [0, 1, 0]`) or a point definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
 
 ```js
 // Example
@@ -149,7 +151,8 @@ Allows setting global properties, e.g. Texture, Float, Color. These will persist
   }
 }
 ```
-`ApplyPostProcessing` will assign a material to the camera. A duration of 0 will run for exactly one frame.
+
+Assigns a material to the camera. A duration of 0 will run for exactly one frame. If a destination is the same as source, a temporary render texture will be created as a buffer.
 
 This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from within.
 
@@ -172,11 +175,11 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
 }
 ```
 
-## DeclareCullingMask
+## DeclareCullingTexture
 ```js
 {
   "b": float, // Time in beats.
-  "t": "DeclareCullingMask",
+  "t": "DeclareCullingTexture",
   "d": {
     "name": string // Name of the culling mask, this is what you must name your sampler in your shader.
     "track": string/string[] // Name(s) of your track(s). Everything on the track(s) will be added to this mask.
@@ -186,7 +189,7 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
 }
 ```
 
-This declares a culling mask where the selected tracks are culled (or if whitelist = true, only the selected tracks are rendered) of which vivify will automatically create a texture for you to sample from your shader.
+Declares a culling mask where the selected tracks are culled (or if whitelist = true, only the selected tracks are rendered) of which vivify will automatically create a texture for you to sample from your shader. If the named field is `_Main` then the culling will apply to the main camera.
 
 ```js
 // Example
@@ -216,18 +219,6 @@ fixed4 frag(v2f i) : SV_Target
 }
 ```
 
-## DestroyTexture
-```js
-{
-  "b": float, // Time in beats.
-  "t": "DestroyTexture",
-  "d": {
-    "name": string or string[], // Names(s) of textures to destroy.
-  }
-}
-```
-`DestroyTexture` will destroy a texture. It is important to destroy any textures created through `DeclareCullingMask` because the scene will have to be rendered again for each active culling mask.
-
 ## DeclareRenderTexture
 ```js
 {
@@ -244,7 +235,21 @@ fixed4 frag(v2f i) : SV_Target
   }
 }
 ```
-`DeclareRenderTexture` declare a RenderTexture to be used anywhere. They are set as a global variable and can be accessed by declaring a sampler named what you put in "name".
+
+Declares a RenderTexture to be used anywhere. They are set as a global variable and can be accessed by declaring a sampler named what you put in "name".
+
+## DestroyTexture
+```js
+{
+  "b": float, // Time in beats.
+  "t": "DestroyTexture",
+  "d": {
+    "name": string or string[], // Names(s) of textures to destroy.
+  }
+}
+```
+
+Destroys a texture. It is important to destroy any textures created through `DeclareCullingTexture` because the scene will have to be rendered again for each active culling texture. This can also be used for textures created through `DeclareRenderTexture` to free up memory.
 
 ## InstantiatePrefab
 ```js
@@ -263,7 +268,7 @@ fixed4 frag(v2f i) : SV_Target
   }
 }
 ```
-`InstantiatePrefab` will instantiate your prefab in the scene.
+Instantiates a prefab in the scene. If left-handed option is enabled, then the position, rotation, and scale will be mirrored.
 
 ## DestroyPrefab
 ```js
@@ -275,11 +280,9 @@ fixed4 frag(v2f i) : SV_Target
   }
 }
 ```
-`DestroyPrefab` will destroy a your prefab in the scene.
+Destroys a prefab in the scene.
 
 ## SetAnimatorProperty
-Allows setting animator properties. This will search the prefab for all Animator components.
-
 ```js
 {
   "b": float, // Time in beats.
@@ -297,6 +300,8 @@ Allows setting animator properties. This will search the prefab for all Animator
 }
 ```
 
+Allows setting animator properties. This will search the prefab for all Animator components.
+
 ### Property types
 - Bool: May either be a direct value (`"value": true`) or a point definition (`"value": [[0,0], [1, 1]]`). Any value greater than or equal to 1 is true.
 - Float: May either be a direct value (`"value": 10.4`) or a point definition (`"value": [[0,0], [10, 1]]`).
@@ -304,8 +309,6 @@ Allows setting animator properties. This will search the prefab for all Animator
 - Trigger: Must be `true` to set trigger or `false` to reset trigger.
 
 ## SetCameraProperty
-Allows setting animator properties. This will search the prefab for all Animator components.
-
 ```js
 {
   "b": float, // Time in beats.
@@ -316,4 +319,18 @@ Allows setting animator properties. This will search the prefab for all Animator
 }
 ```
 
-Rememeber to clear the `depthTextureMode` to `[]` after you are done using it as rendering a depth texture can impact performance. See https://docs.unity3d.com/Manual/SL-CameraDepthTexture.html for more info. Note: if the player has the Smoke option enabled, the `depthTextureMode` will always have `Depth`.
+Remember to clear the `depthTextureMode` to `[]` after you are done using it as rendering a depth texture can impact performance. See https://docs.unity3d.com/Manual/SL-CameraDepthTexture.html for more info. Note: if the player has the Smoke option enabled, the `depthTextureMode` will always have `Depth`.
+
+## AssignTrackPrefab
+```js
+{
+  "b": float, // Time in beats.
+  "t": "AssignTrackPrefab",
+  "d": {
+    "track": string, // Only objects on this track will be affected.
+    "note": string // File path to the desired prefab to replace notes.
+  }
+}
+```
+
+Replaces all objects on the track with the assigned prefab.
