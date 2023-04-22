@@ -18,7 +18,7 @@ using static Vivify.VivifyController;
 using Logger = IPA.Logging.Logger;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Local
-namespace Vivify
+namespace Vivify.Controllers
 {
     [PlayViewControllerSettings(100, "vivify")]
     internal class AssetBundleDownloadViewController : BSMLResourceViewController, IPlayViewController
@@ -67,7 +67,7 @@ namespace Vivify
             Error
         }
 
-        public override string ResourceName => "Vivify.AssetBundleDownloading.bsml";
+        public override string ResourceName => "Vivify.Resources.AssetBundleDownloading.bsml";
 
         public bool Init(StartStandardLevelParameters standardLevelParameters)
         {

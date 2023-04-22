@@ -2,7 +2,7 @@
 using HarmonyLib;
 using UnityEngine;
 
-namespace Vivify.PostProcessing
+namespace Vivify.Controllers
 {
     [RequireComponent(typeof(Camera))]
     internal class CameraPropertyController : MonoBehaviour

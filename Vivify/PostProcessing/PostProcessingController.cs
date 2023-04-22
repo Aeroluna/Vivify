@@ -4,7 +4,8 @@ using System.Linq;
 using System.Reflection;
 using IPA.Utilities;
 using UnityEngine;
-using Vivify.Controllers.TrackGameObject;
+using Vivify.Controllers;
+using Vivify.TrackGameObject;
 using static Vivify.VivifyController;
 using Logger = IPA.Logging.Logger;
 
@@ -18,7 +19,7 @@ namespace Vivify.PostProcessing
         private readonly Dictionary<string, CullingCameraController> _cameraCullingMaskControllers = new();
         private readonly Stack<CullingCameraController> _disabledCullingCameraControllers = new();
 
-        internal static Dictionary<string, CullingMaskController> CullingMasks { get; private set; } = new();
+        internal static Dictionary<string, CullingMask> CullingMasks { get; private set; } = new();
 
         internal static HashSet<DeclareRenderTextureData> DeclaredTextureDatas { get; private set; } = new();
 
@@ -28,7 +29,7 @@ namespace Vivify.PostProcessing
 
         internal static void ResetMaterial()
         {
-            CullingMasks = new Dictionary<string, CullingMaskController>();
+            CullingMasks = new Dictionary<string, CullingMask>();
             DeclaredTextureDatas = new HashSet<DeclareRenderTextureData>();
 
             PostProcessingMaterial = new HashSet<MaterialData>();

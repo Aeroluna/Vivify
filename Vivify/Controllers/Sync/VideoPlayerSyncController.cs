@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Video;
 using Zenject;
 
-namespace Vivify.Controllers
+namespace Vivify.Controllers.Sync
 {
     [RequireComponent(typeof(VideoPlayer))]
     internal class VideoPlayerSyncController : MonoBehaviour

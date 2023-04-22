@@ -3,9 +3,9 @@ using UnityEngine;
 
 namespace Vivify.Managers
 {
-    internal static class InternalBundleManager
+    internal static class DepthShaderManager
     {
-        private const string PATH = "Vivify.Managers.DepthBlitShaders";
+        private const string PATH = "Vivify.Resources.DepthBlitShaders";
 
         internal static Material DepthMaterial { get; private set; } = null!;
 
@@ -15,7 +15,7 @@ namespace Vivify.Managers
         {
             byte[] bytes;
 
-            using (Stream stream = typeof(InternalBundleManager).Assembly.GetManifestResourceStream(PATH)!)
+            using (Stream stream = typeof(DepthShaderManager).Assembly.GetManifestResourceStream(PATH)!)
             using (MemoryStream memoryStream = new())
             {
                 stream.CopyTo(memoryStream);

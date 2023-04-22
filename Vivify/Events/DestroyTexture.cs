@@ -1,6 +1,6 @@
 ﻿using CustomJSONData.CustomBeatmap;
-using Vivify.Controllers.TrackGameObject;
 using Vivify.PostProcessing;
+using Vivify.TrackGameObject;
 
 namespace Vivify.Events
 {
@@ -16,7 +16,7 @@ namespace Vivify.Events
             string[] names = data.Name;
             foreach (string name in names)
             {
-                if (PostProcessingController.CullingMasks.TryGetValue(name, out CullingMaskController? active))
+                if (PostProcessingController.CullingMasks.TryGetValue(name, out CullingMask? active))
                 {
                     PostProcessingController.CullingMasks.Remove(name);
                     active.Dispose();

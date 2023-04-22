@@ -1,11 +1,11 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Vivify.PostProcessing
+namespace Vivify.Controllers
 {
-    internal class MaskRenderer : MonoBehaviour
+    internal class RendererController : MonoBehaviour
     {
-        internal event Action<MaskRenderer>? OnDestroyed;
+        internal event Action<RendererController>? OnDestroyed;
 
         internal event Action? OnTransformChanged;
 

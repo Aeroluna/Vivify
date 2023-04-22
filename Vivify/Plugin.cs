@@ -21,7 +21,7 @@ namespace Vivify
         {
             Log.Logger = new HeckLogger(pluginLogger);
 
-            InternalBundleManager.LoadFromMemory();
+            DepthShaderManager.LoadFromMemory();
             zenjector.Install<VivifyAppInstaller>(Location.App, conf.Generated<Config>());
             zenjector.Install<VivifyPlayerInstaller>(Location.Player);
             zenjector.Install<VivifyMenuInstaller>(Location.Menu);

@@ -4,13 +4,13 @@ using System.Linq;
 using Heck.Animation;
 using UnityEngine;
 
-namespace Vivify.Controllers.TrackGameObject
+namespace Vivify.TrackGameObject
 {
-    internal abstract class TrackGameObjectController : IDisposable
+    internal abstract class TrackGameObjectTracker : IDisposable
     {
         private readonly IEnumerable<Track> _tracks;
 
-        internal TrackGameObjectController(IEnumerable<Track> tracks)
+        internal TrackGameObjectTracker(IEnumerable<Track> tracks)
         {
             _tracks = tracks.ToList();
             foreach (Track track in _tracks)

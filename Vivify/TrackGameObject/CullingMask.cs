@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Heck.Animation;
 using UnityEngine;
-using Vivify.PostProcessing;
+using Vivify.Controllers;
 
-namespace Vivify.Controllers.TrackGameObject
+namespace Vivify.TrackGameObject
 {
-    internal sealed class CullingMaskController : TrackGameObjectController
+    internal sealed class CullingMask : TrackGameObjectTracker
     {
-        private readonly HashSet<MaskRenderer> _maskRenderers = new();
+        private readonly HashSet<RendererController> _maskRenderers = new();
 
-        internal CullingMaskController(IEnumerable<Track> tracks, bool whitelist, bool depthTexture)
+        internal CullingMask(IEnumerable<Track> tracks, bool whitelist, bool depthTexture)
             : base(tracks)
         {
             Whitelist = whitelist;
@@ -29,7 +29,7 @@ namespace Vivify.Controllers.TrackGameObject
         {
             base.Dispose();
 
-            foreach (MaskRenderer maskRenderer in _maskRenderers)
+            foreach (RendererController maskRenderer in _maskRenderers)
             {
                 maskRenderer.OnDestroyed -= OnMaskRendererDestroyed;
                 maskRenderer.OnTransformChanged -= UpdateGameObjects;
@@ -38,8 +38,8 @@ namespace Vivify.Controllers.TrackGameObject
 
         protected override void OnGameObjectAdded(GameObject gameObject)
         {
-            MaskRenderer? maskRenderer = gameObject.GetComponent<MaskRenderer>();
-            maskRenderer ??= gameObject.AddComponent<MaskRenderer>();
+            RendererController? maskRenderer = gameObject.GetComponent<RendererController>();
+            maskRenderer ??= gameObject.AddComponent<RendererController>();
 
             _maskRenderers.Add(maskRenderer);
             maskRenderer.OnDestroyed += OnMaskRendererDestroyed;
@@ -50,18 +50,18 @@ namespace Vivify.Controllers.TrackGameObject
 
         protected override void OnGameObjectRemoved(GameObject gameObject)
         {
-            MaskRenderer maskRenderer = gameObject.GetComponent<MaskRenderer>();
-            if (maskRenderer != null)
+            RendererController rendererController = gameObject.GetComponent<RendererController>();
+            if (rendererController != null)
             {
-                OnMaskRendererDestroyed(maskRenderer);
+                OnMaskRendererDestroyed(rendererController);
             }
         }
 
-        private void OnMaskRendererDestroyed(MaskRenderer maskRenderer)
+        private void OnMaskRendererDestroyed(RendererController rendererController)
         {
-            _maskRenderers.Remove(maskRenderer);
-            maskRenderer.OnDestroyed -= OnMaskRendererDestroyed;
-            maskRenderer.OnTransformChanged -= UpdateGameObjects;
+            _maskRenderers.Remove(rendererController);
+            rendererController.OnDestroyed -= OnMaskRendererDestroyed;
+            rendererController.OnTransformChanged -= UpdateGameObjects;
 
             UpdateGameObjects();
         }

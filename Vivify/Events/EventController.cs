@@ -6,6 +6,7 @@ using Heck;
 using Heck.Animation.Transform;
 using Heck.ReLoad;
 using JetBrains.Annotations;
+using Vivify.Controllers;
 using Vivify.Managers;
 using Vivify.PostProcessing;
 using Zenject;

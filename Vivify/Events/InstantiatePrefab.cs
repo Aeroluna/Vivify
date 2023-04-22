@@ -2,7 +2,7 @@
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.Video;
-using Vivify.Controllers;
+using Vivify.Controllers.Sync;
 using Object = UnityEngine.Object;
 
 namespace Vivify.Events

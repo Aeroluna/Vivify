@@ -32,8 +32,8 @@ namespace Vivify.PostProcessing
             if (_mainEffectContainer.mainEffect.hasPostProcessEffect)
             {
                 _onPreRender(_mainEffectController);
-                _onPostRender(_mainEffectController);
                 _imageEffectControllerCallback(_mainEffectController, src, dest);
+                _onPostRender(_mainEffectController);
             }
             else
             {

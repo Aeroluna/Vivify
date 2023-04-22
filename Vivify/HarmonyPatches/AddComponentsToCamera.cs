@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Heck;
 using UnityEngine;
+using Vivify.Controllers;
 using Vivify.PostProcessing;
 
 namespace Vivify.HarmonyPatches

@@ -1,5 +1,5 @@
 ﻿using CustomJSONData.CustomBeatmap;
-using Vivify.PostProcessing;
+using Vivify.Controllers;
 
 namespace Vivify.Events
 {

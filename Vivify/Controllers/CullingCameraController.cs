@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
-using Vivify.Controllers.TrackGameObject;
 using Vivify.Managers;
+using Vivify.PostProcessing;
+using Vivify.TrackGameObject;
 using static Vivify.VivifyController;
 
-namespace Vivify.PostProcessing
+namespace Vivify.Controllers
 {
     // this is attached to the secondary camera because trying to set the targettexture of a camera disable stereo on a camera for some reason
     // https://forum.unity.com/threads/how-to-create-stereo-rendertextures-and-cameras.925175/#post-6968408
@@ -21,7 +22,7 @@ namespace Vivify.PostProcessing
         private RenderTexture? _renderTextureDepth;
 
         private string? _key;
-        private CullingMaskController? _cullingMaskController;
+        private CullingMask? _cullingMaskController;
 
         private int[]? _cachedLayers;
 
@@ -32,16 +33,16 @@ namespace Vivify.PostProcessing
             _postProcessingController = postProcessingController;
         }
 
-        internal void Init(string key, CullingMaskController cullingMaskController)
+        internal void Init(string key, CullingMask cullingMask)
         {
             _key = key;
-            _cullingMaskController = cullingMaskController;
+            _cullingMaskController = cullingMask;
             _camera.CopyFrom(_postProcessingController.Camera);
-            _camera.depthTextureMode = cullingMaskController.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
+            _camera.depthTextureMode = cullingMask.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
             _camera.depth -= 1;
 
             // flip culling mask when whitelist mode enabled
-            if (cullingMaskController.Whitelist)
+            if (cullingMask.Whitelist)
             {
                 _camera.cullingMask = 1 << CULLINGLAYER;
             }
@@ -110,7 +111,7 @@ namespace Vivify.PostProcessing
             Shader.SetGlobalTexture(_key + "_Depth", _renderTextureDepth);
             if (_renderTextureDepth.dimension == TextureDimension.Tex2DArray)
             {
-                Material sliceMaterial = InternalBundleManager.DepthArrayMaterial;
+                Material sliceMaterial = DepthShaderManager.DepthArrayMaterial;
                 Log.Logger.Log(sliceMaterial.shader.name);
                 sliceMaterial.SetFloat(_arraySliceIndex, 0);
                 Graphics.Blit(null, _renderTextureDepth, sliceMaterial, -1, 0);
@@ -119,7 +120,7 @@ namespace Vivify.PostProcessing
             }
             else
             {
-                Graphics.Blit(null, _renderTextureDepth, InternalBundleManager.DepthMaterial);
+                Graphics.Blit(null, _renderTextureDepth, DepthShaderManager.DepthMaterial);
             }
         }
 

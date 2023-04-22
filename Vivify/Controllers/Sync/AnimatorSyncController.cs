@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Vivify.Controllers
+namespace Vivify.Controllers.Sync
 {
     [RequireComponent(typeof(Animator))]
     internal class AnimatorSyncController : SyncController

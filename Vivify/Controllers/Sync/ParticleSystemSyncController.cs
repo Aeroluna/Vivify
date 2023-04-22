@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Vivify.Controllers
+namespace Vivify.Controllers.Sync
 {
     [RequireComponent(typeof(ParticleSystem))]
     internal class ParticleSystemSyncController : SyncController

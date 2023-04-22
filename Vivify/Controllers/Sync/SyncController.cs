@@ -2,7 +2,7 @@
 using UnityEngine;
 using Zenject;
 
-namespace Vivify.Controllers
+namespace Vivify.Controllers.Sync
 {
     internal abstract class SyncController : MonoBehaviour
     {

@@ -1,7 +1,5 @@
 ﻿using CustomJSONData.CustomBeatmap;
 using UnityEngine;
-using Vivify.Controllers.TrackGameObject;
-using Vivify.PostProcessing;
 
 namespace Vivify.Events
 {

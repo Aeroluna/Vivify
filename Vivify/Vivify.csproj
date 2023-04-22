@@ -43,8 +43,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
-    <EmbeddedResource Include="AssetBundleDownloading.bsml" />
-    <EmbeddedResource Include="Managers\DepthBlitShaders" />
+    <EmbeddedResource Include="Resources\AssetBundleDownloading.bsml" />
+    <EmbeddedResource Include="Resources\DepthBlitShaders" />
   </ItemGroup>
 
   <ItemGroup>
