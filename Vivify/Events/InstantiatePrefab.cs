@@ -1,5 +1,6 @@
 ﻿using CustomJSONData.CustomBeatmap;
 using HarmonyLib;
+using Heck;
 using UnityEngine;
 using UnityEngine.Video;
 using Vivify.Controllers.Sync;
@@ -26,6 +27,12 @@ namespace Vivify.Events
 
             Transform transform = gameObject.transform;
             data.TransformData.Apply(transform, false);
+            if (_leftHanded)
+            {
+                transform.localPosition = transform.localPosition.Mirror();
+                transform.localRotation = transform.localRotation.Mirror();
+                transform.localScale = transform.localScale.Mirror();
+            }
 
             if (data.Track != null)
             {

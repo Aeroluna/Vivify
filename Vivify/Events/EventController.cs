@@ -26,6 +26,7 @@ namespace Vivify.Events
         private readonly CoroutineDummy _coroutineDummy;
         private readonly TransformControllerFactory _transformControllerFactory;
         private readonly BeatmapObjectPrefabManager _beatmapObjectPrefabManager;
+        private readonly bool _leftHanded;
         private readonly ReLoader? _reLoader;
         private readonly BeatmapDataCallbackWrapper _callbackWrapper;
 
@@ -43,6 +44,7 @@ namespace Vivify.Events
             CoroutineDummy coroutineDummy,
             TransformControllerFactory transformControllerFactory,
             BeatmapObjectPrefabManager beatmapObjectPrefabManager,
+            [Inject(Id = HeckController.LEFT_HANDED_ID)] bool leftHanded,
             [InjectOptional] ReLoader? reLoader)
         {
             _instantiator = instantiator;
@@ -55,6 +57,7 @@ namespace Vivify.Events
             _coroutineDummy = coroutineDummy;
             _transformControllerFactory = transformControllerFactory;
             _beatmapObjectPrefabManager = beatmapObjectPrefabManager;
+            _leftHanded = leftHanded;
             _reLoader = reLoader;
             if (reLoader != null)
             {
