@@ -12,27 +12,34 @@ using Logger = IPA.Logging.Logger;
 namespace Vivify.PostProcessing
 {
     [RequireComponent(typeof(Camera))]
-    internal class PostProcessingController : MonoBehaviour
+    internal class PostProcessingController : CullingCameraController
     {
         private readonly Dictionary<string, RenderTextureHolder> _declaredTextures = new();
+        private readonly Dictionary<string, CullingCameraController> _cullingCameraControllers = new();
+        private readonly Stack<CullingTextureController> _disabledCullingCameraControllers = new();
 
-        private readonly Dictionary<string, CullingCameraController> _cameraCullingMaskControllers = new();
-        private readonly Stack<CullingCameraController> _disabledCullingCameraControllers = new();
+        private int? _defaultCullingMask;
 
-        internal static Dictionary<string, CullingMask> CullingMasks { get; private set; } = new();
+        internal static Dictionary<string, CullingTextureData> CullingTextureDatas { get; private set; } = new();
 
         internal static HashSet<DeclareRenderTextureData> DeclaredTextureDatas { get; private set; } = new();
 
         internal static HashSet<MaterialData> PostProcessingMaterial { get; private set; } = new();
 
-        internal Camera Camera { get; private set; } = null!;
+        internal override int DefaultCullingMask => _defaultCullingMask ?? Camera.cullingMask;
 
         internal static void ResetMaterial()
         {
-            CullingMasks = new Dictionary<string, CullingMask>();
+            CullingTextureDatas = new Dictionary<string, CullingTextureData>();
             DeclaredTextureDatas = new HashSet<DeclareRenderTextureData>();
 
             PostProcessingMaterial = new HashSet<MaterialData>();
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            Camera.depth *= 10;
         }
 
         // Cool method for copying serialized fields
@@ -55,17 +62,34 @@ namespace Vivify.PostProcessing
 
         private void OnPreRender()
         {
-            foreach (string cullingMaskKey in _cameraCullingMaskControllers.Keys.Except(CullingMasks.Keys).ToArray())
+            foreach (string cullingMaskKey in _cullingCameraControllers.Keys.Except(CullingTextureDatas.Keys).ToArray())
             {
-                CullingCameraController cullingCullingCameraController = _cameraCullingMaskControllers[cullingMaskKey];
-                cullingCullingCameraController.gameObject.SetActive(false);
-                _disabledCullingCameraControllers.Push(cullingCullingCameraController);
-                _cameraCullingMaskControllers.Remove(cullingMaskKey);
+                if (_cullingCameraControllers[cullingMaskKey] is CullingTextureController cullingTextureController)
+                {
+                    cullingTextureController.gameObject.SetActive(false);
+                    _disabledCullingCameraControllers.Push(cullingTextureController);
+                }
+                else
+                {
+                    CullingTextureData = null;
+                    _defaultCullingMask = null;
+                }
+
+                _cullingCameraControllers.Remove(cullingMaskKey);
             }
 
-            foreach (string cullingMaskKey in CullingMasks.Keys.Except(_cameraCullingMaskControllers.Keys))
+            foreach (string cullingMaskKey in CullingTextureDatas.Keys.Except(_cullingCameraControllers.Keys))
             {
-                CullingCameraController finalController;
+                if (cullingMaskKey == CAMERA_TARGET)
+                {
+                    _defaultCullingMask ??= Camera.cullingMask;
+
+                    CullingTextureData = CullingTextureDatas[cullingMaskKey];
+                    _cullingCameraControllers[cullingMaskKey] = this;
+                    continue;
+                }
+
+                CullingTextureController finalController;
                 if (_disabledCullingCameraControllers.Count > 0)
                 {
                     finalController = _disabledCullingCameraControllers.Pop();
@@ -76,13 +100,13 @@ namespace Vivify.PostProcessing
                     GameObject newObject = new("CullingCamera");
                     newObject.transform.SetParent(transform, false);
                     newObject.AddComponent<Camera>();
-                    finalController = newObject.AddComponent<CullingCameraController>();
+                    finalController = newObject.AddComponent<CullingTextureController>();
                     finalController.Construct(this);
                     CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), newObject);
                 }
 
-                finalController.Init(cullingMaskKey, CullingMasks[cullingMaskKey]);
-                _cameraCullingMaskControllers[cullingMaskKey] = finalController;
+                finalController.Init(cullingMaskKey, CullingTextureDatas[cullingMaskKey]);
+                _cullingCameraControllers[cullingMaskKey] = finalController;
             }
         }
 
@@ -202,6 +226,7 @@ namespace Vivify.PostProcessing
                         {
                             if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder))
                             {
+                                // extra stuff becuase we cannot blit directly into itself
                                 if (sourceHolder == targetHolder)
                                 {
                                     if (material == null)
@@ -227,6 +252,29 @@ namespace Vivify.PostProcessing
                         }
                     }
                 }
+                else if (_cullingCameraControllers.TryGetValue(materialData.Source, out CullingCameraController cullingCameraController)
+                        && cullingCameraController is CullingTextureController cullingTextureController)
+                {
+                    foreach (string materialDataTarget in materialData.Targets)
+                    {
+                        RenderTexture? source = cullingTextureController.RenderTexture;
+                        if (materialDataTarget == CAMERA_TARGET)
+                        {
+                            Blit(source, main, material, materialData.Pass);
+                        }
+                        else
+                        {
+                            if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder))
+                            {
+                                Blit(source, targetHolder.Texture, material, materialData.Pass);
+                            }
+                            else
+                            {
+                                Log.Logger.Log($"Unable to find destination [{materialDataTarget}].", Logger.Level.Error);
+                            }
+                        }
+                    }
+                }
                 else
                 {
                     Log.Logger.Log($"Unable to find source [{materialData.Source}].", Logger.Level.Error);
@@ -237,12 +285,6 @@ namespace Vivify.PostProcessing
             RenderTexture.ReleaseTemporary(main);
         }
 
-        private void Awake()
-        {
-            Camera = GetComponent<Camera>();
-            Camera.depth *= 10;
-        }
-
         private void OnDestroy()
         {
             foreach (RenderTextureHolder declaredTexturesValue in _declaredTextures.Values)
@@ -250,12 +292,15 @@ namespace Vivify.PostProcessing
                 RenderTexture.ReleaseTemporary(declaredTexturesValue.Texture);
             }
 
-            foreach (CullingCameraController cullingCameraController in _cameraCullingMaskControllers.Values.Concat(_disabledCullingCameraControllers))
+            foreach (CullingCameraController cullingCameraController in _cullingCameraControllers.Values.Concat(_disabledCullingCameraControllers))
             {
-                Destroy(cullingCameraController.gameObject);
+                if (cullingCameraController is CullingTextureController)
+                {
+                    Destroy(cullingCameraController.gameObject);
+                }
             }
 
-            _cameraCullingMaskControllers.Clear();
+            _cullingCameraControllers.Clear();
             _disabledCullingCameraControllers.Clear();
         }
     }

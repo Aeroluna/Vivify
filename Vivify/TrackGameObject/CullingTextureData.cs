@@ -7,11 +7,11 @@ using Vivify.Controllers;
 
 namespace Vivify.TrackGameObject
 {
-    internal sealed class CullingMask : TrackGameObjectTracker
+    internal sealed class CullingTextureData : TrackGameObjectTracker
     {
         private readonly HashSet<RendererController> _maskRenderers = new();
 
-        internal CullingMask(IEnumerable<Track> tracks, bool whitelist, bool depthTexture)
+        internal CullingTextureData(IEnumerable<Track> tracks, bool whitelist, bool depthTexture)
             : base(tracks)
         {
             Whitelist = whitelist;

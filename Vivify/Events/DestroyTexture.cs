@@ -16,9 +16,9 @@ namespace Vivify.Events
             string[] names = data.Name;
             foreach (string name in names)
             {
-                if (PostProcessingController.CullingMasks.TryGetValue(name, out CullingMask? active))
+                if (PostProcessingController.CullingTextureDatas.TryGetValue(name, out CullingTextureData? active))
                 {
-                    PostProcessingController.CullingMasks.Remove(name);
+                    PostProcessingController.CullingTextureDatas.Remove(name);
                     active.Dispose();
                     _disposables.Remove(active);
                     Log.Logger.Log($"Destroyed [{name}].");

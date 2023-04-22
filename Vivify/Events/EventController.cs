@@ -89,7 +89,7 @@ namespace Vivify.Events
                     AssignTrackPrefab(customEventData);
                     break;
 
-                case DECLARE_CULLING_MASK:
+                case DECLARE_CULLING_TEXTURE:
                     DeclareCullingMask(customEventData);
                     break;
 
