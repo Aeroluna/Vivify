@@ -14,7 +14,7 @@ namespace Vivify.Controllers
 
         internal Camera Camera { get; private set; } = null!;
 
-        protected CullingTextureData? CullingTextureData
+        internal CullingTextureData? CullingTextureData
         {
             get => _cullingTextureData;
 

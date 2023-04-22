@@ -14,15 +14,20 @@ namespace Vivify.PostProcessing
     [RequireComponent(typeof(Camera))]
     internal class PostProcessingController : CullingCameraController
     {
+        private readonly Dictionary<DeclareRenderTextureData, string> _activeDeclaredTextures = new();
         private readonly Dictionary<string, RenderTextureHolder> _declaredTextures = new();
+        private readonly Dictionary<CullingTextureData, string> _activeCullingTextureDatas = new();
         private readonly Dictionary<string, CullingCameraController> _cullingCameraControllers = new();
         private readonly Stack<CullingTextureController> _disabledCullingCameraControllers = new();
+
+        private readonly List<CullingTextureData> _reusableCullingKeys = new();
+        private readonly List<DeclareRenderTextureData> _reusableDeclaredKeys = new();
 
         private int? _defaultCullingMask;
 
         internal static Dictionary<string, CullingTextureData> CullingTextureDatas { get; private set; } = new();
 
-        internal static HashSet<DeclareRenderTextureData> DeclaredTextureDatas { get; private set; } = new();
+        internal static Dictionary<string, DeclareRenderTextureData> DeclaredTextureDatas { get; private set; } = new();
 
         internal static HashSet<MaterialData> PostProcessingMaterial { get; private set; } = new();
 
@@ -31,7 +36,7 @@ namespace Vivify.PostProcessing
         internal static void ResetMaterial()
         {
             CullingTextureDatas = new Dictionary<string, CullingTextureData>();
-            DeclaredTextureDatas = new HashSet<DeclareRenderTextureData>();
+            DeclaredTextureDatas = new Dictionary<string, DeclareRenderTextureData>();
 
             PostProcessingMaterial = new HashSet<MaterialData>();
         }
@@ -62,12 +67,18 @@ namespace Vivify.PostProcessing
 
         private void OnPreRender()
         {
-            foreach (string cullingMaskKey in _cullingCameraControllers.Keys.Except(CullingTextureDatas.Keys).ToArray())
+            foreach ((CullingTextureData textureData, string textureName) in _activeCullingTextureDatas)
             {
-                if (_cullingCameraControllers[cullingMaskKey] is CullingTextureController cullingTextureController)
+                if (CullingTextureDatas.ContainsValue(textureData))
                 {
-                    cullingTextureController.gameObject.SetActive(false);
-                    _disabledCullingCameraControllers.Push(cullingTextureController);
+                    continue;
+                }
+
+                CullingCameraController cameraController = _cullingCameraControllers[textureName];
+                if (cameraController is CullingTextureController cullingTextureController2)
+                {
+                    cullingTextureController2.gameObject.SetActive(false);
+                    _disabledCullingCameraControllers.Push(cullingTextureController2);
                 }
                 else
                 {
@@ -75,17 +86,26 @@ namespace Vivify.PostProcessing
                     _defaultCullingMask = null;
                 }
 
-                _cullingCameraControllers.Remove(cullingMaskKey);
+                _cullingCameraControllers.Remove(textureName);
+                _reusableCullingKeys.Add(textureData);
             }
 
-            foreach (string cullingMaskKey in CullingTextureDatas.Keys.Except(_cullingCameraControllers.Keys))
+            _reusableCullingKeys.ForEach(n => _activeCullingTextureDatas.Remove(n));
+            _reusableCullingKeys.Clear();
+
+            foreach ((string textureName, CullingTextureData textureData) in CullingTextureDatas)
             {
-                if (cullingMaskKey == CAMERA_TARGET)
+                if (_activeCullingTextureDatas.ContainsKey(textureData))
+                {
+                    continue;
+                }
+
+                if (textureName == CAMERA_TARGET)
                 {
                     _defaultCullingMask ??= Camera.cullingMask;
 
-                    CullingTextureData = CullingTextureDatas[cullingMaskKey];
-                    _cullingCameraControllers[cullingMaskKey] = this;
+                    CullingTextureData = CullingTextureDatas[textureName];
+                    _cullingCameraControllers[textureName] = this;
                     continue;
                 }
 
@@ -105,20 +125,45 @@ namespace Vivify.PostProcessing
                     CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), newObject);
                 }
 
-                finalController.Init(cullingMaskKey, CullingTextureDatas[cullingMaskKey]);
-                _cullingCameraControllers[cullingMaskKey] = finalController;
+                finalController.Init(textureName, CullingTextureDatas[textureName]);
+                _cullingCameraControllers[textureName] = finalController;
+                _activeCullingTextureDatas[textureData] = textureName;
             }
         }
 
         private void OnRenderImage(RenderTexture src, RenderTexture dst)
         {
-            // instantiate declared textures
-            foreach (DeclareRenderTextureData declareRenderTextureData in DeclaredTextureDatas)
+            // delete old declared textures
+            foreach ((DeclareRenderTextureData value, string textureName) in _activeDeclaredTextures)
             {
-                if (!_declaredTextures.ContainsKey(declareRenderTextureData.Name))
+                if (DeclaredTextureDatas.ContainsValue(value))
                 {
-                    _declaredTextures.Add(declareRenderTextureData.Name, new RenderTextureHolder(declareRenderTextureData));
+                    continue;
                 }
+
+                RenderTexture? renderTexture = _declaredTextures[textureName].Texture;
+                if (renderTexture != null)
+                {
+                    renderTexture.Release();
+                }
+
+                _declaredTextures.Remove(textureName);
+                _reusableDeclaredKeys.Add(value);
+            }
+
+            _reusableDeclaredKeys.ForEach(n => _activeDeclaredTextures.Remove(n));
+            _reusableDeclaredKeys.Clear();
+
+            // instantiate declared textures
+            foreach ((string textureName, DeclareRenderTextureData declareRenderTextureData) in DeclaredTextureDatas)
+            {
+                if (_activeDeclaredTextures.ContainsKey(declareRenderTextureData))
+                {
+                    continue;
+                }
+
+                _declaredTextures.Add(textureName, new RenderTextureHolder(declareRenderTextureData));
+                _activeDeclaredTextures.Add(declareRenderTextureData, textureName);
             }
 
             // set up declared textures
@@ -140,7 +185,7 @@ namespace Vivify.PostProcessing
                         descripter.colorFormat = format;
                     }
 
-                    texture = RenderTexture.GetTemporary(descripter);
+                    texture = new RenderTexture(descripter);
                     if (data.FilterMode.HasValue)
                     {
                         texture.filterMode = data.FilterMode.Value;
@@ -289,7 +334,11 @@ namespace Vivify.PostProcessing
         {
             foreach (RenderTextureHolder declaredTexturesValue in _declaredTextures.Values)
             {
-                RenderTexture.ReleaseTemporary(declaredTexturesValue.Texture);
+                RenderTexture? texture = declaredTexturesValue.Texture;
+                if (texture != null)
+                {
+                    texture.Release();
+                }
             }
 
             foreach (CullingCameraController cullingCameraController in _cullingCameraControllers.Values.Concat(_disabledCullingCameraControllers))
