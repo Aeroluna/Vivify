@@ -100,6 +100,8 @@ namespace Vivify.PostProcessing
                     continue;
                 }
 
+                _activeCullingTextureDatas[textureData] = textureName;
+
                 if (textureName == CAMERA_TARGET)
                 {
                     _defaultCullingMask ??= Camera.cullingMask;
@@ -127,7 +129,6 @@ namespace Vivify.PostProcessing
 
                 finalController.Init(textureName, CullingTextureDatas[textureName]);
                 _cullingCameraControllers[textureName] = finalController;
-                _activeCullingTextureDatas[textureData] = textureName;
             }
         }
 
