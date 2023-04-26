@@ -47,25 +47,7 @@ namespace Vivify.PostProcessing
             Camera.depth *= 10;
         }
 
-        // Cool method for copying serialized fields
-        // if i was smart, i would've used this for chroma components
-        private static void CopyComponent<T, TDerived>(T original, GameObject destination)
-            where T : MonoBehaviour
-            where TDerived : T
-        {
-            Type type = typeof(T);
-            MonoBehaviour copy = destination.AddComponent<TDerived>();
-            FieldInfo[] fields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-            foreach (FieldInfo field in fields)
-            {
-                if (Attribute.IsDefined(field, typeof(SerializeField)))
-                {
-                    field.SetValue(copy, field.GetValue(original));
-                }
-            }
-        }
-
-        private void OnPreRender()
+        protected override void OnPreCull()
         {
             foreach ((CullingTextureData textureData, string textureName) in _activeCullingTextureDatas)
             {
@@ -129,6 +111,26 @@ namespace Vivify.PostProcessing
 
                 finalController.Init(textureName, CullingTextureDatas[textureName]);
                 _cullingCameraControllers[textureName] = finalController;
+            }
+
+            base.OnPreCull();
+        }
+
+        // Cool method for copying serialized fields
+        // if i was smart, i would've used this for chroma components
+        private static void CopyComponent<T, TDerived>(T original, GameObject destination)
+            where T : MonoBehaviour
+            where TDerived : T
+        {
+            Type type = typeof(T);
+            MonoBehaviour copy = destination.AddComponent<TDerived>();
+            FieldInfo[] fields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (FieldInfo field in fields)
+            {
+                if (Attribute.IsDefined(field, typeof(SerializeField)))
+                {
+                    field.SetValue(copy, field.GetValue(original));
+                }
             }
         }
 

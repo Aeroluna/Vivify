@@ -32,7 +32,7 @@ namespace Vivify.Controllers
             Camera = GetComponent<Camera>();
         }
 
-        private void OnPreCull()
+        protected virtual void OnPreCull()
         {
             if (_cullingTextureData == null)
             {
