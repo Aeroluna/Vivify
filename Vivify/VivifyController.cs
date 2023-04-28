@@ -33,7 +33,7 @@ namespace Vivify
 
         internal const string NOTE_PREFAB = "note";
 
-        internal const string APPLY_POST_PROCESSING = "ApplyPostProcessing";
+        internal const string APPLY_POST_PROCESSING = "Blit";
         internal const string ASSIGN_TRACK_PREFAB = "AssignTrackPrefab";
         internal const string DECLARE_CULLING_TEXTURE = "DeclareCullingTexture";
         internal const string DECLARE_TEXTURE = "DeclareRenderTexture";
