@@ -153,7 +153,6 @@ namespace Vivify
             Duration = customData.GetRequired<float>(DURATION);
             Priority = customData.Get<int?>(PRIORITY) ?? 0;
             Source = customData.Get<string?>(SOURCE);
-            Target = customData.Get<List<object>?>(DESTINATION)?.Cast<string>().ToArray();
             Asset = customData.Get<string?>(ASSET);
             Pass = customData.Get<int?>(PASS);
             List<object>? properties = customData.Get<List<object>>(PROPERTIES);
@@ -163,6 +162,15 @@ namespace Vivify
                     .Select(n => MaterialProperty.CreateMaterialProperty((CustomData)n, pointDefinitions))
                     .ToList();
             }
+
+            object? destRaw = customData.Get<object>(DESTINATION);
+            Target = destRaw switch
+            {
+                null => null,
+                string destString => new[] { destString },
+                List<object> destArray => destArray.Select(n => (string)n).ToArray(),
+                _ => throw new InvalidCastException($"[{DESTINATION}] was not an allowable type. Was [{destRaw.GetType().FullName}].")
+            };
         }
 
         internal Functions Easing { get; }
