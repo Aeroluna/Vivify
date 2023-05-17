@@ -13,7 +13,7 @@ This documentation assumes basic understanding of custom events and tracks.
 ### Event Types
 - [`SetMaterialProperty`](#setmaterialproperty)
 - [`SetGlobalProperty`](#setglobalproperty)
-- [`ApplyPostProcessing`](#applypostprocessing)
+- [`Blit`](#blit)
 - [`DeclareCullingTexture`](#declarecullingtexture)
 - [`DeclareRenderTexture`](#declarerendertexture)
 - [`DestroyTexture`](#destroytexture)
@@ -134,17 +134,17 @@ Allows setting global properties, e.g. Texture, Float, Color. These will persist
 }
 ```
 
-## ApplyPostProcessing
+## Blit
 ```js
 {
   "b": float, // Time in beats.
-  "t": "ApplyPostProcessing",
+  "t": "Blit",
   "d": {
     "asset": string, // File path to the desired material.
     "priority": int, // (Optional) Which order to run current active post processing effects. Higher priority will run first. Default = 0
     "pass": int, // (Optional) Which pass in the shader to use. Will use all passes if not defined.
     "source": string, // (Optional) Which texture to pass to the shader as "_MainTex". "_Main" is reserved for the camera. Default = "_Main"
-    "destination": string[], // (Optional) Which render texture to save to. "_Main" is reserved for the camera. Default = "_Main"
+    "destination": string, // (Optional) Which render texture to save to. Can be an array. "_Main" is reserved for the camera. Default = "_Main"
     "duration": float, // (Optional) How long will this material be applied. Default = 0
     "easing": string, // See SetMaterialProperty.
     "properties": ? // See SetMaterialProperty.
@@ -160,7 +160,7 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
 // Example
 {
   "b": 73.0,
-  "t": "ApplyPostProcessing",
+  "t": "Blit",
   "d": {
     "asset": "assets/shaders/tvdistortmat.mat",
     "duration": 32,
