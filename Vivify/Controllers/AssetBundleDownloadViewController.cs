@@ -206,19 +206,18 @@ namespace Vivify.Controllers
                 yield break;
             }
 
-            if (www.isNetworkError || www.isHttpError)
+            if (www.result != UnityWebRequest.Result.Success)
             {
-                if (www.isNetworkError)
+                _lastError = www.result switch
                 {
-                    _lastError = $"Network error while downloading bundle.\n{www.error}";
-                    Vivify.Log.Logger.Log(_lastError, Logger.Level.Error);
-                }
-                else if (www.isHttpError)
-                {
-                    _lastError = $"Server sent error response code while downloading bundle.\n({www.responseCode})";
-                    Vivify.Log.Logger.Log(_lastError, Logger.Level.Error);
-                }
+                    UnityWebRequest.Result.ConnectionError => $"Failed to communicate with the server.\n{www.error}",
+                    UnityWebRequest.Result.ProtocolError => $"The server returned an error response.\n({www.responseCode})",
+                    UnityWebRequest.Result.DataProcessingError =>
+                        "Request succeeded in communicating with the server, but encountered an error when processing the received data.",
+                    _ => "Download failed for unknown reason."
+                };
 
+                Vivify.Log.Logger.Log(_lastError, Logger.Level.Error);
                 _newView = View.Error;
                 yield break;
             }

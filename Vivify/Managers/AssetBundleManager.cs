@@ -15,11 +15,10 @@ namespace Vivify.Managers
     {
         private readonly Dictionary<string, Object> _assets = new();
 
-        private readonly AssetBundle _mainBundle;
-
         [UsedImplicitly]
         private AssetBundleManager(IDifficultyBeatmap difficultyBeatmap, Config config)
         {
+            AssetBundle mainBundle;
             if (difficultyBeatmap is not CustomDifficultyBeatmap customDifficultyBeatmap)
             {
                 throw new ArgumentException(
@@ -35,34 +34,36 @@ namespace Vivify.Managers
 
             if (Heck.HeckController.DebugMode)
             {
-                _mainBundle = AssetBundle.LoadFromFile(path);
+                mainBundle = AssetBundle.LoadFromFile(path);
             }
             else
             {
                 CustomData levelCustomData = ((CustomBeatmapSaveData)customDifficultyBeatmap.beatmapSaveData).levelCustomData;
                 uint assetBundleChecksum = levelCustomData.GetRequired<uint>(ASSET_BUNDLE);
-                _mainBundle = AssetBundle.LoadFromFile(path, assetBundleChecksum);
+                mainBundle = AssetBundle.LoadFromFile(path, assetBundleChecksum);
             }
 
-            if (_mainBundle == null)
+            if (mainBundle == null)
             {
                 throw new InvalidOperationException($"Failed to load [{path}]");
             }
 
-            string[] assetnames = _mainBundle.GetAllAssetNames();
+            string[] assetnames = mainBundle.GetAllAssetNames();
             foreach (string name in assetnames)
             {
                 Log.Logger.Log($"Loaded [{name}].");
-                Object asset = _mainBundle.LoadAsset(name);
+                Object asset = mainBundle.LoadAsset(name);
                 _assets.Add(name, asset);
             }
+
+            mainBundle.Unload(false);
         }
 
         public void Dispose()
         {
-            if (_mainBundle != null)
+            foreach (Object asset in _assets.Values)
             {
-                _mainBundle.Unload(true);
+                Object.Destroy(asset);
             }
         }
 

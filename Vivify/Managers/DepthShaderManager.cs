@@ -25,6 +25,7 @@ namespace Vivify.Managers
             AssetBundle bundle = AssetBundle.LoadFromMemory(bytes, 1737660153);
             DepthMaterial = bundle.LoadAsset<Material>("assets/depthblit.mat");
             DepthArrayMaterial = bundle.LoadAsset<Material>("assets/depthblitarrayslice.mat");
+            bundle.Unload(false);
         }
     }
 }
