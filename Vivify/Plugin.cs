@@ -1,8 +1,5 @@
-﻿using Heck;
-using IPA;
-using IPA.Config.Stores;
-using IPA.Logging;
-using JetBrains.Annotations;
+﻿using BepInEx;
+using BepInEx.Logging;
 using SiraUtil.Zenject;
 using SongCore;
 using UnityEngine.SceneManagement;
@@ -12,25 +9,30 @@ using static Vivify.VivifyController;
 
 namespace Vivify
 {
-    [Plugin(RuntimeOptions.DynamicInit)]
-    internal class Plugin
+    [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInDependency("BeatSaberMarkupLanguage")]
+    [BepInDependency("BSIPA_Utilities")]
+    [BepInDependency("CustomJSONData")]
+    [BepInDependency("SiraUtil")]
+    [BepInDependency("Heck")]
+    [BepInProcess("Beat Saber.exe")]
+    internal class Plugin : BaseUnityPlugin
     {
-        [UsedImplicitly]
-        [Init]
-        public Plugin(Logger pluginLogger, IPA.Config.Config conf, Zenjector zenjector)
+        internal static ManualLogSource Log { get; private set; } = null!;
+
+        private void Awake()
         {
-            Log.Logger = new HeckLogger(pluginLogger);
+            Log = Logger;
 
             DepthShaderManager.LoadFromMemory();
-            zenjector.Install<VivifyAppInstaller>(Location.App, conf.Generated<Config>());
+            Zenjector zenjector = Zenjector.ConstructZenjector(Info);
+            zenjector.Install<VivifyAppInstaller>(Location.App, new Config(Config));
             zenjector.Install<VivifyPlayerInstaller>(Location.Player);
             zenjector.Install<VivifyMenuInstaller>(Location.Menu);
         }
 
 #pragma warning disable CA1822
-        [UsedImplicitly]
-        [OnEnable]
-        public void OnEnable()
+        private void OnEnable()
         {
             Collections.RegisterCapability(CAPABILITY);
             CorePatcher.Enabled = true;
@@ -39,9 +41,7 @@ namespace Vivify
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
         }
 
-        [UsedImplicitly]
-        [OnDisable]
-        public void OnDisable()
+        private void OnDisable()
         {
             Collections.DeregisterizeCapability(CAPABILITY);
             CorePatcher.Enabled = false;

@@ -75,7 +75,7 @@ namespace Vivify.Controllers
             if (_renderTextureDepth.dimension == TextureDimension.Tex2DArray)
             {
                 Material sliceMaterial = DepthShaderManager.DepthArrayMaterial;
-                Log.Logger.Log(sliceMaterial.shader.name);
+                Plugin.Log.LogDebug(sliceMaterial.shader.name);
                 sliceMaterial.SetFloat(_arraySliceIndex, 0);
                 Graphics.Blit(null, _renderTextureDepth, sliceMaterial, -1, 0);
                 sliceMaterial.SetFloat(_arraySliceIndex, 1);

@@ -17,7 +17,7 @@ namespace Vivify.Events
             CullingTextureData textureData = new(data.Tracks, data.Whitelist, data.DepthTexture);
             _disposables.Add(textureData);
             PostProcessingController.CullingTextureDatas.Add(name, textureData);
-            Log.Logger.Log($"Created culling mask [{name}].");
+            Plugin.Log.LogDebug($"Created culling mask [{name}].");
             /*
                 GameObject[] gameObjects = Resources.FindObjectsOfTypeAll<GameObject>();
                 List<int> layers = new List<int>();

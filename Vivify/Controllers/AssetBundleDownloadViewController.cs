@@ -15,7 +15,6 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 using Zenject;
 using static Vivify.VivifyController;
-using Logger = IPA.Logging.Logger;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 namespace Vivify.Controllers
@@ -97,7 +96,7 @@ namespace Vivify.Controllers
             uint assetBundleChecksum = levelCustomData.GetRequired<uint>(ASSET_BUNDLE);
             _doAbort = false;
             _downloadFinished = false;
-            if (_config.AllowDownload)
+            if (_config.AllowDownload.Value)
             {
                 _coroutineBastard.StartCoroutine(DownloadAndSave(
                     path,
@@ -179,7 +178,7 @@ namespace Vivify.Controllers
         {
             _config = config;
             _coroutineBastard = coroutineBastard;
-            _newView = config.AllowDownload ? View.Downloading : View.Tos;
+            _newView = config.AllowDownload.Value ? View.Downloading : View.Tos;
         }
 
         // TODO: figure out a way to resolve the fact that multiplayer does NOT have enough time to download bundles
@@ -188,8 +187,8 @@ namespace Vivify.Controllers
             uint checksum)
         {
             _newView = View.Downloading;
-            string url = _config.BundleRepository + checksum;
-            Vivify.Log.Logger.Log($"Attempting to download asset bundle from [{url}].");
+            string url = _config.BundleRepository.Value + checksum;
+            Plugin.Log.LogDebug($"Attempting to download asset bundle from [{url}].");
             using UnityWebRequest www = UnityWebRequest.Get(url);
             www.SendWebRequest();
             while (!www.isDone)
@@ -202,21 +201,33 @@ namespace Vivify.Controllers
                 }
 
                 www.Abort();
-                Vivify.Log.Logger.Log("Download cancelled.");
+                Plugin.Log.LogDebug("Download cancelled.");
                 yield break;
             }
 
-            if (www.isNetworkError || www.isHttpError)
+            if (www.result != UnityWebRequest.Result.Success)
             {
-                if (www.isNetworkError)
+                switch (www.result)
                 {
-                    _lastError = $"Network error while downloading bundle.\n{www.error}";
-                    Vivify.Log.Logger.Log(_lastError, Logger.Level.Error);
-                }
-                else if (www.isHttpError)
-                {
-                    _lastError = $"Server sent error response code while downloading bundle.\n({www.responseCode})";
-                    Vivify.Log.Logger.Log(_lastError, Logger.Level.Error);
+                    case UnityWebRequest.Result.ConnectionError:
+                        _lastError = $"Failed to communicate with the server.\n{www.error}";
+                        Plugin.Log.LogError(_lastError);
+                        break;
+
+                    case UnityWebRequest.Result.ProtocolError:
+                        _lastError = $"The server returned an error response.\n({www.responseCode})";
+                        Plugin.Log.LogError(_lastError);
+                        break;
+
+                    case UnityWebRequest.Result.DataProcessingError:
+                        _lastError = "Request succeeded in communicating with the server, but encountered an error when processing the received data.";
+                        Plugin.Log.LogError(_lastError);
+                        break;
+
+                    default:
+                        _lastError = "Download failed for unknown reason.";
+                        Plugin.Log.LogError(_lastError);
+                        break;
                 }
 
                 _newView = View.Error;
@@ -224,7 +235,7 @@ namespace Vivify.Controllers
             }
 
             File.WriteAllBytes(savePath, www.downloadHandler.data);
-            Vivify.Log.Logger.Log($"Successfully downloaded bundle to [{savePath}].");
+            Plugin.Log.LogDebug($"Successfully downloaded bundle to [{savePath}].");
             _downloadFinished = true;
         }
 
@@ -232,7 +243,7 @@ namespace Vivify.Controllers
         [UIAction("accept-click")]
         private void OnAcceptClick()
         {
-            _config.AllowDownload = true;
+            _config.AllowDownload.Value = true;
             if (_downloadPath != null)
             {
                 _coroutineBastard.StartCoroutine(DownloadAndSave(

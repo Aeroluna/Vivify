@@ -6,7 +6,6 @@ using CustomJSONData.CustomBeatmap;
 using JetBrains.Annotations;
 using UnityEngine;
 using static Vivify.VivifyController;
-using Logger = IPA.Logging.Logger;
 using Object = UnityEngine.Object;
 
 namespace Vivify.Managers
@@ -52,7 +51,7 @@ namespace Vivify.Managers
             string[] assetnames = _mainBundle.GetAllAssetNames();
             foreach (string name in assetnames)
             {
-                Log.Logger.Log($"Loaded [{name}].");
+                Plugin.Log.LogDebug($"Loaded [{name}].");
                 Object asset = _mainBundle.LoadAsset(name);
                 _assets.Add(name, asset);
             }
@@ -76,11 +75,11 @@ namespace Vivify.Managers
                     return true;
                 }
 
-                Log.Logger.Log($"Found {assetName}, but was null or not [{typeof(T).FullName}]!", Logger.Level.Error);
+                Plugin.Log.LogWarning($"Found {assetName}, but was null or not [{typeof(T).FullName}]!");
             }
             else
             {
-                Log.Logger.Log($"Could not find {typeof(T).FullName} [{assetName}].", Logger.Level.Error);
+                Plugin.Log.LogWarning($"Could not find {typeof(T).FullName} [{assetName}].");
             }
 
             asset = default;

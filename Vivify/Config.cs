@@ -1,17 +1,27 @@
-﻿using System.Runtime.CompilerServices;
-using IPA.Config.Stores;
+﻿using BepInEx.Configuration;
 using JetBrains.Annotations;
 
-[assembly: InternalsVisibleTo(GeneratedStore.AssemblyVisibilityTarget)]
-
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 namespace Vivify
 {
     [UsedImplicitly]
-    public class Config
+    internal class Config
     {
-        public bool AllowDownload { get; set; }
+        internal Config(ConfigFile configFile)
+        {
+            AllowDownload = configFile.Bind(
+                VivifyController.ID,
+                "Allow Download",
+                false,
+                "Allows Vivify to automatically download necessary assets.");
+            BundleRepository = configFile.Bind(
+                VivifyController.ID,
+                "Bundle Repository",
+                "https://aeroluna.dev/bundles/",
+                "The URL to download bundles from.");
+        }
 
-        public string BundleRepository { get; set; } = "https://aeroluna.dev/bundles/";
+        internal ConfigEntry<bool> AllowDownload { get; }
+
+        internal ConfigEntry<string> BundleRepository { get; }
     }
 }

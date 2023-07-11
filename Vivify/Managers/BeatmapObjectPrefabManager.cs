@@ -5,7 +5,6 @@ using HarmonyLib;
 using Heck;
 using Heck.Animation;
 using Heck.ReLoad;
-using IPA.Utilities;
 using JetBrains.Annotations;
 using UnityEngine;
 using Zenject;
@@ -166,16 +165,7 @@ namespace Vivify.Managers
 
         private class MPBControllerHijacker
         {
-            private static readonly FieldAccessor<MaterialPropertyBlockController, Renderer[]>.Accessor _renderersAccessor =
-                FieldAccessor<MaterialPropertyBlockController, Renderer[]>.GetAccessor("_renderers");
-
-            private static readonly FieldAccessor<MaterialPropertyBlockController, List<int>>.Accessor _numberOfMaterialsInRenderersAccessor =
-                FieldAccessor<MaterialPropertyBlockController, List<int>>.GetAccessor("_numberOfMaterialsInRenderers");
-
-            private static readonly FieldAccessor<MaterialPropertyBlockController, bool>.Accessor _isInitializedAccessor =
-                FieldAccessor<MaterialPropertyBlockController, bool>.GetAccessor("_isInitialized");
-
-            private MaterialPropertyBlockController _materialPropertyBlockController;
+            private readonly MaterialPropertyBlockController _materialPropertyBlockController;
 
             private Renderer[]? _cachedRenderers;
             private List<int>? _cachedNumberOfMaterialsInRenderers;
@@ -195,15 +185,15 @@ namespace Vivify.Managers
 
             internal void Activate(GameObject gameObject)
             {
-                if (_isInitializedAccessor(ref _materialPropertyBlockController))
+                if (_materialPropertyBlockController._isInitialized)
                 {
-                    _cachedNumberOfMaterialsInRenderers = _numberOfMaterialsInRenderersAccessor(ref _materialPropertyBlockController);
-                    _isInitializedAccessor(ref _materialPropertyBlockController) = false;
+                    _cachedNumberOfMaterialsInRenderers = _materialPropertyBlockController._numberOfMaterialsInRenderers;
+                    _materialPropertyBlockController._isInitialized = false;
                 }
 
-                _cachedRenderers = _renderersAccessor(ref _materialPropertyBlockController);
+                _cachedRenderers = _materialPropertyBlockController._renderers;
                 Renderer[] newRenderers = gameObject.GetComponentsInChildren<Renderer>(true);
-                _renderersAccessor(ref _materialPropertyBlockController) = _cachedRenderers.Concat(newRenderers).ToArray();
+                _materialPropertyBlockController._renderers = _cachedRenderers.Concat(newRenderers).ToArray();
                 _materialPropertyBlockController.ApplyChanges();
             }
 
@@ -212,13 +202,13 @@ namespace Vivify.Managers
             {
                 if (_cachedNumberOfMaterialsInRenderers != null)
                 {
-                    _numberOfMaterialsInRenderersAccessor(ref _materialPropertyBlockController) = _cachedNumberOfMaterialsInRenderers;
+                    _materialPropertyBlockController._numberOfMaterialsInRenderers = _cachedNumberOfMaterialsInRenderers;
                     _cachedNumberOfMaterialsInRenderers = null;
                 }
 
                 if (_cachedRenderers != null)
                 {
-                    _renderersAccessor(ref _materialPropertyBlockController) = _cachedRenderers;
+                    _materialPropertyBlockController._renderers = _cachedRenderers;
                     _cachedRenderers = null;
                 }
             }

@@ -11,6 +11,10 @@ namespace Vivify.TrackGameObject
     {
         private readonly HashSet<RendererController> _maskRenderers = new();
 
+        private bool _gameObjectsDirty;
+
+        private GameObject[] _gameObjects = Array.Empty<GameObject>();
+
         internal CullingTextureData(IEnumerable<Track> tracks, bool whitelist, bool depthTexture)
             : base(tracks)
         {
@@ -23,7 +27,18 @@ namespace Vivify.TrackGameObject
 
         internal bool DepthTexture { get; }
 
-        internal GameObject[] GameObjects { get; private set; } = Array.Empty<GameObject>();
+        internal GameObject[] GameObjects
+        {
+            get
+            {
+                if (_gameObjectsDirty)
+                {
+                    _gameObjects = _maskRenderers.SelectMany(n => n.ChildRenderers).Select(n => n.gameObject).ToArray();
+                }
+
+                return _gameObjects;
+            }
+        }
 
         public override void Dispose()
         {
@@ -68,7 +83,7 @@ namespace Vivify.TrackGameObject
 
         private void UpdateGameObjects()
         {
-            GameObjects = _maskRenderers.SelectMany(n => n.ChildRenderers).Select(n => n.gameObject).ToArray();
+            _gameObjectsDirty = true;
         }
     }
 }

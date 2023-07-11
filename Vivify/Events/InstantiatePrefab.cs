@@ -47,13 +47,13 @@ namespace Vivify.Events
             string? id = data.Id;
             if (id != null)
             {
-                Log.Logger.Log($"Created [{assetName}] with id [{id}].");
+                Plugin.Log.LogDebug($"Created [{assetName}] with id [{id}].");
                 _prefabManager.Add(id, gameObject, data.Track);
             }
             else
             {
                 string genericId = gameObject.GetHashCode().ToString();
-                Log.Logger.Log($"Created [{assetName}] without id.");
+                Plugin.Log.LogDebug($"Created [{assetName}] without id.");
                 _prefabManager.Add(genericId, gameObject, data.Track);
             }
         }

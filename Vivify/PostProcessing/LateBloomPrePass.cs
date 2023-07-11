@@ -3,7 +3,9 @@
     // Cannot copy BloomPrePass because it initializes on Awake()
     internal class LateBloomPrePass : BloomPrePass
     {
-        public override void Awake()
+#pragma warning disable CA1822
+        private new void Awake()
+#pragma warning restore CA1822
         {
         }
 

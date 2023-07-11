@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using IPA.Utilities;
+using BSIPA_Utilities;
+using ModestTree;
 using UnityEngine;
 using Vivify.Controllers;
 using Vivify.TrackGameObject;
 using static Vivify.VivifyController;
-using Logger = IPA.Logging.Logger;
 
 namespace Vivify.PostProcessing
 {
@@ -195,7 +195,7 @@ namespace Vivify.PostProcessing
                     }
 
                     value.Texture = texture;
-                    Log.Logger.Log($"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}.");
+                    Plugin.Log.LogDebug($"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}.");
                 }
 
                 Shader.SetGlobalTexture(data.PropertyId, texture);
@@ -256,7 +256,7 @@ namespace Vivify.PostProcessing
                             }
                             else
                             {
-                                Log.Logger.Log($"Unable to find destination [{materialDataTarget}].", Logger.Level.Error);
+                                Plugin.Log.LogWarning($"Unable to find destination [{materialDataTarget}].");
                             }
                         }
                     }
@@ -295,7 +295,7 @@ namespace Vivify.PostProcessing
                             }
                             else
                             {
-                                Log.Logger.Log($"Unable to find destination [{materialDataTarget}].", Logger.Level.Error);
+                                Plugin.Log.LogWarning($"Unable to find destination [{materialDataTarget}].");
                             }
                         }
                     }
@@ -318,14 +318,14 @@ namespace Vivify.PostProcessing
                             }
                             else
                             {
-                                Log.Logger.Log($"Unable to find destination [{materialDataTarget}].", Logger.Level.Error);
+                                Plugin.Log.LogWarning($"Unable to find destination [{materialDataTarget}].");
                             }
                         }
                     }
                 }
                 else
                 {
-                    Log.Logger.Log($"Unable to find source [{materialData.Source}].", Logger.Level.Error);
+                    Plugin.Log.LogWarning($"Unable to find source [{materialData.Source}].");
                 }
             }
 

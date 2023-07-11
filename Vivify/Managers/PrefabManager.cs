@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using BSIPA_Utilities;
 using Heck.Animation;
 using Heck.ReLoad;
-using IPA.Utilities;
 using JetBrains.Annotations;
 using UnityEngine;
 using Zenject;
-using Logger = IPA.Logging.Logger;
 using Object = UnityEngine.Object;
 
 namespace Vivify.Managers
@@ -47,7 +46,7 @@ namespace Vivify.Managers
                 return;
             }
 
-            Log.Logger.Log($"Destroying [{id}].");
+            Plugin.Log.LogDebug($"Destroying [{id}].");
 
             prefab.Track?.RemoveGameObject(prefab.GameObject);
 
@@ -60,7 +59,7 @@ namespace Vivify.Managers
             bool result = _prefabs.TryGetValue(id, out prefab);
             if (!result)
             {
-                Log.Logger.Log($"No prefab with id [{id}] detected.", Logger.Level.Error);
+                Plugin.Log.LogWarning($"No prefab with id [{id}] detected.");
             }
 
             return result;

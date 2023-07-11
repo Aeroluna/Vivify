@@ -35,7 +35,7 @@ namespace Vivify.Events
             if (duration == 0)
             {
                 PostProcessingController.PostProcessingMaterial.Add(new MaterialData(material, data.Priority, data.Source, data.Target, data.Pass, Time.frameCount));
-                Log.Logger.Log($"Applied material [{assetName}] for single frame.");
+                Plugin.Log.LogDebug($"Applied material [{assetName}] for single frame.");
                 return;
             }
 
@@ -46,7 +46,7 @@ namespace Vivify.Events
 
             MaterialData materialData = new(material, data.Priority, data.Source, data.Target, data.Pass);
             PostProcessingController.PostProcessingMaterial.Add(materialData);
-            Log.Logger.Log($"Applied material [{assetName}] for [{duration}] seconds.");
+            Plugin.Log.LogDebug($"Applied material [{assetName}] for [{duration}] seconds.");
             _coroutineDummy.StartCoroutine(KillPostProcessingCoroutine(materialData, duration, customEventData.time));
         }
 
