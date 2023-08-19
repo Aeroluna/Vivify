@@ -55,12 +55,12 @@ When referencing an asset's file path in an event, remember to write in all lowe
 By default when Vivify will check against a checksum when loading an asset bundle, but this checksum check can be disabled by enabling debug mode using the "-aerolunaisthebestmodder" launch parameter. You can add the checksum to the map by using the `"_assetBundle"` field in the info.dat.
 ```js
   ...
-  "_environmentName" : "DefaultEnvironment",
-  "_allDirectionsEnvironmentName" : "GlassDesertEnvironment",
-  "_customData" : {
+  "_environmentName": "DefaultEnvironment",
+  "_allDirectionsEnvironmentName": "GlassDesertEnvironment",
+  "_customData": {
     "_assetBundle": 1414251160
   },
-  "_difficultyBeatmapSets" : [
+  "_difficultyBeatmapSets": [
     {
   ...
 ```
@@ -140,14 +140,14 @@ Allows setting global properties, e.g. Texture, Float, Color. These will persist
   "b": float, // Time in beats.
   "t": "Blit",
   "d": {
-    "asset": string, // File path to the desired material.
+    "asset": string, // (Optional) File path to the desired material. If missing, will just copy from source to destination without anything special.
     "priority": int, // (Optional) Which order to run current active post processing effects. Higher priority will run first. Default = 0
     "pass": int, // (Optional) Which pass in the shader to use. Will use all passes if not defined.
     "source": string, // (Optional) Which texture to pass to the shader as "_MainTex". "_Main" is reserved for the camera. Default = "_Main"
     "destination": string, // (Optional) Which render texture to save to. Can be an array. "_Main" is reserved for the camera. Default = "_Main"
     "duration": float, // (Optional) How long will this material be applied. Default = 0
-    "easing": string, // See SetMaterialProperty.
-    "properties": ? // See SetMaterialProperty.
+    "easing": string, // (Optional) See SetMaterialProperty.
+    "properties": ? // (Optional) See SetMaterialProperty.
   }
 }
 ```
@@ -189,13 +189,13 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
 }
 ```
 
-Declares a culling mask where the selected tracks are culled (or if whitelist = true, only the selected tracks are rendered) of which vivify will automatically create a texture for you to sample from your shader. If the named field is `_Main` then the culling will apply to the main camera.
+Declares a culling mask where the selected tracks are culled (or if whitelist = true, only the selected tracks are rendered) of which Vivify will automatically create a texture for you to sample from your shader. If the named field is `_Main` then the culling will apply to the main camera.
 
 ```js
 // Example
 {
   "b": 0.0,
-  "t": "DeclareCullingMask",
+  "t": "DeclareCullingTexture",
   "d": {
     "name": "_NotesCulled",
     "track": "allnotes"
@@ -225,9 +225,9 @@ fixed4 frag(v2f i) : SV_Target
   "b": float, // Time in beats.
   "t": "DeclareRenderTexture",
   "d": {
-    "name": string, // Name of the depth texture
-    "xRatio": float, // (Optional) Number to divide width by, i.e. on a 1920x1080 screen, an xRatio of 2 will give you a 960x1080 texture
-    "yRatio": float, // (Optional) Number to divide height by
+    "name": string, // Name of the texture
+    "xRatio": float, // (Optional) Number to divide width by, i.e. on a 1920x1080 screen, an xRatio of 2 will give you a 960x1080 texture.
+    "yRatio": float, // (Optional) Number to divide height by.
     "width": int, // (Optional) Exact width for the texture.
     "height": int, // (Optional) Exact height for the texture.
     "colorFormat": string, // (Optional) https://docs.unity3d.com/ScriptReference/RenderTextureFormat.html
@@ -237,6 +237,34 @@ fixed4 frag(v2f i) : SV_Target
 ```
 
 Declares a RenderTexture to be used anywhere. They are set as a global variable and can be accessed by declaring a sampler named what you put in "name".
+
+```js
+// Example
+// Here we declare a texture called "snapshot", capture a single frame at 78.0, then store it in our new render texture.
+// Lastly we destroy the texture (See below) after we are done with it to free up any memory it was taking.
+// (Realistically, won't provide noticable boost to performance, but it can't hurt.)
+{
+  "b": 70.0,
+  "t": "DeclareRenderTexture",
+  "d": {
+    "name": "snapshot"
+  }
+},
+{
+  "b": 78.0,
+  "t": "Blit",
+  "d": {
+    "destination": "snapshot"
+  }
+},
+{
+  "b": 120.0,
+  "t": "DestroyTexture",
+  "d": {
+    "name": "snapshot"
+  }
+}
+```
 
 ## DestroyTexture
 ```js
