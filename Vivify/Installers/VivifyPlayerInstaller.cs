@@ -20,6 +20,8 @@ namespace Vivify.Installers
 
             Container.BindInterfacesAndSelfTo<BeatmapObjectPrefabManager>().AsSingle();
 
+            Container.BindInterfacesTo<QualitySettingsManager>().AsSingle();
+
             // Events
             Container.BindInterfacesTo<EventController>().AsSingle();
         }
