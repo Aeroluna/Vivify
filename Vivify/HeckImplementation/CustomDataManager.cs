@@ -120,6 +120,10 @@ namespace Vivify
                             dictionary.Add(customEventData, new SetAnimatorPropertyData(data, pointDefinitions));
                             break;
 
+                        case SET_RENDER_SETTING:
+                            dictionary.Add(customEventData, new SetRenderSettingData(data, pointDefinitions));
+                            break;
+
                         default:
                             continue;
                     }

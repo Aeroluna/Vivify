@@ -6,6 +6,7 @@ using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.Animation;
 using Heck.Animation.Transform;
+using IPA.Utilities;
 using UnityEngine;
 using static Heck.HeckController;
 using static Vivify.VivifyController;
@@ -145,6 +146,50 @@ namespace Vivify
         }
     }
 
+    internal abstract class RenderSettingProperty
+    {
+        internal RenderSettingProperty(string name)
+        {
+            Name = name;
+        }
+
+        internal string Name { get; }
+
+        internal static RenderSettingProperty CreateRenderSettingProperty<T>(string name, object value, CustomData rawData, Dictionary<string, List<object>> pointDefinitions)
+            where T : struct
+        {
+            return value is List<object>
+                ? new AnimatedRenderSettingProperty<T>(name, rawData, pointDefinitions)
+                : new RenderSettingProperty<T>(name, rawData.GetRequired<T>(name));
+        }
+    }
+
+    internal class AnimatedRenderSettingProperty<T> : RenderSettingProperty
+        where T : struct
+    {
+        internal AnimatedRenderSettingProperty(
+            string name,
+            CustomData rawData,
+            Dictionary<string, List<object>> pointDefinitions)
+            : base(name)
+        {
+            PointDefinition = rawData.GetPointData<T>(name, pointDefinitions) ?? throw new JsonNotDefinedException(name);
+        }
+
+        internal PointDefinition<T> PointDefinition { get; }
+    }
+
+    internal class RenderSettingProperty<T> : RenderSettingProperty
+    {
+        internal RenderSettingProperty(string name, T value)
+            : base(name)
+        {
+            Value = value;
+        }
+
+        internal T Value { get; }
+    }
+
     internal class ApplyPostProcessingData : ICustomEventCustomData
     {
         internal ApplyPostProcessingData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)
@@ -266,6 +311,72 @@ namespace Vivify
         internal string Id { get; }
 
         internal List<AnimatorProperty> Properties { get; }
+    }
+
+    internal class SetRenderSettingData : ICustomEventCustomData
+    {
+        internal SetRenderSettingData(
+            CustomData customData,
+            Dictionary<string, List<object>> pointDefinitions)
+        {
+            Duration = customData.Get<float?>(DURATION) ?? 0f;
+            Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
+
+            string[] excludedStrings = { DURATION, EASING };
+            List<KeyValuePair<string, object?>> propertyKeys = customData.Where(n => excludedStrings.All(m => m != n.Key)).ToList();
+            foreach ((string? key, object? value) in propertyKeys)
+            {
+                if (value == null)
+                {
+                    continue;
+                }
+
+                switch (key)
+                {
+                    case "ambientIntensity":
+                    case "ambientMode":
+                    case "defaultReflectionMode":
+                    case "defaultReflectionResolution":
+                    case "flareFadeSpeed":
+                    case "flareStrength":
+                    case "fog":
+                    case "fogDensity":
+                    case "fogEndDistance":
+                    case "fogMode":
+                    case "fogStartDistance":
+                    case "haloStrength":
+                    case "reflectionBounces":
+                    case "reflectionIntensity":
+                        Properties.Add(
+                            RenderSettingProperty.CreateRenderSettingProperty<float>(
+                                key,
+                                value,
+                                customData,
+                                pointDefinitions));
+                        break;
+
+                    case "ambientEquatorColor":
+                    case "ambientGroundColor":
+                    case "ambientLight":
+                    case "ambientSkyColor":
+                    case "fogColor":
+                    case "subtractiveShadowColor":
+                        Properties.Add(
+                            RenderSettingProperty.CreateRenderSettingProperty<Vector4>(
+                                key,
+                                value,
+                                customData,
+                                pointDefinitions));
+                        break;
+                }
+            }
+        }
+
+        internal float Duration { get; }
+
+        internal Functions Easing { get; }
+
+        internal List<RenderSettingProperty> Properties { get; } = new();
     }
 
     internal class DeclareCullingMaskData : ICustomEventCustomData

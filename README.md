@@ -65,6 +65,34 @@ By default when Vivify will check against a checksum when loading an asset bundl
   ...
 ```
 
+## Quality Settings
+Want realtime reflection probes? Here you go. See https://docs.unity3d.com/ScriptReference/QualitySettings.html for better descriptions of each setting.
+```js
+  ...
+  "_difficulty": "ExpertPlus",
+  "_difficultyRank": 9,
+  "_beatmapFilename": "ExpertPlusStandard.dat",
+  "_noteJumpMovementSpeed": 19,
+  "_customData": {
+    "_qualitySettings": {
+      "_realtimeReflectionProbes": true,
+      "_shadows": 2
+    }
+  }
+  ...
+```
+
+Currently provided settings:
+- `"_anisotropicFiltering"`: (0 - 2) Disable, Enable, ForceEnable.
+- `"_antiAliasing"`: (0, 2, 4, 8)
+- `"_pixelLightCount"`: (int)
+- `"_realtimeReflectionProbes"`: (bool)
+- `"_shadowCascades"`: (0, 2, 4)
+- `"_shadowDistance"`: (float)
+- `"_shadowResolution"`: (0 - 3) Low, Medium, High, VeryHigh.
+- `"_shadows"`: (0 - 2) Disable, HardOnly, All.
+- `"_softParticles"`: (bool)
+
 ## SetMaterialProperty
 ```js
 {

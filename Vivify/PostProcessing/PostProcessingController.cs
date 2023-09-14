@@ -45,6 +45,8 @@ namespace Vivify.PostProcessing
         {
             base.Awake();
             Camera.depth *= 10;
+
+            Log.Logger.Log($"Created PostProcessingController for [{gameObject.name}].");
         }
 
         protected override void OnPreCull()
@@ -114,6 +116,52 @@ namespace Vivify.PostProcessing
             }
 
             base.OnPreCull();
+
+            // delete old declared textures
+            foreach ((DeclareRenderTextureData value, string textureName) in _activeDeclaredTextures)
+            {
+                if (DeclaredTextureDatas.ContainsValue(value))
+                {
+                    continue;
+                }
+
+                RenderTexture? renderTexture = _declaredTextures[textureName].Texture;
+                if (renderTexture != null)
+                {
+                    renderTexture.Release();
+                }
+
+                _declaredTextures.Remove(textureName);
+                _reusableDeclaredKeys.Add(value);
+            }
+
+            _reusableDeclaredKeys.ForEach(n => _activeDeclaredTextures.Remove(n));
+            _reusableDeclaredKeys.Clear();
+
+            // instantiate RenderTextureHolders
+            foreach ((string textureName, DeclareRenderTextureData declareRenderTextureData) in DeclaredTextureDatas)
+            {
+                if (_activeDeclaredTextures.ContainsKey(declareRenderTextureData))
+                {
+                    continue;
+                }
+
+                _declaredTextures.Add(textureName, new RenderTextureHolder(declareRenderTextureData));
+                _activeDeclaredTextures.Add(declareRenderTextureData, textureName);
+            }
+
+            // set up declared textures
+            foreach (RenderTextureHolder value in _declaredTextures.Values)
+            {
+                DeclareRenderTextureData data = value.Data;
+
+                // TODO: clean better
+                RenderTexture? texture = value.Texture;
+                if (texture != null)
+                {
+                    Shader.SetGlobalTexture(data.PropertyId, texture);
+                }
+            }
         }
 
         // Cool method for copying serialized fields
@@ -136,39 +184,6 @@ namespace Vivify.PostProcessing
 
         private void OnRenderImage(RenderTexture src, RenderTexture dst)
         {
-            // delete old declared textures
-            foreach ((DeclareRenderTextureData value, string textureName) in _activeDeclaredTextures)
-            {
-                if (DeclaredTextureDatas.ContainsValue(value))
-                {
-                    continue;
-                }
-
-                RenderTexture? renderTexture = _declaredTextures[textureName].Texture;
-                if (renderTexture != null)
-                {
-                    renderTexture.Release();
-                }
-
-                _declaredTextures.Remove(textureName);
-                _reusableDeclaredKeys.Add(value);
-            }
-
-            _reusableDeclaredKeys.ForEach(n => _activeDeclaredTextures.Remove(n));
-            _reusableDeclaredKeys.Clear();
-
-            // instantiate declared textures
-            foreach ((string textureName, DeclareRenderTextureData declareRenderTextureData) in DeclaredTextureDatas)
-            {
-                if (_activeDeclaredTextures.ContainsKey(declareRenderTextureData))
-                {
-                    continue;
-                }
-
-                _declaredTextures.Add(textureName, new RenderTextureHolder(declareRenderTextureData));
-                _activeDeclaredTextures.Add(declareRenderTextureData, textureName);
-            }
-
             // set up declared textures
             foreach ((string textureName, RenderTextureHolder value) in _declaredTextures)
             {
@@ -176,29 +191,29 @@ namespace Vivify.PostProcessing
 
                 // TODO: clean better
                 RenderTexture? texture = value.Texture;
-                if (texture == null)
+                if (texture != null)
                 {
-                    RenderTextureDescriptor descripter = src.descriptor;
-                    descripter.width = (int)((data.Width ?? descripter.width) / data.XRatio);
-                    descripter.height = (int)((data.Height ?? descripter.height) / data.YRatio);
-
-                    if (data.Format.HasValue)
-                    {
-                        RenderTextureFormat format = data.Format.Value;
-                        descripter.colorFormat = format;
-                    }
-
-                    texture = new RenderTexture(descripter);
-                    if (data.FilterMode.HasValue)
-                    {
-                        texture.filterMode = data.FilterMode.Value;
-                    }
-
-                    value.Texture = texture;
-                    Log.Logger.Log($"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}.");
+                    continue;
                 }
 
-                Shader.SetGlobalTexture(data.PropertyId, texture);
+                RenderTextureDescriptor descripter = src.descriptor;
+                descripter.width = (int)((data.Width ?? descripter.width) / data.XRatio);
+                descripter.height = (int)((data.Height ?? descripter.height) / data.YRatio);
+
+                if (data.Format.HasValue)
+                {
+                    RenderTextureFormat format = data.Format.Value;
+                    descripter.colorFormat = format;
+                }
+
+                texture = new RenderTexture(descripter);
+                if (data.FilterMode.HasValue)
+                {
+                    texture.filterMode = data.FilterMode.Value;
+                }
+
+                value.Texture = texture;
+                Log.Logger.Log($"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}.");
             }
 
             // blit all passes

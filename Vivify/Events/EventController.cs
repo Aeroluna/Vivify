@@ -6,6 +6,7 @@ using Heck;
 using Heck.Animation.Transform;
 using Heck.ReLoad;
 using JetBrains.Annotations;
+using UnityEngine;
 using Vivify.Controllers;
 using Vivify.Managers;
 using Vivify.PostProcessing;
@@ -126,6 +127,10 @@ namespace Vivify.Events
 
                 case SET_CAMERA_PROPERTY:
                     SetCameraProperty(customEventData);
+                    break;
+
+                case SET_RENDER_SETTING:
+                    SetRenderSetting(customEventData);
                     break;
             }
         }

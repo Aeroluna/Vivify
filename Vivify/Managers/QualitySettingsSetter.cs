@@ -5,6 +5,7 @@ using HarmonyLib;
 using IPA.Utilities;
 using JetBrains.Annotations;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Zenject;
 
 namespace Vivify.Managers
@@ -13,14 +14,17 @@ namespace Vivify.Managers
     {
         private readonly Dictionary<string, QualitySetting> _settings = new()
         {
-            { "_anisotropicFiltering", new QualitySetting(() => QualitySettings.anisotropicFiltering, n => QualitySettings.anisotropicFiltering = (AnisotropicFiltering)n) },
-            { "_antiAliasing", new QualitySetting(() => QualitySettings.antiAliasing, n => QualitySettings.antiAliasing = (int)n) },
-            { "_pixelLightCount", new QualitySetting(() => QualitySettings.pixelLightCount, n => QualitySettings.pixelLightCount = (int)n) },
+            { "_anisotropicFiltering", new QualitySetting(() => QualitySettings.anisotropicFiltering, n => QualitySettings.anisotropicFiltering = ToEnum<AnisotropicFiltering>(n)) },
+            { "_antiAliasing", new QualitySetting(() => QualitySettings.antiAliasing, n => QualitySettings.antiAliasing = Convert.ToInt32(n)) },
+            { "_pixelLightCount", new QualitySetting(() => QualitySettings.pixelLightCount, n => QualitySettings.pixelLightCount = Convert.ToInt32(n)) },
             { "_realtimeReflectionProbes", new QualitySetting(() => QualitySettings.realtimeReflectionProbes, n => QualitySettings.realtimeReflectionProbes = (bool)n) },
-            { "_shadowCascades", new QualitySetting(() => QualitySettings.shadowCascades, n => QualitySettings.shadowCascades = (int)n) },
-            { "_shadowDistance", new QualitySetting(() => QualitySettings.shadowDistance, n => QualitySettings.shadowDistance = (float)n) },
-            { "_shadowResolution", new QualitySetting(() => QualitySettings.shadowResolution, n => QualitySettings.shadowResolution = (ShadowResolution)n) },
-            { "_shadows", new QualitySetting(() => QualitySettings.shadows, n => QualitySettings.shadows = (ShadowQuality)n) },
+            { "_shadowCascades", new QualitySetting(() => QualitySettings.shadowCascades, n => QualitySettings.shadowCascades = Convert.ToInt32(n)) },
+            { "_shadowDistance", new QualitySetting(() => QualitySettings.shadowDistance, n => QualitySettings.shadowDistance = Convert.ToSingle(n)) },
+            { "_shadowmaskMode", new QualitySetting(() => QualitySettings.shadowmaskMode, n => QualitySettings.shadowmaskMode = ToEnum<ShadowmaskMode>(n)) },
+            { "_shadowNearPlaneOffset", new QualitySetting(() => QualitySettings.shadowNearPlaneOffset, n => QualitySettings.shadowNearPlaneOffset = Convert.ToSingle(n)) },
+            { "_shadowProjection", new QualitySetting(() => QualitySettings.shadowProjection, n => QualitySettings.shadowProjection = ToEnum<ShadowProjection>(n)) },
+            { "_shadowResolution", new QualitySetting(() => QualitySettings.shadowResolution, n => QualitySettings.shadowResolution = ToEnum<ShadowResolution>(n)) },
+            { "_shadows", new QualitySetting(() => QualitySettings.shadows, n => QualitySettings.shadows = ToEnum<ShadowQuality>(n)) },
             { "_softParticles", new QualitySetting(() => QualitySettings.softParticles, n => QualitySettings.softParticles = (bool)n) },
         };
 
@@ -67,6 +71,12 @@ namespace Vivify.Managers
         public void Dispose()
         {
             _settings.Values.Do(n => n.Reset());
+        }
+
+        private static T ToEnum<T>(object obj)
+        {
+            T enumVal = (T)Enum.ToObject(typeof(T), obj);
+            return enumVal;
         }
 
         private class QualitySetting

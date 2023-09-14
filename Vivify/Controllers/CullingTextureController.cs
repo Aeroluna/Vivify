@@ -46,6 +46,14 @@ namespace Vivify.Controllers
             _mainEffectRenderer = new MainEffectRenderer(gameObject.transform.parent.GetComponent<MainEffectController>());
         }
 
+        protected override void OnPreCull()
+        {
+            base.OnPreCull();
+            Transform transform1 = transform;
+            transform1.localPosition = Vector3.zero;
+            transform1.localRotation = Quaternion.identity;
+        }
+
         private void OnRenderImage(RenderTexture src, RenderTexture dst)
         {
             if (CullingTextureData == null)
