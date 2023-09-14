@@ -89,8 +89,11 @@ Currently provided settings:
 - `"_realtimeReflectionProbes"`: (bool)
 - `"_shadowCascades"`: (0, 2, 4)
 - `"_shadowDistance"`: (float)
-- `"_shadowResolution"`: (0 - 3) Low, Medium, High, VeryHigh.
-- `"_shadows"`: (0 - 2) Disable, HardOnly, All.
+- `"_shadowmaskMode"`: (0, 1) Shadowmask, DistanceShadowmask
+- `"_shadowNearPlaneOffset"`: (float)
+- `"_shadowProjection"`: (0, 1) CloseFit, StableFit
+- `"_shadowResolution"`: (0, 1, 2, 3) Low, Medium, High, VeryHigh.
+- `"_shadows"`: (0, 1, 2) Disable, HardOnly, All.
 - `"_softParticles"`: (bool)
 
 ## SetMaterialProperty
@@ -103,7 +106,7 @@ Currently provided settings:
     "duration": float, // The length of the event in beats (defaults to 0).
     "easing": string, // An easing for the animation to follow (defaults to easeLinear).
     "properties": [{
-      "name": string, // Name of the property on the material.
+      "id": string, // Name of the property on the material.
       "type": string, // Type of the property (Texture, Float, Color).
       "value": ? // What to set the property to, type varies depending on property type.
     }]
@@ -122,7 +125,7 @@ Allows setting material properties, e.g. Texture, Float, Color.
     "duration": float, // The length of the event in beats (defaults to 0).
     "easing": string, // An easing for the animation to follow (defaults to easeLinear).
     "properties": [{
-      "name": string, // Name of the property.
+      "id": string, // Name of the property.
       "type": string, // Type of the property (Texture, Float, Color).
       "value": ? // What to set the property to, type varies depending on property type.
     }]
@@ -147,7 +150,7 @@ Allows setting global properties, e.g. Texture, Float, Color. These will persist
     "asset": "assets/screens/glitchmat.mat",
     "duration": 8,
     "properties": [{
-      "name": "_Juice",
+      "id": "_Juice",
       "type": "Float",
       "value": [
         [0.02, 0],
@@ -194,7 +197,7 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
     "duration": 32,
     "properties": [
       {
-        "name": "_Juice",
+        "id": "_Juice",
         "type": "Float",
         "value": 0.2
       }
@@ -209,7 +212,7 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
   "b": float, // Time in beats.
   "t": "DeclareCullingTexture",
   "d": {
-    "name": string // Name of the culling mask, this is what you must name your sampler in your shader.
+    "id": string // Name of the culling mask, this is what you must name your sampler in your shader.
     "track": string/string[] // Name(s) of your track(s). Everything on the track(s) will be added to this mask.
     "whitelist": bool // (Optional) When true, will cull everything but the selected tracks. Default = false.
     "depthTexture": bool // (Optional) When true, write depth texture to "'name'_Depth". Default = false.
@@ -225,7 +228,7 @@ Declares a culling mask where the selected tracks are culled (or if whitelist = 
   "b": 0.0,
   "t": "DeclareCullingTexture",
   "d": {
-    "name": "_NotesCulled",
+    "id": "_NotesCulled",
     "track": "allnotes"
   }
 }
@@ -253,7 +256,7 @@ fixed4 frag(v2f i) : SV_Target
   "b": float, // Time in beats.
   "t": "DeclareRenderTexture",
   "d": {
-    "name": string, // Name of the texture
+    "id": string, // Name of the texture
     "xRatio": float, // (Optional) Number to divide width by, i.e. on a 1920x1080 screen, an xRatio of 2 will give you a 960x1080 texture.
     "yRatio": float, // (Optional) Number to divide height by.
     "width": int, // (Optional) Exact width for the texture.
@@ -264,7 +267,7 @@ fixed4 frag(v2f i) : SV_Target
 }
 ```
 
-Declares a RenderTexture to be used anywhere. They are set as a global variable and can be accessed by declaring a sampler named what you put in "name".
+Declares a RenderTexture to be used anywhere. They are set as a global variable and can be accessed by declaring a sampler named what you put in "id".
 
 ```js
 // Example
@@ -275,7 +278,7 @@ Declares a RenderTexture to be used anywhere. They are set as a global variable 
   "b": 70.0,
   "t": "DeclareRenderTexture",
   "d": {
-    "name": "snapshot"
+    "id": "snapshot"
   }
 },
 {
@@ -289,7 +292,7 @@ Declares a RenderTexture to be used anywhere. They are set as a global variable 
   "b": 120.0,
   "t": "DestroyTexture",
   "d": {
-    "name": "snapshot"
+    "id": "snapshot"
   }
 }
 ```
@@ -300,7 +303,7 @@ Declares a RenderTexture to be used anywhere. They are set as a global variable 
   "b": float, // Time in beats.
   "t": "DestroyTexture",
   "d": {
-    "name": string or string[], // Names(s) of textures to destroy.
+    "id": string or string[], // Names(s) of textures to destroy.
   }
 }
 ```
@@ -348,7 +351,7 @@ Destroys a prefab in the scene.
     "duration": float, // (Optional) The length of the event in beats. Defaults to 0.
     "easing": string, // (Optional) An easing for the animation to follow. Defaults to "easeLinear".
     "properties": [{
-      "name": string, // Name of the property.
+      "id": string, // Name of the property.
       "type": string, // Type of the property (Bool, Float, Trigger).
       "value": ? // What to set the property to, type varies depending on property type.
     }]
@@ -390,3 +393,51 @@ Remember to clear the `depthTextureMode` to `[]` after you are done using it as 
 ```
 
 Replaces all objects on the track with the assigned prefab.
+
+## SetRenderSetting
+```js
+{
+  "b": float, // Time in beats.
+  "t": "SetRenderSetting",
+  "d": {
+    "duration": float, // (Optional) The length of the event in beats. Defaults to 0.
+    "easing": string, // (Optional) An easing for the animation to follow. Defaults to "easeLinear".
+    "property": point definition // The setting to set
+  }
+}
+```
+
+Property does not have to be a point definition. See https://docs.unity3d.com/ScriptReference/RenderSettings.html.
+
+Currently provided settings:
+- `"ambientEquatorColor"`: (color)
+- `"ambientGroundColor"`: (color)
+- `"ambientIntensity"`: (float)
+- `"ambientLight"`: (color)
+- `"ambientMode"`: (0, 1, 3, 4) Skybox, Trilight, Flat, Custom
+- `"ambientSkyColor"`: (color)
+- `"defaultReflectionMode"`: (0, 1) Skybox, Custom
+- `"defaultReflectionResolution"`: (int)
+- `"flareFadeSpeed"`: (float)
+- `"flareStrength"`: (float)
+- `"fog"`: (0, 1) Bool
+- `"fogColor"`: (color)
+- `"fogDensity"`: (float)
+- `"fogEndDistance"`: (float)
+- `"fogMode"`: (1, 2, 3) Linear, Exponential, ExponentialSquared
+- `"fogEndDistance"`: (float)
+- `"haloStrength"`: (float)
+- `"reflectionBounces"`: (int)
+- `"reflectionIntensity"`: (float)
+- `"subtractiveShadowColor"`: (color)
+
+```js
+// Example
+{
+  "b": 70.0,
+  "t": "SetRenderSetting",
+  "d": {
+    "ambientLight": [0, 0, 0, 0]
+  }
+}
+```

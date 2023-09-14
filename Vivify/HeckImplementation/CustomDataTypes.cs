@@ -68,7 +68,7 @@ namespace Vivify
     {
         internal MaterialProperty(CustomData rawData, MaterialPropertyType materialPropertyType, object value)
         {
-            Name = Shader.PropertyToID(rawData.GetRequired<string>(NAME));
+            Name = Shader.PropertyToID(rawData.GetRequired<string>(ID_FIELD));
             Type = materialPropertyType;
             Value = value;
         }
@@ -116,7 +116,7 @@ namespace Vivify
     {
         internal AnimatorProperty(CustomData rawData, AnimatorPropertyType animatorPropertyType, object value)
         {
-            Name = rawData.GetRequired<string>(NAME);
+            Name = rawData.GetRequired<string>(ID_FIELD);
             Type = animatorPropertyType;
             Value = value;
         }
@@ -297,7 +297,7 @@ namespace Vivify
         {
             Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
             Duration = customData.Get<float?>(DURATION) ?? 0f;
-            Id = customData.GetRequired<string>(PREFAB_ID);
+            Id = customData.GetRequired<string>(ID_FIELD);
             Properties = customData
                 .GetRequired<List<object>>(PROPERTIES)
                 .Select(n => AnimatorProperty.CreateAnimatorProperty((CustomData)n, pointDefinitions))
@@ -383,7 +383,7 @@ namespace Vivify
     {
         internal DeclareCullingMaskData(CustomData customData, Dictionary<string, Track> tracks)
         {
-            Name = customData.GetRequired<string>(NAME);
+            Name = customData.GetRequired<string>(ID_FIELD);
             Tracks = customData.GetTrackArray(tracks, false);
             Whitelist = customData.Get<bool?>(WHITELIST) ?? false;
             DepthTexture = customData.Get<bool?>(DEPTH_TEXTURE) ?? false;
@@ -402,12 +402,12 @@ namespace Vivify
     {
         internal DestroyTextureData(CustomData customData)
         {
-            object nameRaw = customData.GetRequired<object>(NAME);
+            object nameRaw = customData.GetRequired<object>(ID_FIELD);
             Name = nameRaw switch
             {
                 string nameString => new[] { nameString },
                 List<object> nameArray => nameArray.Select(n => (string)n).ToArray(),
-                _ => throw new InvalidCastException($"[{NAME}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
+                _ => throw new InvalidCastException($"[{ID_FIELD}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
             };
         }
 
@@ -418,7 +418,7 @@ namespace Vivify
     {
         internal DeclareRenderTextureData(CustomData customData)
         {
-            Name = customData.GetRequired<string>(NAME);
+            Name = customData.GetRequired<string>(ID_FIELD);
             PropertyId = Shader.PropertyToID(Name);
             XRatio = customData.Get<float?>(XRATIO) ?? 1;
             YRatio = customData.Get<float?>(YRATIO) ?? 1;
@@ -453,12 +453,12 @@ namespace Vivify
     {
         internal DestroyPrefabData(CustomData customData)
         {
-            object nameRaw = customData.GetRequired<object>(PREFAB_ID);
+            object nameRaw = customData.GetRequired<object>(ID_FIELD);
             Id = nameRaw switch
             {
                 string nameString => new[] { nameString },
                 List<object> nameArray => nameArray.Select(n => (string)n).ToArray(),
-                _ => throw new InvalidCastException($"[{PREFAB_ID}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
+                _ => throw new InvalidCastException($"[{ID_FIELD}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
             };
         }
 
@@ -472,7 +472,7 @@ namespace Vivify
             Dictionary<string, Track> beatmapTracks)
         {
             Asset = customData.GetRequired<string>(ASSET);
-            Id = customData.Get<string>(PREFAB_ID);
+            Id = customData.Get<string>(ID_FIELD);
             TransformData = new TransformData(customData);
             Track = customData.GetNullableTrack(beatmapTracks, false);
         }
