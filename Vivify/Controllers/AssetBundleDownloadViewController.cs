@@ -206,6 +206,7 @@ namespace Vivify.Controllers
                 yield break;
             }
 
+#pragma warning disable CS0618
             if (www.isHttpError)
             {
                 _lastError = $"The server returned an error response.\n({www.responseCode})";
@@ -232,6 +233,7 @@ namespace Vivify.Controllers
                 _newView = View.Error;
                 yield break;
             }
+#pragma warning restore CS0618
 
             File.WriteAllBytes(savePath, www.downloadHandler.data);
             Vivify.Log.Logger.Log($"Successfully downloaded bundle to [{savePath}].");

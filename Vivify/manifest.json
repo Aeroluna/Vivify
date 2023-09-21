@@ -1,11 +1,8 @@
 ﻿{
-  "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
   "id": "Vivify",
   "name": "Vivify",
   "author": "Aeroluna",
-  "version": "0.0.1",
   "description": "Bring your map to life!",
-  "gameVersion": "1.29.1",
   "dependsOn": {
     "_Heck": "^1.3.8",
     "SongCore": "^3.9.5",
