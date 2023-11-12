@@ -24,20 +24,30 @@ This documentation assumes basic understanding of custom events and tracks.
 - [`AssignTrackPrefab`](#assigntrackprefab)
 
 ## Setting up Unity
-First, you should to download the Unity Hub at https://unity3d.com/get-unity/download and follow the on-screen instructions until you get to the projects page, while skipping the recommended Unity Editor. Install a version of Unity (Installs > Install Editor) and for maximum compatibility, Beat Saber uses version 2021.3.16f1 found in the [archive](https://unity3d.com/get-unity/download/archive).
+First, you should to download the Unity Hub at https://unity3d.com/get-unity/download. Beat Saber 1.29.1 uses version 2019.4.28f and Beat Saber 1.30.0+ uses 2021.3.16f1. For maximum compatibility, you should use 2019.4.28f found in the [archive](https://unity3d.com/get-unity/download/archive) as bundles built on that version will be compatible on both versions.
 
 Now, you can create your own Unity project or use a specially made template for Vivify (coming soon).
 
-If you want to test your shaders, make sure you enable `XR Plugin Management` enabled in your project. (Edit > Project Settings > XR Plugin Management > Install XR Plugin Management) After that installs, select your approriate Plug-in Provider. Enabling the Unity Mock HMD allows you to preview in vr without a hmd.
+Make sure you have `Virtual Reality Supported` enabled in your project and your stereo rendering mode is set to `Single Pass`. (Edit > Project Settings > Player > XR Settings > Deprecated Settings > Virtual Reality Supported).
 
 ## Writing VR shaders
 
-Beat Saber uses Single Pass Instanced rendering. Any incompatible shaders will only appear in the left eye. To make your shader compatible with this vr rendering method, add instancing support to your shader. See https://docs.unity3d.com/Manual/SinglePassInstancing.html for how to add instancing support. Look under "Post-Processing shaders" to see how to sample a screen space texture.
+Beat Saber v1.29.1 uses Single Pass Stereo renderering (See https://docs.unity3d.com/2019.4/Documentation/Manual/SinglePassStereoRendering.html for more info). Use the unity built-in function `UnityStereoTransformScreenSpaceTex` to fix your shaders in vr.
+```csharp
+sampler2D _MainTex;
+
+fixed4 frag (v2f i) : SV_Target
+{
+  return tex2D(_MainTex, UnityStereoTransformScreenSpaceTex(i.uv));
+}
+```
+
+Beat Saber v1.30.0+ uses Single Pass Instanced rendering. Any incompatible shaders will only appear in the left eye. To make your shader compatible with this vr rendering method, add instancing support to your shader. See https://docs.unity3d.com/Manual/SinglePassInstancing.html for how to add instancing support. Look under "Post-Processing shaders" to see how to sample a screen space texture.
 
 A tip for writing shaders, there are many commonly used structs/functions in UnityCG.cginc. As a few examples, `appdata_base`, `appdata_img`, `appdata_full`, and `v2f_img` can usually be used instead of writing your own structs and since most image effect shaders use the same vertex function, the include file has a `vert_img` that can be used with `#pragma vertex vert_img`.
 
 ### Creating an asset bundle
-Visit https://learn.unity.com/tutorial/introduction-to-asset-bundles for a basic introduction to creating asset bundles. Even if you are using a template it is still useful to at least read through these instructions.
+Visit https://learn.unity.com/tutorial/introduction-to-asset-bundles-1 for a basic introduction to creating asset bundles. Even if you are using a template it is still useful to at least read through these instructions.
 
 (Optional) See https://docs.unity3d.com/Manual/AssetBundles-Browser.html. this tool allows you to browse the contents of a built asset bundle.
 
