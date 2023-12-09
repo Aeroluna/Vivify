@@ -103,7 +103,7 @@ namespace Vivify.Events
                         else
                         {
                             List<float> vector = ((List<object>)value).Select(Convert.ToSingle).ToList();
-                            material.SetVector(name, new Color(vector[0], vector[1], vector[2], vector[3]));
+                            material.SetVector(name, new Vector4(vector[0], vector[1], vector[2], vector[3]));
                         }
 
                         break;

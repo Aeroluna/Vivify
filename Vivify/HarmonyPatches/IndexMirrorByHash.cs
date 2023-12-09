@@ -15,7 +15,11 @@ namespace Vivify.HarmonyPatches
         private static readonly MethodInfo _getFloatHash = AccessTools.Method(typeof(IndexMirrorByHash), nameof(GetFloatHash));
 
         [HarmonyTranspiler]
+#if LATEST
+        [HarmonyPatch(nameof(MirrorRendererSO.RenderMirrorTexture))]
+#else
         [HarmonyPatch(nameof(MirrorRendererSO.GetMirrorTexture))]
+#endif
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             return new CodeMatcher(instructions)
