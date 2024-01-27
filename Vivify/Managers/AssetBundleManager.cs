@@ -14,11 +14,11 @@ namespace Vivify.Managers
     internal class AssetBundleManager : IDisposable
     {
         private readonly Dictionary<string, Object> _assets = new();
+        private readonly AssetBundle _mainBundle;
 
         [UsedImplicitly]
         private AssetBundleManager(IDifficultyBeatmap difficultyBeatmap, Config config)
         {
-            AssetBundle mainBundle;
             if (difficultyBeatmap is not CustomDifficultyBeatmap customDifficultyBeatmap)
             {
                 throw new ArgumentException(
@@ -34,36 +34,41 @@ namespace Vivify.Managers
 
             if (Heck.HeckController.DebugMode)
             {
-                mainBundle = AssetBundle.LoadFromFile(path);
+                _mainBundle = AssetBundle.LoadFromFile(path);
             }
             else
             {
                 CustomData levelCustomData = ((CustomBeatmapSaveData)customDifficultyBeatmap.beatmapSaveData).levelCustomData;
                 uint assetBundleChecksum = levelCustomData.GetRequired<uint>(ASSET_BUNDLE);
-                mainBundle = AssetBundle.LoadFromFile(path, assetBundleChecksum);
+                _mainBundle = AssetBundle.LoadFromFile(path, assetBundleChecksum);
             }
 
-            if (mainBundle == null)
+            if (_mainBundle == null)
             {
                 throw new InvalidOperationException($"Failed to load [{path}]");
             }
 
-            string[] assetnames = mainBundle.GetAllAssetNames();
+            string[] assetnames = _mainBundle.GetAllAssetNames();
             foreach (string name in assetnames)
             {
-                Log.Logger.Log($"Loaded [{name}].");
-                Object asset = mainBundle.LoadAsset(name);
+                Object asset = _mainBundle.LoadAsset(name);
                 _assets.Add(name, asset);
             }
 
-            mainBundle.Unload(false);
+            /*
+             In Version 1.31.0,
+             If you have any of the DLC, AssetBundle.UnloadAllAssetBundles(true) is called in
+             BeatmapLevelDataLoader.Dispose when switching scenes.
+             AssetBundle used by the mod will be unloaded. */
+            ////mainBundle.Unload(false);
         }
 
         public void Dispose()
         {
-            foreach (Object asset in _assets.Values)
+            Log.Logger.Log("disposed");
+            if (_mainBundle != null)
             {
-                Object.Destroy(asset);
+                _mainBundle.Unload(true);
             }
         }
 

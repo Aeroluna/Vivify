@@ -46,8 +46,6 @@ namespace Vivify.Controllers.Sync
         private void Awake()
         {
             _videoPlayer = GetComponent<VideoPlayer>();
-            _videoPlayer.Prepare();
-            _videoPlayer.timeReference = VideoTimeReference.ExternalTime;
         }
 
         private void OnDestroy()
@@ -61,7 +59,7 @@ namespace Vivify.Controllers.Sync
         private void Update()
         {
             _videoPlayer.playbackSpeed = _audioTimeSyncController.timeScale;
-            _videoPlayer.externalReferenceTime = _audioTimeSyncController.songTime - _startTime;
+            _videoPlayer.time = _audioTimeSyncController.songTime - _startTime;
         }
     }
 }
