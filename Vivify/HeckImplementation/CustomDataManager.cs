@@ -13,9 +13,9 @@ namespace Vivify
         internal static void DeserializerEarly(
             TrackBuilder trackBuilder,
             CustomBeatmapData beatmapData,
-            IReadOnlyList<CustomEventData> customEventDatas)
+            IDifficultyBeatmap difficultyBeatmap)
         {
-            foreach (CustomEventData customEventData in customEventDatas)
+            foreach (CustomEventData customEventData in beatmapData.customEventDatas)
             {
                 try
                 {
@@ -31,7 +31,7 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Log.Logger.LogFailure(e, customEventData);
+                    Log.Logger.LogFailure(e, customEventData, difficultyBeatmap);
                 }
             }
         }
@@ -40,12 +40,12 @@ namespace Vivify
         internal static Dictionary<BeatmapObjectData, IObjectCustomData> DeserializeObjects(
             CustomBeatmapData beatmapData,
             Dictionary<string, Track> beatmapTracks,
-            IReadOnlyList<BeatmapObjectData> beatmapObjectDatas)
+            IDifficultyBeatmap difficultyBeatmap)
         {
             bool v2 = beatmapData.version2_6_0AndEarlier;
             Dictionary<BeatmapObjectData, IObjectCustomData> dictionary = new();
 
-            foreach (BeatmapObjectData beatmapObjectData in beatmapObjectDatas)
+            foreach (BeatmapObjectData beatmapObjectData in beatmapData.beatmapObjectDatas)
             {
                 try
                 {
@@ -54,7 +54,7 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Log.Logger.LogFailure(e, beatmapObjectData);
+                    Log.Logger.LogFailure(e, beatmapObjectData, difficultyBeatmap);
                 }
             }
 
@@ -64,12 +64,12 @@ namespace Vivify
         [CustomEventsDeserializer]
         private static Dictionary<CustomEventData, ICustomEventCustomData> DeserializeCustomEvents(
             CustomBeatmapData beatmapData,
+            IDifficultyBeatmap difficultyBeatmap,
             Dictionary<string, List<object>> pointDefinitions,
-            Dictionary<string, Track> tracks,
-            IReadOnlyList<CustomEventData> customEventDatas)
+            Dictionary<string, Track> tracks)
         {
             Dictionary<CustomEventData, ICustomEventCustomData> dictionary = new();
-            foreach (CustomEventData customEventData in customEventDatas)
+            foreach (CustomEventData customEventData in beatmapData.customEventDatas)
             {
                 try
                 {
@@ -130,7 +130,7 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Log.Logger.LogFailure(e, customEventData);
+                    Log.Logger.LogFailure(e, customEventData, difficultyBeatmap);
                 }
             }
 

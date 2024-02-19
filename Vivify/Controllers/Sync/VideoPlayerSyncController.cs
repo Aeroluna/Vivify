@@ -15,7 +15,9 @@ namespace Vivify.Controllers.Sync
 
         [Inject]
         [UsedImplicitly]
-        private void Construct(float startTime, AudioTimeSyncController audioTimeSyncController)
+        private void Construct(
+            float startTime,
+            AudioTimeSyncController audioTimeSyncController)
         {
             _startTime = startTime;
             _audioTimeSyncController = audioTimeSyncController;

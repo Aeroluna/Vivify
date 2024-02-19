@@ -4,10 +4,9 @@ using JetBrains.Annotations;
 
 [assembly: InternalsVisibleTo(GeneratedStore.AssemblyVisibilityTarget)]
 
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 namespace Vivify
 {
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseTargetFlags.Members)]
     public class Config
     {
         public bool AllowDownload { get; set; }

@@ -65,7 +65,6 @@ namespace Vivify.Managers
 
         public void Dispose()
         {
-            Log.Logger.Log("disposed");
             if (_mainBundle != null)
             {
                 _mainBundle.Unload(true);

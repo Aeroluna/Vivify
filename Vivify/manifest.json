@@ -4,7 +4,7 @@
   "author": "Aeroluna",
   "description": "Bring your map to life!",
   "dependsOn": {
-    "_Heck": "^1.3.8",
+    "_Heck": "^1.4.18",
     "SongCore": "^3.9.5",
     "CustomJSONData": "^2.3.0",
     "BSIPA": "^4.2.2",
