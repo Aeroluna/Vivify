@@ -5,7 +5,6 @@ using CustomJSONData.CustomBeatmap;
 using Heck.Animation;
 using UnityEngine;
 using Vivify.Managers;
-using Logger = IPA.Logging.Logger;
 
 namespace Vivify.Events
 {
@@ -133,7 +132,7 @@ namespace Vivify.Events
                         break;
 
                     default:
-                        Log.Logger.Log($"[{type}] invalid.", Logger.Level.Error);
+                        _log.Error($"[{type}] invalid");
                         break;
                 }
             }

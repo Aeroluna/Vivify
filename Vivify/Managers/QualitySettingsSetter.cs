@@ -4,8 +4,8 @@ using CustomJSONData.CustomBeatmap;
 using HarmonyLib;
 using IPA.Utilities;
 using JetBrains.Annotations;
+using SiraUtil.Logging;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Zenject;
 
 namespace Vivify.Managers
@@ -25,14 +25,16 @@ namespace Vivify.Managers
             { "_shadowProjection", new QualitySetting(() => QualitySettings.shadowProjection, n => QualitySettings.shadowProjection = ToEnum<ShadowProjection>(n)) },
             { "_shadowResolution", new QualitySetting(() => QualitySettings.shadowResolution, n => QualitySettings.shadowResolution = ToEnum<ShadowResolution>(n)) },
             { "_shadows", new QualitySetting(() => QualitySettings.shadows, n => QualitySettings.shadows = ToEnum<ShadowQuality>(n)) },
-            { "_softParticles", new QualitySetting(() => QualitySettings.softParticles, n => QualitySettings.softParticles = (bool)n) },
+            { "_softParticles", new QualitySetting(() => QualitySettings.softParticles, n => QualitySettings.softParticles = (bool)n) }
         };
 
+        private readonly SiraLog _log;
         private readonly IReadonlyBeatmapData _beatmapData;
 
         [UsedImplicitly]
-        private QualitySettingsManager(IReadonlyBeatmapData beatmapData)
+        private QualitySettingsManager(SiraLog log, IReadonlyBeatmapData beatmapData)
         {
+            _log = log;
             _beatmapData = beatmapData;
         }
 
@@ -63,7 +65,7 @@ namespace Vivify.Managers
                     continue;
                 }
 
-                Log.Logger.Log($"Set [{key}] to [{value}].");
+                _log.Debug($"Set [{key}] to [{value}]");
                 setting.Set(value);
             }
         }

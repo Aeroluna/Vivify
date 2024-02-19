@@ -31,7 +31,7 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Log.Logger.LogFailure(e, customEventData, difficultyBeatmap);
+                    Plugin.Log.DeserializeFailure(e, customEventData, difficultyBeatmap);
                 }
             }
         }
@@ -54,7 +54,7 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Log.Logger.LogFailure(e, beatmapObjectData, difficultyBeatmap);
+                    Plugin.Log.DeserializeFailure(e, beatmapObjectData, difficultyBeatmap);
                 }
             }
 
@@ -130,7 +130,7 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Log.Logger.LogFailure(e, customEventData, difficultyBeatmap);
+                    Plugin.Log.DeserializeFailure(e, customEventData, difficultyBeatmap);
                 }
             }
 

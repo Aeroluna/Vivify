@@ -5,21 +5,23 @@ using Heck.Animation;
 using Heck.ReLoad;
 using IPA.Utilities;
 using JetBrains.Annotations;
+using SiraUtil.Logging;
 using UnityEngine;
 using Zenject;
-using Logger = IPA.Logging.Logger;
 using Object = UnityEngine.Object;
 
 namespace Vivify.Managers
 {
     internal class PrefabManager : IDisposable
     {
-        private readonly Dictionary<string, InstantiatedPrefab> _prefabs = new();
+        private readonly SiraLog _log;
         private readonly ReLoader? _reLoader;
+        private readonly Dictionary<string, InstantiatedPrefab> _prefabs = new();
 
         [UsedImplicitly]
-        private PrefabManager([InjectOptional] ReLoader? reLoader)
+        private PrefabManager(SiraLog log, [InjectOptional] ReLoader? reLoader)
         {
+            _log = log;
             _reLoader = reLoader;
             if (reLoader != null)
             {
@@ -47,7 +49,7 @@ namespace Vivify.Managers
                 return;
             }
 
-            Log.Logger.Log($"Destroying [{id}].");
+            _log.Debug($"Destroying [{id}]");
 
             prefab.Track?.RemoveGameObject(prefab.GameObject);
 
@@ -60,7 +62,7 @@ namespace Vivify.Managers
             bool result = _prefabs.TryGetValue(id, out prefab);
             if (!result)
             {
-                Log.Logger.Log($"No prefab with id [{id}] detected.", Logger.Level.Error);
+                _log.Error($"No prefab with id [{id}] detected");
             }
 
             return result;

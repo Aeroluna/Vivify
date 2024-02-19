@@ -6,7 +6,7 @@ using Heck;
 using Heck.Animation.Transform;
 using Heck.ReLoad;
 using JetBrains.Annotations;
-using UnityEngine;
+using SiraUtil.Logging;
 using Vivify.Controllers;
 using Vivify.Managers;
 using Vivify.PostProcessing;
@@ -17,6 +17,7 @@ namespace Vivify.Events
 {
     internal partial class EventController : IDisposable
     {
+        private readonly SiraLog _log;
         private readonly IInstantiator _instantiator;
         private readonly BeatmapCallbacksController _callbacksController;
         private readonly AssetBundleManager _assetBundleManager;
@@ -35,6 +36,7 @@ namespace Vivify.Events
 
         [UsedImplicitly]
         private EventController(
+            SiraLog log,
             IInstantiator instantiator,
             BeatmapCallbacksController callbacksController,
             AssetBundleManager assetBundleManager,
@@ -48,6 +50,7 @@ namespace Vivify.Events
             [Inject(Id = HeckController.LEFT_HANDED_ID)] bool leftHanded,
             [InjectOptional] ReLoader? reLoader)
         {
+            _log = log;
             _instantiator = instantiator;
             _callbacksController = callbacksController;
             _assetBundleManager = assetBundleManager;

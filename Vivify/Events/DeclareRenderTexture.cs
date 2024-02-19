@@ -13,7 +13,7 @@ namespace Vivify.Events
             }
 
             PostProcessingController.DeclaredTextureDatas.Add(data.Name, data);
-            Log.Logger.Log($"Created texture [{data.Name}].");
+            _log.Debug($"Created texture [{data.Name}]");
         }
     }
 }

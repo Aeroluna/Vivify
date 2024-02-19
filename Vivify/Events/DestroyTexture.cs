@@ -1,5 +1,4 @@
 ﻿using CustomJSONData.CustomBeatmap;
-using IPA.Logging;
 using Vivify.PostProcessing;
 using Vivify.TrackGameObject;
 
@@ -22,15 +21,15 @@ namespace Vivify.Events
                     PostProcessingController.CullingTextureDatas.Remove(name);
                     active.Dispose();
                     _disposables.Remove(active);
-                    Log.Logger.Log($"Destroyed culling texture [{name}].");
+                    _log.Debug($"Destroyed culling texture [{name}]");
                 }
                 else if (PostProcessingController.DeclaredTextureDatas.Remove(name))
                 {
-                    Log.Logger.Log($"Destroyed render texture [{name}].");
+                    _log.Debug($"Destroyed render texture [{name}]");
                 }
                 else
                 {
-                    Log.Logger.Log($"Could not find [{name}].", Logger.Level.Error);
+                    _log.Error($"Could not find [{name}]");
                 }
             }
         }

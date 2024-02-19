@@ -10,7 +10,6 @@ using IPA.Utilities;
 using UnityEngine;
 using static Heck.HeckController;
 using static Vivify.VivifyController;
-using Logger = IPA.Logging.Logger;
 
 namespace Vivify
 {
@@ -428,7 +427,7 @@ namespace Vivify
             FilterMode = customData.GetStringToEnum<FilterMode?>(FILTER);
             if (Format.HasValue && !SystemInfo.SupportsRenderTextureFormat(Format.Value))
             {
-                Log.Logger.Log($"Current graphics card does not support [{Format.Value}].", Logger.Level.Warning);
+                Plugin.Log.Warn($"Current graphics card does not support [{Format.Value}].");
             }
         }
 

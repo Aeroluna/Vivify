@@ -4,20 +4,21 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using CustomJSONData.CustomBeatmap;
 using JetBrains.Annotations;
+using SiraUtil.Logging;
 using UnityEngine;
 using static Vivify.VivifyController;
-using Logger = IPA.Logging.Logger;
 using Object = UnityEngine.Object;
 
 namespace Vivify.Managers
 {
     internal class AssetBundleManager : IDisposable
     {
+        private readonly SiraLog _log;
         private readonly Dictionary<string, Object> _assets = new();
-        private readonly AssetBundle _mainBundle;
+        private readonly AssetBundle? _mainBundle;
 
         [UsedImplicitly]
-        private AssetBundleManager(IDifficultyBeatmap difficultyBeatmap, Config config)
+        private AssetBundleManager(SiraLog log, IDifficultyBeatmap difficultyBeatmap, Config config)
         {
             if (difficultyBeatmap is not CustomDifficultyBeatmap customDifficultyBeatmap)
             {
@@ -26,10 +27,13 @@ namespace Vivify.Managers
                     nameof(difficultyBeatmap));
             }
 
+            _log = log;
+
             string path = Path.Combine(((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath, BUNDLE);
             if (!File.Exists(path))
             {
-                throw new InvalidOperationException($"[{BUNDLE}] not found!"); // TODO: Figure out a way to not just obliterate everything
+                _log.Error($"[{BUNDLE}] not found");
+                return;
             }
 
             if (Heck.HeckController.DebugMode)
@@ -45,7 +49,8 @@ namespace Vivify.Managers
 
             if (_mainBundle == null)
             {
-                throw new InvalidOperationException($"Failed to load [{path}]");
+                _log.Error($"Failed to load [{path}]");
+                return;
             }
 
             string[] assetnames = _mainBundle.GetAllAssetNames();
@@ -81,11 +86,11 @@ namespace Vivify.Managers
                     return true;
                 }
 
-                Log.Logger.Log($"Found {assetName}, but was null or not [{typeof(T).FullName}]!", Logger.Level.Error);
+                _log.Error($"Found {assetName}, but was null or not [{typeof(T).FullName}]");
             }
             else
             {
-                Log.Logger.Log($"Could not find {typeof(T).FullName} [{assetName}].", Logger.Level.Error);
+                _log.Error($"Could not find {typeof(T).FullName} [{assetName}]");
             }
 
             asset = default;

@@ -9,13 +9,13 @@ using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.PlayView;
 using JetBrains.Annotations;
+using SiraUtil.Logging;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using Zenject;
 using static Vivify.VivifyController;
-using Logger = IPA.Logging.Logger;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 namespace Vivify.Controllers
@@ -23,10 +23,11 @@ namespace Vivify.Controllers
     [PlayViewControllerSettings(100, "vivify")]
     internal class AssetBundleDownloadViewController : BSMLResourceViewController, IPlayViewController
     {
-        private Image _loadingBar = null!;
-
+        private SiraLog _log = null!;
         private Config _config = null!;
         private CoroutineBastard _coroutineBastard = null!;
+
+        private Image _loadingBar = null!;
 
         private bool _doAbort;
         private bool _downloadFinished;
@@ -175,8 +176,9 @@ namespace Vivify.Controllers
 
         [UsedImplicitly]
         [Inject]
-        private void Construct(Config config, CoroutineBastard coroutineBastard)
+        private void Construct(SiraLog log, Config config, CoroutineBastard coroutineBastard)
         {
+            _log = log;
             _config = config;
             _coroutineBastard = coroutineBastard;
             _newView = config.AllowDownload ? View.Downloading : View.Tos;
@@ -189,7 +191,7 @@ namespace Vivify.Controllers
         {
             _newView = View.Downloading;
             string url = _config.BundleRepository + checksum;
-            Vivify.Log.Logger.Log($"Attempting to download asset bundle from [{url}].");
+            _log.Debug($"Attempting to download asset bundle from [{url}].");
             using UnityWebRequest www = UnityWebRequest.Get(url);
             www.SendWebRequest();
             while (!www.isDone)
@@ -202,7 +204,7 @@ namespace Vivify.Controllers
                 }
 
                 www.Abort();
-                Vivify.Log.Logger.Log("Download cancelled.");
+                _log.Debug("Download cancelled.");
                 yield break;
             }
 
@@ -222,12 +224,12 @@ namespace Vivify.Controllers
                 if (www.isNetworkError)
                 {
                     _lastError = $"Network error while downloading bundle.\n{www.error}";
-                    Vivify.Log.Logger.Log(_lastError, Logger.Level.Error);
+                    _log.Error(_lastError);
                 }
                 else if (www.isHttpError)
                 {
                     _lastError = $"Server sent error response code while downloading bundle.\n({www.responseCode})";
-                    Vivify.Log.Logger.Log(_lastError, Logger.Level.Error);
+                    _log.Error(_lastError);
                 }
 
                 _newView = View.Error;
@@ -236,7 +238,7 @@ namespace Vivify.Controllers
 #pragma warning restore CS0618
 
             File.WriteAllBytes(savePath, www.downloadHandler.data);
-            Vivify.Log.Logger.Log($"Successfully downloaded bundle to [{savePath}].");
+            _log.Debug($"Successfully downloaded bundle to [{savePath}].");
             _downloadFinished = true;
         }
 

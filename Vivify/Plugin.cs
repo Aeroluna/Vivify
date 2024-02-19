@@ -1,5 +1,4 @@
-﻿using Heck;
-using IPA;
+﻿using IPA;
 using IPA.Config.Stores;
 using IPA.Logging;
 using JetBrains.Annotations;
@@ -19,13 +18,16 @@ namespace Vivify
         [Init]
         public Plugin(Logger pluginLogger, IPA.Config.Config conf, Zenjector zenjector)
         {
-            Log.Logger = new HeckLogger(pluginLogger);
+            Log = pluginLogger;
 
             DepthShaderManager.LoadFromMemory();
             zenjector.Install<VivifyAppInstaller>(Location.App, conf.Generated<Config>());
             zenjector.Install<VivifyPlayerInstaller>(Location.Player);
             zenjector.Install<VivifyMenuInstaller>(Location.Menu);
+            zenjector.UseLogger(pluginLogger);
         }
+
+        internal static Logger Log { get; private set; } = null!;
 
 #pragma warning disable CA1822
         [UsedImplicitly]

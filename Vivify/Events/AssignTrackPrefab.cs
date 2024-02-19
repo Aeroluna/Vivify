@@ -18,7 +18,7 @@ namespace Vivify.Events
                 return;
             }
 
-            Log.Logger.Log($"Assigned note prefab: [{assetName}]");
+            _log.Debug($"Assigned note prefab: [{assetName}]");
             _beatmapObjectPrefabManager.Add(data.Track, prefab);
         }
     }

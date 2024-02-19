@@ -5,7 +5,6 @@ using System.Linq;
 using CustomJSONData.CustomBeatmap;
 using Heck.Animation;
 using UnityEngine;
-using Logger = IPA.Logging.Logger;
 
 namespace Vivify.Events
 {
@@ -110,7 +109,7 @@ namespace Vivify.Events
 
                     default:
                         // im lazy, shoot me
-                        Log.Logger.Log($"[{type}] not currently supported", Logger.Level.Warning);
+                        _log.Warn($"[{type}] not currently supported");
                         break;
                 }
             }
@@ -153,7 +152,7 @@ namespace Vivify.Events
                             break;
 
                         default:
-                            Log.Logger.Log($"[{type.ToString()}] not supported yet.");
+                            _log.Warn($"[{type.ToString()}] not supported yet");
                             yield break;
                     }
 

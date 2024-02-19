@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using Vivify.HarmonyPatches;
 using Zenject;
 
 namespace Vivify.Installers
@@ -16,6 +17,7 @@ namespace Vivify.Installers
         public override void InstallBindings()
         {
             Container.BindInstance(_config);
+            Container.BindInterfacesTo<AddComponentsToCamera>().AsSingle();
         }
     }
 }

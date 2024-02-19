@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using IPA.Utilities;
+using JetBrains.Annotations;
+using SiraUtil.Logging;
 using UnityEngine;
 using Vivify.Controllers;
 using Vivify.TrackGameObject;
+using Zenject;
 using static Vivify.VivifyController;
-using Logger = IPA.Logging.Logger;
 
 namespace Vivify.PostProcessing
 {
@@ -22,6 +24,8 @@ namespace Vivify.PostProcessing
 
         private readonly List<CullingTextureData> _reusableCullingKeys = new();
         private readonly List<DeclareRenderTextureData> _reusableDeclaredKeys = new();
+
+        private SiraLog _log = null!;
 
         private int? _defaultCullingMask;
 
@@ -45,8 +49,6 @@ namespace Vivify.PostProcessing
         {
             base.Awake();
             Camera.depth *= 10;
-
-            Log.Logger.Log($"Created PostProcessingController for [{gameObject.name}].");
         }
 
         protected override void OnPreCull()
@@ -154,8 +156,6 @@ namespace Vivify.PostProcessing
             foreach (RenderTextureHolder value in _declaredTextures.Values)
             {
                 DeclareRenderTextureData data = value.Data;
-
-                // TODO: clean better
                 RenderTexture? texture = value.Texture;
                 if (texture != null)
                 {
@@ -182,14 +182,19 @@ namespace Vivify.PostProcessing
             }
         }
 
+        [UsedImplicitly]
+        [Inject]
+        private void Construct(SiraLog log)
+        {
+            _log = log;
+        }
+
         private void OnRenderImage(RenderTexture src, RenderTexture dst)
         {
             // set up declared textures
             foreach ((string textureName, RenderTextureHolder value) in _declaredTextures)
             {
                 DeclareRenderTextureData data = value.Data;
-
-                // TODO: clean better
                 RenderTexture? texture = value.Texture;
                 if (texture != null)
                 {
@@ -213,7 +218,7 @@ namespace Vivify.PostProcessing
                 }
 
                 value.Texture = texture;
-                Log.Logger.Log($"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}.");
+                _log.Debug($"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}");
             }
 
             // blit all passes
@@ -229,23 +234,6 @@ namespace Vivify.PostProcessing
                 }
 
                 Material? material = materialData.Material;
-
-                static void Blit(RenderTexture? blitsrc, RenderTexture? blitdst, Material? blitmat, int blitpass)
-                {
-                    if (blitdst == null || blitsrc == null)
-                    {
-                        return;
-                    }
-
-                    if (blitmat != null)
-                    {
-                        Graphics.Blit(blitsrc, blitdst, blitmat, blitpass);
-                    }
-                    else
-                    {
-                        Graphics.Blit(blitsrc, blitdst);
-                    }
-                }
 
                 if (materialData.Source == CAMERA_TARGET)
                 {
@@ -271,7 +259,7 @@ namespace Vivify.PostProcessing
                             }
                             else
                             {
-                                Log.Logger.Log($"Unable to find destination [{materialDataTarget}].", Logger.Level.Error);
+                                _log.Warn($"Unable to find destination [{materialDataTarget}]");
                             }
                         }
                     }
@@ -310,7 +298,7 @@ namespace Vivify.PostProcessing
                             }
                             else
                             {
-                                Log.Logger.Log($"Unable to find destination [{materialDataTarget}].", Logger.Level.Error);
+                                _log.Warn($"Unable to find destination [{materialDataTarget}]");
                             }
                         }
                     }
@@ -333,14 +321,33 @@ namespace Vivify.PostProcessing
                             }
                             else
                             {
-                                Log.Logger.Log($"Unable to find destination [{materialDataTarget}].", Logger.Level.Error);
+                                _log.Warn($"Unable to find destination [{materialDataTarget}]");
                             }
                         }
                     }
                 }
                 else
                 {
-                    Log.Logger.Log($"Unable to find source [{materialData.Source}].", Logger.Level.Error);
+                    _log.Warn($"Unable to find source [{materialData.Source}]");
+                }
+
+                continue;
+
+                static void Blit(RenderTexture? blitsrc, RenderTexture? blitdst, Material? blitmat, int blitpass)
+                {
+                    if (blitdst == null || blitsrc == null)
+                    {
+                        return;
+                    }
+
+                    if (blitmat != null)
+                    {
+                        Graphics.Blit(blitsrc, blitdst, blitmat, blitpass);
+                    }
+                    else
+                    {
+                        Graphics.Blit(blitsrc, blitdst);
+                    }
                 }
             }
 

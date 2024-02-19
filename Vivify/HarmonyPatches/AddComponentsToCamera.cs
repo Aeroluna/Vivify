@@ -1,29 +1,40 @@
-﻿using HarmonyLib;
-using Heck;
+﻿using JetBrains.Annotations;
+using SiraUtil.Affinity;
+using SiraUtil.Logging;
 using UnityEngine;
 using Vivify.Controllers;
 using Vivify.PostProcessing;
+using Zenject;
 
 namespace Vivify.HarmonyPatches
 {
-    [HeckPatch]
-    [HarmonyPatch(typeof(MainEffectController))]
-    internal static class AddComponentsToCamera
+    internal class AddComponentsToCamera : IAffinity
     {
-        private static void SafeAddComponent<T>(GameObject gameObject)
+        private readonly SiraLog _log;
+        private readonly IInstantiator _instantiator;
+
+        [UsedImplicitly]
+        private AddComponentsToCamera(SiraLog log, IInstantiator instantiator)
+        {
+            _log = log;
+            _instantiator = instantiator;
+        }
+
+        private void SafeAddComponent<T>(GameObject gameObject)
             where T : Component
         {
             if (gameObject.GetComponent<T>() == null)
             {
-                gameObject.AddComponent<T>();
+                _instantiator.InstantiateComponent<T>(gameObject);
             }
         }
 
-        [HarmonyPostfix]
-        [HarmonyPatch(nameof(MainEffectController.LazySetupImageEffectController))]
-        private static void AddComponents(MainEffectController __instance)
+        [AffinityPostfix]
+        [AffinityPatch(typeof(MainEffectController), nameof(MainEffectController.LazySetupImageEffectController))]
+        private void AddComponents(MainEffectController __instance)
         {
             GameObject gameObject = __instance.gameObject;
+            _log.Debug($"Created PostProcessingController for [{gameObject.name}]");
             SafeAddComponent<PostProcessingController>(gameObject);
             SafeAddComponent<CameraPropertyController>(gameObject);
         }

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using CustomJSONData.CustomBeatmap;
 using Heck.Animation;
 using UnityEngine;
 using UnityEngine.Rendering;
-using Logger = IPA.Logging.Logger;
 
 namespace Vivify.Events
 {
@@ -33,32 +31,6 @@ namespace Vivify.Events
                 string name = property.Name;
 
                 bool noDuration = duration == 0 || startTime + duration < _audioTimeSource.songTime;
-
-                T ToEnum<T>(float obj)
-                {
-                    T enumVal = (T)Enum.ToObject(typeof(T), (int)obj);
-                    return enumVal;
-                }
-
-                void Handle<T>(Action<T> set)
-                    where T : struct
-                {
-                    switch (property)
-                    {
-                        case AnimatedRenderSettingProperty<T> animated when noDuration:
-                            set(animated.PointDefinition.Interpolate(1));
-                            break;
-                        case AnimatedRenderSettingProperty<T> animated:
-                            StartCoroutine(animated.PointDefinition, set, duration, startTime, easing);
-                            break;
-                        case RenderSettingProperty<T> value:
-                            set(value.Value);
-                            DynamicGI.UpdateEnvironment();
-                            break;
-                        default:
-                            throw new InvalidOperationException($"Could not handle type [{property.GetType().FullName}]");
-                    }
-                }
 
                 switch (name)
                 {
@@ -141,6 +113,34 @@ namespace Vivify.Events
                     case "subtractiveShadowColor":
                         Handle<Vector4>(n => RenderSettings.subtractiveShadowColor = n);
                         break;
+                }
+
+                continue;
+
+                void Handle<T>(Action<T> set)
+                    where T : struct
+                {
+                    switch (property)
+                    {
+                        case AnimatedRenderSettingProperty<T> animated when noDuration:
+                            set(animated.PointDefinition.Interpolate(1));
+                            break;
+                        case AnimatedRenderSettingProperty<T> animated:
+                            StartCoroutine(animated.PointDefinition, set, duration, startTime, easing);
+                            break;
+                        case RenderSettingProperty<T> value:
+                            set(value.Value);
+                            DynamicGI.UpdateEnvironment();
+                            break;
+                        default:
+                            throw new InvalidOperationException($"Could not handle type [{property.GetType().FullName}]");
+                    }
+                }
+
+                T ToEnum<T>(float obj)
+                {
+                    T enumVal = (T)Enum.ToObject(typeof(T), (int)obj);
+                    return enumVal;
                 }
             }
         }
