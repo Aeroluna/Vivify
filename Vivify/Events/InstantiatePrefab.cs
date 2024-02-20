@@ -23,7 +23,7 @@ namespace Vivify.Events
                 return;
             }
 
-            GameObject gameObject = Object.Instantiate(prefab);
+            GameObject gameObject = _instantiator.InstantiatePrefab(prefab);
 
             Transform transform = gameObject.transform;
             data.TransformData.Apply(transform, false);

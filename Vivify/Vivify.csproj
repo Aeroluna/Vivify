@@ -31,7 +31,7 @@
   </PropertyGroup>
 
   <ItemDefinitionGroup>
-    <Reference Private="False"/>
+    <Reference Private="False" />
   </ItemDefinitionGroup>
   <ItemGroup>
     <Reference Include="0Harmony" HintPath="$(BeatSaberDir)\Libs\0Harmony.dll" />
