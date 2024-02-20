@@ -4,6 +4,7 @@ using Heck;
 using UnityEngine;
 using UnityEngine.Video;
 using Vivify.Controllers.Sync;
+using Vivify.UnityKit;
 using Object = UnityEngine.Object;
 
 namespace Vivify.Events
@@ -24,6 +25,17 @@ namespace Vivify.Events
             }
 
             GameObject gameObject = _instantiator.InstantiatePrefab(prefab);
+
+            // Lets quickly disable our base gameObject and initialize our UnityKit components.
+            bool isActive = gameObject.activeSelf;
+            gameObject.SetActive(false);
+
+            foreach (BaseComponentsMonoBehaviour behaviour in gameObject.GetComponentsInChildren<BaseComponentsMonoBehaviour>(true))
+            {
+                behaviour.InitializeBaseComponentsInternal();
+            }
+
+            gameObject.SetActive(isActive);
 
             Transform transform = gameObject.transform;
             data.TransformData.Apply(transform, false);
