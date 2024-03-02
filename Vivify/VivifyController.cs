@@ -51,6 +51,13 @@ namespace Vivify
         internal const string ASSET_BUNDLE = "_assetBundle";
         internal const string BUNDLE = "bundle";
 
+#if LATEST
+        internal const string BUNDLE_SUFFIX = "_windows2021";
+#else
+        //internal const string BUNDLE_SUFFIX = "_windows2019";
+        internal const string BUNDLE_SUFFIX = ""; // TODO: reimplement this later
+#endif
+
         internal const string CAPABILITY = "Vivify";
         internal const string ID = "Vivify";
         internal const string HARMONY_ID = "aeroluna.Vivify";

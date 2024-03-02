@@ -3,14 +3,44 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CustomJSONData.CustomBeatmap;
+using Heck;
 using Heck.Animation;
+using Heck.Event;
+using SiraUtil.Logging;
 using UnityEngine;
+using Vivify.Managers;
+using Zenject;
+using static Vivify.VivifyController;
 
 namespace Vivify.Events
 {
-    internal partial class EventController
+    [CustomEvent(SET_MATERIAL_PROPERTY)]
+    internal class SetMaterialProperty : ICustomEvent
     {
-        internal void SetMaterialProperty(CustomEventData customEventData)
+        private readonly SiraLog _log;
+        private readonly AssetBundleManager _assetBundleManager;
+        private readonly DeserializedData _deserializedData;
+        private readonly IAudioTimeSource _audioTimeSource;
+        private readonly IBpmController _bpmController;
+        private readonly CoroutineDummy _coroutineDummy;
+
+        private SetMaterialProperty(
+            SiraLog log,
+            AssetBundleManager assetBundleManager,
+            [Inject(Id = ID)] DeserializedData deserializedData,
+            IAudioTimeSource audioTimeSource,
+            IBpmController bpmController,
+            CoroutineDummy coroutineDummy)
+        {
+            _log = log;
+            _assetBundleManager = assetBundleManager;
+            _deserializedData = deserializedData;
+            _audioTimeSource = audioTimeSource;
+            _bpmController = bpmController;
+            _coroutineDummy = coroutineDummy;
+        }
+
+        public void Callback(CustomEventData customEventData)
         {
             if (!_deserializedData.Resolve(customEventData, out SetMaterialPropertyData? data))
             {

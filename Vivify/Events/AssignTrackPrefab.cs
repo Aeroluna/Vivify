@@ -1,11 +1,35 @@
 ﻿using CustomJSONData.CustomBeatmap;
+using Heck;
+using Heck.Event;
+using SiraUtil.Logging;
 using UnityEngine;
+using Vivify.Managers;
+using Zenject;
+using static Vivify.VivifyController;
 
 namespace Vivify.Events
 {
-    internal partial class EventController
+    [CustomEvent(ASSIGN_TRACK_PREFAB)]
+    internal class AssignTrackPrefab : ICustomEvent
     {
-        internal void AssignTrackPrefab(CustomEventData customEventData)
+        private readonly SiraLog _log;
+        private readonly AssetBundleManager _assetBundleManager;
+        private readonly DeserializedData _deserializedData;
+        private readonly BeatmapObjectPrefabManager _beatmapObjectPrefabManager;
+
+        private AssignTrackPrefab(
+            SiraLog log,
+            AssetBundleManager assetBundleManager,
+            [Inject(Id = ID)] DeserializedData deserializedData,
+            BeatmapObjectPrefabManager beatmapObjectPrefabManager)
+        {
+            _log = log;
+            _assetBundleManager = assetBundleManager;
+            _deserializedData = deserializedData;
+            _beatmapObjectPrefabManager = beatmapObjectPrefabManager;
+        }
+
+        public void Callback(CustomEventData customEventData)
         {
             if (!_deserializedData.Resolve(customEventData, out AssignTrackPrefabData? data))
             {

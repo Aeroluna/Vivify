@@ -22,8 +22,18 @@ namespace Vivify.Installers
 
             Container.BindInterfacesTo<QualitySettingsManager>().AsSingle();
 
-            // Events
-            Container.BindInterfacesTo<EventController>().AsSingle();
+            // Custom Events
+            Container.BindInterfacesTo<ApplyPostProcessing>().AsSingle();
+            Container.BindInterfacesTo<AssignTrackPrefab>().AsSingle();
+            Container.BindInterfacesTo<DeclareCullingMask>().AsSingle();
+            Container.BindInterfacesTo<DeclareRenderTexture>().AsSingle();
+            Container.BindInterfacesTo<DestroyPrefab>().AsSingle();
+            Container.BindInterfacesTo<Events.InstantiatePrefab>().AsSingle();
+            Container.BindInterfacesTo<SetAnimatorProperty>().AsSingle();
+            Container.BindInterfacesTo<SetCameraProperty>().AsSingle();
+            Container.BindInterfacesTo<SetGlobalProperty>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SetMaterialProperty>().AsSingle();
+            Container.BindInterfacesTo<SetRenderSetting>().AsSingle();
         }
     }
 }

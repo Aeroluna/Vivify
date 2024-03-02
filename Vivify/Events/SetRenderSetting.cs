@@ -2,16 +2,77 @@
 using System.Collections;
 using System.Collections.Generic;
 using CustomJSONData.CustomBeatmap;
+using Heck;
 using Heck.Animation;
+using Heck.Event;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Vivify.Managers;
+using Zenject;
+using static Vivify.VivifyController;
 
 namespace Vivify.Events
 {
-    internal partial class EventController
+    [CustomEvent(SET_RENDER_SETTING)]
+    internal class SetRenderSetting : ICustomEvent, IInitializable, IDisposable
     {
-        // TODO: RESET EVERYthing cause this shit needs to reset on map end
-        internal void SetRenderSetting(CustomEventData customEventData)
+        private readonly DeserializedData _deserializedData;
+        private readonly IAudioTimeSource _audioTimeSource;
+        private readonly IBpmController _bpmController;
+        private readonly CoroutineDummy _coroutineDummy;
+
+        private readonly Dictionary<string, ISettingHandler> _settings = new()
+        {
+            { "ambientEquatorColor", new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.ambientEquatorColor))) },
+            { "ambientGroundColor", new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.ambientEquatorColor))) },
+            { "ambientIntensity", new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.ambientIntensity))) },
+            { "ambientLight", new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.ambientLight))) },
+            { "ambientMode", new SettingHandler<float, AmbientMode>(new RenderEnumCapturedSetting<AmbientMode>(nameof(RenderSettings.ambientMode))) },
+            { "ambientSkyColor", new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.ambientSkyColor))) },
+            { "defaultReflectionMode", new SettingHandler<float, DefaultReflectionMode>(new RenderEnumCapturedSetting<DefaultReflectionMode>(nameof(RenderSettings.defaultReflectionMode))) },
+            { "defaultReflectionResolution", new SettingHandler<float, int>(new RenderIntCapturedSetting(nameof(RenderSettings.defaultReflectionResolution))) },
+            { "flareFadeSpeed", new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.flareFadeSpeed))) },
+            { "flareStrength", new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.flareStrength))) },
+            { "fog", new SettingHandler<float, bool>(new CapturedSetting<RenderSettings, bool>(nameof(RenderSettings.fog), n => Convert.ToBoolean((int)n))) },
+            { "fogColor", new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.fogColor))) },
+            { "fogDensity", new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.fogDensity))) },
+            { "fogEndDistance", new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.fogEndDistance))) },
+            { "fogMode", new SettingHandler<float, FogMode>(new RenderEnumCapturedSetting<FogMode>(nameof(RenderSettings.fogMode))) },
+            { "fogStartDistance", new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.fogStartDistance))) },
+            { "haloStrength", new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.haloStrength))) },
+            { "reflectionBounces", new SettingHandler<float, int>(new RenderIntCapturedSetting(nameof(RenderSettings.reflectionBounces))) },
+            { "reflectionIntensity", new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.reflectionIntensity))) },
+            { "subtractiveShadowColor", new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.subtractiveShadowColor))) },
+        };
+
+        private SetRenderSetting(
+            [Inject(Id = ID)] DeserializedData deserializedData,
+            IAudioTimeSource audioTimeSource,
+            IBpmController bpmController,
+            CoroutineDummy coroutineDummy)
+        {
+            _deserializedData = deserializedData;
+            _audioTimeSource = audioTimeSource;
+            _bpmController = bpmController;
+            _coroutineDummy = coroutineDummy;
+        }
+
+        private interface ISettingHandler
+        {
+            public void Capture();
+
+            public void Reset();
+
+            public void Handle(
+                SetRenderSetting instance,
+                RenderSettingProperty property,
+                bool noDuration,
+                float duration,
+                Functions easing,
+                float startTime);
+        }
+
+        public void Callback(CustomEventData customEventData)
         {
             if (!_deserializedData.Resolve(customEventData, out SetRenderSettingData? data))
             {
@@ -24,6 +85,22 @@ namespace Vivify.Events
             SetRenderSettings(properties, duration, data.Easing, customEventData.time);
         }
 
+        public void Initialize()
+        {
+            foreach (ISettingHandler settingHandler in _settings.Values)
+            {
+                settingHandler.Capture();
+            }
+        }
+
+        public void Dispose()
+        {
+            foreach (ISettingHandler settingHandler in _settings.Values)
+            {
+                settingHandler.Reset();
+            }
+        }
+
         internal void SetRenderSettings(List<RenderSettingProperty> properties, float duration, Functions easing, float startTime)
         {
             foreach (RenderSettingProperty property in properties)
@@ -32,129 +109,23 @@ namespace Vivify.Events
 
                 bool noDuration = duration == 0 || startTime + duration < _audioTimeSource.songTime;
 
-                switch (name)
+                if (_settings.TryGetValue(name, out ISettingHandler settingHandler))
                 {
-                    case "ambientEquatorColor":
-                        Handle<Vector4>(n => RenderSettings.ambientEquatorColor = n);
-                        break;
-
-                    case "ambientGroundColor":
-                        Handle<Vector4>(n => RenderSettings.ambientGroundColor = n);
-                        break;
-
-                    case "ambientIntensity":
-                        Handle<float>(n => RenderSettings.ambientIntensity = n);
-                        break;
-
-                    case "ambientLight":
-                        Handle<Vector4>(n => RenderSettings.ambientLight = n);
-                        break;
-
-                    case "ambientMode":
-                        Handle<float>(n => RenderSettings.ambientMode = ToEnum<AmbientMode>(n));
-                        break;
-
-                    case "ambientSkyColor":
-                        Handle<Vector4>(n => RenderSettings.ambientSkyColor = n);
-                        break;
-
-                    case "defaultReflectionMode":
-                        Handle<float>(n => RenderSettings.defaultReflectionMode = ToEnum<DefaultReflectionMode>(n));
-                        break;
-
-                    case "defaultReflectionResolution":
-                        Handle<float>(n => RenderSettings.defaultReflectionResolution = (int)n);
-                        break;
-
-                    case "flareFadeSpeed":
-                        Handle<float>(n => RenderSettings.flareFadeSpeed = n);
-                        break;
-
-                    case "flareStrength":
-                        Handle<float>(n => RenderSettings.flareStrength = n);
-                        break;
-
-                    case "fog":
-                        Handle<float>(n => RenderSettings.fog = Convert.ToBoolean((int)n));
-                        break;
-
-                    case "fogColor":
-                        Handle<Vector4>(n => RenderSettings.fogColor = n);
-                        break;
-
-                    case "fogDensity":
-                        Handle<float>(n => RenderSettings.fogDensity = n);
-                        break;
-
-                    case "fogEndDistance":
-                        Handle<float>(n => RenderSettings.fogEndDistance = n);
-                        break;
-
-                    case "fogMode":
-                        Handle<float>(n => RenderSettings.fogMode = ToEnum<FogMode>(n));
-                        break;
-
-                    case "fogStartDistance":
-                        Handle<float>(n => RenderSettings.fogStartDistance = n);
-                        break;
-
-                    case "haloStrength":
-                        Handle<float>(n => RenderSettings.fogStartDistance = n);
-                        break;
-
-                    case "reflectionBounces":
-                        Handle<float>(n => RenderSettings.reflectionBounces = (int)n);
-                        break;
-
-                    case "reflectionIntensity":
-                        Handle<float>(n => RenderSettings.reflectionIntensity = n);
-                        break;
-
-                    case "subtractiveShadowColor":
-                        Handle<Vector4>(n => RenderSettings.subtractiveShadowColor = n);
-                        break;
-                }
-
-                continue;
-
-                void Handle<T>(Action<T> set)
-                    where T : struct
-                {
-                    switch (property)
-                    {
-                        case AnimatedRenderSettingProperty<T> animated when noDuration:
-                            set(animated.PointDefinition.Interpolate(1));
-                            break;
-                        case AnimatedRenderSettingProperty<T> animated:
-                            StartCoroutine(animated.PointDefinition, set, duration, startTime, easing);
-                            break;
-                        case RenderSettingProperty<T> value:
-                            set(value.Value);
-                            DynamicGI.UpdateEnvironment();
-                            break;
-                        default:
-                            throw new InvalidOperationException($"Could not handle type [{property.GetType().FullName}]");
-                    }
-                }
-
-                T ToEnum<T>(float obj)
-                {
-                    T enumVal = (T)Enum.ToObject(typeof(T), (int)obj);
-                    return enumVal;
+                    settingHandler.Handle(this, property, noDuration, duration, easing, startTime);
                 }
             }
         }
 
         private void StartCoroutine<T>(
             PointDefinition<T> points,
-            Action<T> set,
+            Action<object> set,
             float duration,
             float startTime,
             Functions easing)
             where T : struct
             => _coroutineDummy.StartCoroutine(AnimatePropertyCoroutine(points, set, duration, startTime, easing));
 
-        private IEnumerator AnimatePropertyCoroutine<T>(PointDefinition<T> points, Action<T> set, float duration, float startTime, Functions easing)
+        private IEnumerator AnimatePropertyCoroutine<T>(PointDefinition<T> points, Action<object> set, float duration, float startTime, Functions easing)
             where T : struct
         {
             while (true)
@@ -172,6 +143,80 @@ namespace Vivify.Events
                 {
                     break;
                 }
+            }
+        }
+
+        private class SettingHandler<THandled, TProperty> : ISettingHandler
+            where THandled : struct
+            where TProperty : struct
+        {
+            private readonly CapturedSetting<RenderSettings, TProperty> _capturedSetting;
+
+            internal SettingHandler(CapturedSetting<RenderSettings, TProperty> capturedSetting)
+            {
+                _capturedSetting = capturedSetting;
+            }
+
+            public void Capture() => _capturedSetting.Capture();
+
+            public void Reset() => _capturedSetting.Reset();
+
+            public void Handle(
+                SetRenderSetting instance,
+                RenderSettingProperty property,
+                bool noDuration,
+                float duration,
+                Functions easing,
+                float startTime)
+            {
+                switch (property)
+                {
+                    case AnimatedRenderSettingProperty<THandled> animated when noDuration:
+                        _capturedSetting.Set(animated.PointDefinition.Interpolate(1));
+                        break;
+                    case AnimatedRenderSettingProperty<THandled> animated:
+                        instance.StartCoroutine(animated.PointDefinition, _capturedSetting.Set, duration, startTime, easing);
+                        break;
+                    case RenderSettingProperty<THandled> value:
+                        _capturedSetting.Set(value.Value);
+                        DynamicGI.UpdateEnvironment();
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Could not handle type [{property.GetType().FullName}]");
+                }
+            }
+        }
+
+        private class RenderEnumCapturedSetting<TEnum> : EnumCapturedSetting<RenderSettings, TEnum>
+            where TEnum : struct, Enum
+        {
+            internal RenderEnumCapturedSetting(string property)
+                : base(property)
+            {
+            }
+        }
+
+        private class RenderColorCapturedSetting : ColorCapturedSetting<RenderSettings>
+        {
+            internal RenderColorCapturedSetting(string property)
+                : base(property)
+            {
+            }
+        }
+
+        private class RenderFloatCapturedSetting : FloatCapturedSetting<RenderSettings>
+        {
+            internal RenderFloatCapturedSetting(string property)
+                : base(property)
+            {
+            }
+        }
+
+        private class RenderIntCapturedSetting : IntCapturedSetting<RenderSettings>
+        {
+            internal RenderIntCapturedSetting(string property)
+                : base(property)
+            {
             }
         }
     }

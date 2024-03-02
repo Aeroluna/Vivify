@@ -1,11 +1,28 @@
 ﻿using CustomJSONData.CustomBeatmap;
+using Heck;
+using Heck.Event;
+using SiraUtil.Logging;
 using Vivify.PostProcessing;
+using Zenject;
+using static Vivify.VivifyController;
 
 namespace Vivify.Events
 {
-    internal partial class EventController
+    [CustomEvent(DECLARE_TEXTURE)]
+    internal class DeclareRenderTexture : ICustomEvent
     {
-        internal void DeclareRenderTexture(CustomEventData customEventData)
+        private readonly SiraLog _log;
+        private readonly DeserializedData _deserializedData;
+
+        private DeclareRenderTexture(
+            SiraLog log,
+            [Inject(Id = ID)] DeserializedData deserializedData)
+        {
+            _log = log;
+            _deserializedData = deserializedData;
+        }
+
+        public void Callback(CustomEventData customEventData)
         {
             if (!_deserializedData.Resolve(customEventData, out DeclareRenderTextureData? data))
             {

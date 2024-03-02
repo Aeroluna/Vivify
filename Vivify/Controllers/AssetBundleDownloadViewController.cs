@@ -88,14 +88,14 @@ namespace Vivify.Controllers
             }
 
             // check if bundle already downloaded
-            string path = Path.Combine(((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath, BUNDLE);
+            string path = Path.Combine(((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath, BUNDLE + BUNDLE_SUFFIX);
             if (File.Exists(path))
             {
                 return false;
             }
 
             CustomData levelCustomData = saveData.levelCustomData;
-            uint assetBundleChecksum = levelCustomData.GetRequired<uint>(ASSET_BUNDLE);
+            uint assetBundleChecksum = levelCustomData.GetRequired<CustomData>(ASSET_BUNDLE).GetRequired<uint>(BUNDLE_SUFFIX);
             _doAbort = false;
             _downloadFinished = false;
             if (_config.AllowDownload)

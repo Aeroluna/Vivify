@@ -29,10 +29,10 @@ namespace Vivify.Managers
 
             _log = log;
 
-            string path = Path.Combine(((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath, BUNDLE);
+            string path = Path.Combine(((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath, BUNDLE + BUNDLE_SUFFIX);
             if (!File.Exists(path))
             {
-                _log.Error($"[{BUNDLE}] not found");
+                _log.Error($"[{BUNDLE + BUNDLE_SUFFIX}] not found");
                 return;
             }
 
@@ -43,7 +43,7 @@ namespace Vivify.Managers
             else
             {
                 CustomData levelCustomData = ((CustomBeatmapSaveData)customDifficultyBeatmap.beatmapSaveData).levelCustomData;
-                uint assetBundleChecksum = levelCustomData.GetRequired<uint>(ASSET_BUNDLE);
+                uint assetBundleChecksum = levelCustomData.GetRequired<CustomData>(ASSET_BUNDLE).GetRequired<uint>(BUNDLE_SUFFIX);
                 _mainBundle = AssetBundle.LoadFromFile(path, assetBundleChecksum);
             }
 

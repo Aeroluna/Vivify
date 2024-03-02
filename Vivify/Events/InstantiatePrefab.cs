@@ -1,16 +1,49 @@
 ﻿using CustomJSONData.CustomBeatmap;
 using HarmonyLib;
 using Heck;
+using Heck.Animation.Transform;
+using Heck.Event;
+using SiraUtil.Logging;
 using UnityEngine;
 using UnityEngine.Video;
 using Vivify.Controllers.Sync;
+using Vivify.Managers;
+using Zenject;
+using static Vivify.VivifyController;
 using Object = UnityEngine.Object;
 
 namespace Vivify.Events
 {
-    internal partial class EventController
+    [CustomEvent(INSTANTIATE_PREFAB)]
+    internal class InstantiatePrefab : ICustomEvent
     {
-        internal void InstantiatePrefab(CustomEventData customEventData)
+        private readonly SiraLog _log;
+        private readonly IInstantiator _instantiator;
+        private readonly AssetBundleManager _assetBundleManager;
+        private readonly PrefabManager _prefabManager;
+        private readonly DeserializedData _deserializedData;
+        private readonly TransformControllerFactory _transformControllerFactory;
+        private readonly bool _leftHanded;
+
+        private InstantiatePrefab(
+            SiraLog log,
+            IInstantiator instantiator,
+            AssetBundleManager assetBundleManager,
+            PrefabManager prefabManager,
+            [Inject(Id = ID)] DeserializedData deserializedData,
+            TransformControllerFactory transformControllerFactory,
+            [Inject(Id = HeckController.LEFT_HANDED_ID)] bool leftHanded)
+        {
+            _log = log;
+            _instantiator = instantiator;
+            _assetBundleManager = assetBundleManager;
+            _prefabManager = prefabManager;
+            _deserializedData = deserializedData;
+            _transformControllerFactory = transformControllerFactory;
+            _leftHanded = leftHanded;
+        }
+
+        public void Callback(CustomEventData customEventData)
         {
             if (!_deserializedData.Resolve(customEventData, out InstantiatePrefabData? data))
             {

@@ -2,15 +2,44 @@
 using System.Collections;
 using System.Collections.Generic;
 using CustomJSONData.CustomBeatmap;
+using Heck;
 using Heck.Animation;
+using Heck.Event;
+using SiraUtil.Logging;
 using UnityEngine;
 using Vivify.Managers;
+using Zenject;
+using static Vivify.VivifyController;
 
 namespace Vivify.Events
 {
-    internal partial class EventController
+    [CustomEvent(SET_ANIMATOR_PROPERTY)]
+    internal class SetAnimatorProperty : ICustomEvent
     {
-        internal void SetAnimatorProperty(CustomEventData customEventData)
+        private readonly SiraLog _log;
+        private readonly PrefabManager _prefabManager;
+        private readonly DeserializedData _deserializedData;
+        private readonly IAudioTimeSource _audioTimeSource;
+        private readonly IBpmController _bpmController;
+        private readonly CoroutineDummy _coroutineDummy;
+
+        private SetAnimatorProperty(
+            SiraLog log,
+            PrefabManager prefabManager,
+            [Inject(Id = ID)] DeserializedData deserializedData,
+            IAudioTimeSource audioTimeSource,
+            IBpmController bpmController,
+            CoroutineDummy coroutineDummy)
+        {
+            _log = log;
+            _prefabManager = prefabManager;
+            _deserializedData = deserializedData;
+            _audioTimeSource = audioTimeSource;
+            _bpmController = bpmController;
+            _coroutineDummy = coroutineDummy;
+        }
+
+        public void Callback(CustomEventData customEventData)
         {
             if (!_deserializedData.Resolve(customEventData, out SetAnimatorPropertyData? data))
             {

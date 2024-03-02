@@ -403,6 +403,7 @@ Remember to clear the `depthTextureMode` to `[]` after you are done using it as 
 ```
 
 Replaces all objects on the track with the assigned prefab.
+If replacing a note, all materials on the prefab will have `_Color` and `_Cutout` properties set automatically.
 
 ## SetRenderSetting
 ```js

@@ -1,14 +1,65 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using CustomJSONData.CustomBeatmap;
+using Heck;
+using Heck.Event;
+using Heck.ReLoad;
+using SiraUtil.Logging;
 using UnityEngine;
+using Vivify.Managers;
 using Vivify.PostProcessing;
+using Zenject;
+using static Vivify.VivifyController;
 
 namespace Vivify.Events
 {
-    internal partial class EventController
+    [CustomEvent(APPLY_POST_PROCESSING)]
+    internal class ApplyPostProcessing : ICustomEvent, IDisposable
     {
-        internal void ApplyPostProcessing(CustomEventData customEventData)
+        private readonly SiraLog _log;
+        private readonly AssetBundleManager _assetBundleManager;
+        private readonly DeserializedData _deserializedData;
+        private readonly IAudioTimeSource _audioTimeSource;
+        private readonly IBpmController _bpmController;
+        private readonly SetMaterialProperty _setMaterialProperty;
+        private readonly CoroutineDummy _coroutineDummy;
+        private readonly ReLoader? _reLoader;
+
+        private ApplyPostProcessing(
+            SiraLog log,
+            AssetBundleManager assetBundleManager,
+            [Inject(Id = ID)] DeserializedData deserializedData,
+            IAudioTimeSource audioTimeSource,
+            IBpmController bpmController,
+            SetMaterialProperty setMaterialProperty,
+            CoroutineDummy coroutineDummy,
+            [Inject(Id = HeckController.LEFT_HANDED_ID)] bool leftHanded,
+            [InjectOptional] ReLoader? reLoader)
+        {
+            _log = log;
+            _assetBundleManager = assetBundleManager;
+            _deserializedData = deserializedData;
+            _audioTimeSource = audioTimeSource;
+            _bpmController = bpmController;
+            _setMaterialProperty = setMaterialProperty;
+            _coroutineDummy = coroutineDummy;
+            _reLoader = reLoader;
+            if (reLoader != null)
+            {
+                reLoader.Rewinded += PostProcessingController.ResetMaterial;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_reLoader != null)
+            {
+                _reLoader.Rewinded -= PostProcessingController.ResetMaterial;
+            }
+        }
+
+        public void Callback(CustomEventData customEventData)
         {
             if (!_deserializedData.Resolve(customEventData, out ApplyPostProcessingData? data))
             {
@@ -28,7 +79,7 @@ namespace Vivify.Events
                 List<MaterialProperty>? properties = data.Properties;
                 if (properties != null)
                 {
-                    SetMaterialProperties(material, properties, duration, data.Easing, customEventData.time);
+                    _setMaterialProperty.SetMaterialProperties(material, properties, duration, data.Easing, customEventData.time);
                 }
             }
 

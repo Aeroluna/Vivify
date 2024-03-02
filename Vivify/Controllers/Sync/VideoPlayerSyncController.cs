@@ -13,6 +13,8 @@ namespace Vivify.Controllers.Sync
         private AudioTimeSyncController _audioTimeSyncController = null!;
         private float _startTime;
 
+        private float SongTime => _audioTimeSyncController.songTime - _startTime;
+
         [Inject]
         [UsedImplicitly]
         private void Construct(
@@ -29,6 +31,7 @@ namespace Vivify.Controllers.Sync
             switch (_audioTimeSyncController.state)
             {
                 case AudioTimeSyncController.State.Playing:
+                    ResyncTime();
                     _videoPlayer.Play();
                     break;
 
@@ -60,8 +63,16 @@ namespace Vivify.Controllers.Sync
 
         private void Update()
         {
+            if (Math.Abs(_videoPlayer.time - SongTime) > 0.2)
+            {
+                ResyncTime();
+            }
+        }
+
+        private void ResyncTime()
+        {
             _videoPlayer.playbackSpeed = _audioTimeSyncController.timeScale;
-            _videoPlayer.time = _audioTimeSyncController.songTime - _startTime;
+            _videoPlayer.time = SongTime;
         }
     }
 }
