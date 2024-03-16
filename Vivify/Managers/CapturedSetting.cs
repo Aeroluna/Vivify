@@ -23,7 +23,7 @@ namespace Vivify.Managers
         {
         }
 
-        private static TEnum Convert(object obj) => (TEnum)Enum.ToObject(typeof(TEnum), (int)obj);
+        private static TEnum Convert(object obj) => (TEnum)Enum.ToObject(typeof(TEnum), obj);
     }
 
     public class IntCapturedSetting<TClass> : CapturedSetting<TClass, int>
@@ -63,7 +63,7 @@ namespace Vivify.Managers
         {
         }
 
-        private static Color Convert(object obj) => (Color)obj;
+        private static Color Convert(object obj) => (Vector4)obj;
     }
 
     public class CapturedSetting<TClass, TProperty> : ICapturedSetting

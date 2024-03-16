@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using JetBrains.Annotations;
+using SiraUtil.Logging;
 using UnityEngine;
 using UnityEngine.Video;
 using Zenject;
@@ -9,18 +11,23 @@ namespace Vivify.Controllers.Sync
     [RequireComponent(typeof(VideoPlayer))]
     internal class VideoPlayerSyncController : MonoBehaviour
     {
+        private SiraLog _log = null!;
         private VideoPlayer _videoPlayer = null!;
         private AudioTimeSyncController _audioTimeSyncController = null!;
         private float _startTime;
+
+        private bool _seeking;
 
         private float SongTime => _audioTimeSyncController.songTime - _startTime;
 
         [Inject]
         [UsedImplicitly]
         private void Construct(
+            SiraLog log,
             float startTime,
             AudioTimeSyncController audioTimeSyncController)
         {
+            _log = log;
             _startTime = startTime;
             _audioTimeSyncController = audioTimeSyncController;
             audioTimeSyncController.stateChangedEvent += OnStateChange;
@@ -28,6 +35,11 @@ namespace Vivify.Controllers.Sync
 
         private void OnStateChange()
         {
+            if (!_videoPlayer.isPrepared)
+            {
+                return;
+            }
+
             switch (_audioTimeSyncController.state)
             {
                 case AudioTimeSyncController.State.Playing:
@@ -51,10 +63,24 @@ namespace Vivify.Controllers.Sync
         private void Awake()
         {
             _videoPlayer = GetComponent<VideoPlayer>();
+            _videoPlayer.errorReceived += OnErrorRecieved;
+            _videoPlayer.prepareCompleted += OnPrepareCompleted;
+            _videoPlayer.skipOnDrop = false;
+        }
+
+        private void OnEnable()
+        {
+            StartCoroutine(Prepare());
         }
 
         private void OnDestroy()
         {
+            if (_videoPlayer != null)
+            {
+                _videoPlayer.errorReceived -= OnErrorRecieved;
+                _videoPlayer.prepareCompleted -= OnPrepareCompleted;
+            }
+
             if (_audioTimeSyncController != null)
             {
                 _audioTimeSyncController.stateChangedEvent -= OnStateChange;
@@ -63,6 +89,11 @@ namespace Vivify.Controllers.Sync
 
         private void Update()
         {
+            if (!_videoPlayer.isPrepared)
+            {
+                return;
+            }
+
             if (Math.Abs(_videoPlayer.time - SongTime) > 0.2)
             {
                 ResyncTime();
@@ -71,8 +102,43 @@ namespace Vivify.Controllers.Sync
 
         private void ResyncTime()
         {
+            if (_seeking)
+            {
+                return;
+            }
+
+            _seeking = true;
             _videoPlayer.playbackSpeed = _audioTimeSyncController.timeScale;
+            _videoPlayer.seekCompleted += OnSeekCompleted;
             _videoPlayer.time = SongTime;
+        }
+
+        private void OnSeekCompleted(VideoPlayer _)
+        {
+            _videoPlayer.seekCompleted -= OnSeekCompleted;
+            StartCoroutine(SeekCompleteDelay());
+        }
+
+        private void OnErrorRecieved(VideoPlayer _, string error)
+        {
+            _log.Error(error);
+        }
+
+        private void OnPrepareCompleted(VideoPlayer _)
+        {
+            OnStateChange();
+        }
+
+        private IEnumerator Prepare()
+        {
+            yield return new WaitUntil(() => _videoPlayer != null && _videoPlayer.isActiveAndEnabled);
+            _videoPlayer.Prepare();
+        }
+
+        private IEnumerator SeekCompleteDelay()
+        {
+            yield return new WaitForEndOfFrame();
+            _seeking = false;
         }
     }
 }

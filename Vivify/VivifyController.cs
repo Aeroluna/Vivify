@@ -54,8 +54,7 @@ namespace Vivify
 #if LATEST
         internal const string BUNDLE_SUFFIX = "_windows2021";
 #else
-        //internal const string BUNDLE_SUFFIX = "_windows2019";
-        internal const string BUNDLE_SUFFIX = ""; // TODO: reimplement this later
+        internal const string BUNDLE_SUFFIX = "_windows2019";
 #endif
 
         internal const string CAPABILITY = "Vivify";

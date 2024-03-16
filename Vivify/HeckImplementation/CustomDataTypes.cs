@@ -88,7 +88,8 @@ namespace Vivify
                 {
                     MaterialPropertyType.Color => new AnimatedMaterialProperty<Vector4>(rawData, type, value, pointDefinitions),
                     MaterialPropertyType.Float => new AnimatedMaterialProperty<float>(rawData, type, value, pointDefinitions),
-                    _ => throw new InvalidOperationException()
+                    MaterialPropertyType.Vector => new AnimatedMaterialProperty<Vector4>(rawData, type, value, pointDefinitions),
+                    _ => throw new InvalidOperationException($"[{type}] not currently supported.")
                 };
             }
 

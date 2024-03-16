@@ -182,18 +182,20 @@ namespace Vivify.Events
                         DynamicGI.UpdateEnvironment();
                         break;
                     default:
-                        throw new InvalidOperationException($"Could not handle type [{property.GetType().FullName}]");
+                        throw new InvalidOperationException($"Could not handle type [{property.GetType().FullName}].");
                 }
             }
         }
 
-        private class RenderEnumCapturedSetting<TEnum> : EnumCapturedSetting<RenderSettings, TEnum>
+        private class RenderEnumCapturedSetting<TEnum> : CapturedSetting<RenderSettings, TEnum>
             where TEnum : struct, Enum
         {
             internal RenderEnumCapturedSetting(string property)
-                : base(property)
+                : base(property, Convert)
             {
             }
+
+            private static TEnum Convert(object obj) => (TEnum)Enum.ToObject(typeof(TEnum), (int)(float)obj);
         }
 
         private class RenderColorCapturedSetting : ColorCapturedSetting<RenderSettings>
