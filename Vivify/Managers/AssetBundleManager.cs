@@ -43,8 +43,11 @@ namespace Vivify.Managers
             else
             {
                 CustomData levelCustomData = ((CustomBeatmapSaveData)customDifficultyBeatmap.beatmapSaveData).levelCustomData;
-                uint assetBundleChecksum = levelCustomData.GetRequired<CustomData>(ASSET_BUNDLE).GetRequired<uint>(BUNDLE_SUFFIX);
-                _mainBundle = AssetBundle.LoadFromFile(path, assetBundleChecksum);
+                uint? assetBundleChecksum = levelCustomData.Get<CustomData>(ASSET_BUNDLE)?.Get<uint>(BUNDLE_SUFFIX);
+                if (assetBundleChecksum != null)
+                {
+                    _mainBundle = AssetBundle.LoadFromFile(path, assetBundleChecksum.Value);
+                }
             }
 
             if (_mainBundle == null)

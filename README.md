@@ -22,11 +22,10 @@ This documentation assumes basic understanding of custom events and tracks.
 - [`SetAnimatorProperty`](#setanimatorproperty)
 - [`SetCameraProperty`](#setcameraproperty)
 - [`AssignTrackPrefab`](#assigntrackprefab)
+- ['SetRenderSetting'](#setrendersetting)
 
 ## Setting up Unity
-First, you should to download the Unity Hub at https://unity3d.com/get-unity/download. Beat Saber 1.29.1 uses version 2019.4.28f and Beat Saber 1.30.0+ uses 2021.3.16f1. For maximum compatibility, you should use 2019.4.28f found in the [archive](https://unity3d.com/get-unity/download/archive) as bundles built on that version will be compatible on both versions.
-
-Now, you can create your own Unity project or use a specially made template for Vivify (coming soon).
+First, you should to download the Unity Hub at https://unity3d.com/get-unity/download. Beat Saber 1.29.1 uses version 2019.4.28f and Beat Saber 1.30.0+ uses 2021.3.16f1. For maximum compatibility, you should use 2019.4.28f found in the [archive](https://unity3d.com/get-unity/download/archive) and use Swifter's VivifyTemplate to build your bundles https://github.com/Swifter1243/VivifyTemplate. 2019 bundles built without using that script will have nonfunctioning shader keywords in 2021.
 
 Make sure you have `Virtual Reality Supported` enabled in your project and your stereo rendering mode is set to `Single Pass`. (Edit > Project Settings > Player > XR Settings > Deprecated Settings > Virtual Reality Supported).
 
@@ -47,14 +46,16 @@ Beat Saber v1.30.0+ uses Single Pass Instanced rendering. Any incompatible shade
 A tip for writing shaders, there are many commonly used structs/functions in UnityCG.cginc. As a few examples, `appdata_base`, `appdata_img`, `appdata_full`, and `v2f_img` can usually be used instead of writing your own structs and since most image effect shaders use the same vertex function, the include file has a `vert_img` that can be used with `#pragma vertex vert_img`.
 
 ### Creating an asset bundle
-Visit https://learn.unity.com/tutorial/introduction-to-asset-bundles-1 for a basic introduction to creating asset bundles. Even if you are using a template it is still useful to at least read through these instructions.
+Use https://github.com/Swifter1243/VivifyTemplate to create the bundle. (TODO: more instructions here)
 
 (Optional) See https://docs.unity3d.com/Manual/AssetBundles-Browser.html. this tool allows you to browse the contents of a built asset bundle.
 
-After creating your asset bundle, place it in your map folder and call it `bundle` (no extension).
+Bundles should be placed in your map folder and called either `bundle_windows2019`, `bundle_windows2021`. Although Quest support does not exist yet, bundles should still be built for them and be called `bundle_android2021`.
 ```
 Map Folder
-├── bundle
+├── bundle_windows2019
+├── bundle_windows2021
+├── bundle_android2021
 ├── song.ogg
 ├── cover.jpg
 ├── ExpertPlusStandard.dat
@@ -68,7 +69,11 @@ By default when Vivify will check against a checksum when loading an asset bundl
   "_environmentName": "DefaultEnvironment",
   "_allDirectionsEnvironmentName": "GlassDesertEnvironment",
   "_customData": {
-    "_assetBundle": 1414251160
+    "_assetBundle": {
+      "_windows2019": 1414251160,
+      "_windows2021": 6436275894,
+      "_android2021": 4262884586,
+    }
   },
   "_difficultyBeatmapSets": [
     {
@@ -103,7 +108,7 @@ Currently provided settings:
 - `"_shadowNearPlaneOffset"`: (float)
 - `"_shadowProjection"`: (0, 1) CloseFit, StableFit
 - `"_shadowResolution"`: (0, 1, 2, 3) Low, Medium, High, VeryHigh.
-- `"_shadows"`: (0, 1, 2) Disable, HardOnly, All.
+- `"_shadows"`: (0, 1, 2) Disable, HardOnly, All. WARNING: May cause random crashes, needs more investigation.
 - `"_softParticles"`: (bool)
 
 ## SetMaterialProperty

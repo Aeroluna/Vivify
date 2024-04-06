@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using Vivify.TrackGameObject;
 using static Vivify.VivifyController;
 
@@ -6,9 +7,9 @@ namespace Vivify.Controllers
 {
     internal abstract class CullingCameraController : MonoBehaviour
     {
-        private CullingTextureData? _cullingTextureData;
+        private readonly List<(GameObject, int)> _cachedLayers = new();
 
-        private int[]? _cachedLayers;
+        private CullingTextureData? _cullingTextureData;
 
         internal abstract int DefaultCullingMask { get; }
 
@@ -42,29 +43,24 @@ namespace Vivify.Controllers
             // Set renderers to culling layer
             GameObject[] gameObjects = _cullingTextureData.GameObjects;
             int length = gameObjects.Length;
-            _cachedLayers = new int[length];
             for (int i = 0; i < length; i++)
             {
                 GameObject renderedObject = gameObjects[i];
-                _cachedLayers[i] = renderedObject.layer;
+                _cachedLayers.Add((renderedObject, renderedObject.layer));
                 renderedObject.layer = CULLINGLAYER;
             }
         }
 
         private void OnPostRender()
         {
-            if (_cullingTextureData == null || _cachedLayers == null)
+            if (_cachedLayers.Count == 0)
             {
                 return;
             }
 
             // reset renderer layers
-            GameObject[] gameObjects = _cullingTextureData.GameObjects;
-            int length = gameObjects.Length;
-            for (int i = 0; i < length; i++)
-            {
-                gameObjects[i].layer = _cachedLayers[i];
-            }
+            _cachedLayers.ForEach(n => n.Item1.layer = n.Item2);
+            _cachedLayers.Clear();
         }
     }
 }
