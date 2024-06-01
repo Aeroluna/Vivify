@@ -18,18 +18,18 @@ namespace Vivify.PostProcessing
     {
         private readonly Dictionary<DeclareRenderTextureData, string> _activeDeclaredTextures = new();
         private readonly Dictionary<string, RenderTextureHolder> _declaredTextures = new();
-        private readonly Dictionary<CullingTextureData, string> _activeCullingTextureDatas = new();
+        private readonly Dictionary<CullingTextureTracker, string> _activeCullingTextureDatas = new();
         private readonly Dictionary<string, CullingCameraController> _cullingCameraControllers = new();
         private readonly Stack<CullingTextureController> _disabledCullingCameraControllers = new();
 
-        private readonly List<CullingTextureData> _reusableCullingKeys = new();
+        private readonly List<CullingTextureTracker> _reusableCullingKeys = new();
         private readonly List<DeclareRenderTextureData> _reusableDeclaredKeys = new();
 
         private SiraLog _log = null!;
 
         private int? _defaultCullingMask;
 
-        internal static Dictionary<string, CullingTextureData> CullingTextureDatas { get; private set; } = new();
+        internal static Dictionary<string, CullingTextureTracker> CullingTextureDatas { get; private set; } = new();
 
         internal static Dictionary<string, DeclareRenderTextureData> DeclaredTextureDatas { get; private set; } = new();
 
@@ -39,7 +39,12 @@ namespace Vivify.PostProcessing
 
         internal static void ResetMaterial()
         {
-            CullingTextureDatas = new Dictionary<string, CullingTextureData>();
+            foreach (CullingTextureTracker cullingTextureTracker in CullingTextureDatas.Values)
+            {
+                cullingTextureTracker.Dispose();
+            }
+
+            CullingTextureDatas = new Dictionary<string, CullingTextureTracker>();
             DeclaredTextureDatas = new Dictionary<string, DeclareRenderTextureData>();
 
             PostProcessingMaterial = new HashSet<MaterialData>();
@@ -53,7 +58,7 @@ namespace Vivify.PostProcessing
 
         protected override void OnPreCull()
         {
-            foreach ((CullingTextureData textureData, string textureName) in _activeCullingTextureDatas)
+            foreach ((CullingTextureTracker textureData, string textureName) in _activeCullingTextureDatas)
             {
                 if (CullingTextureDatas.ContainsValue(textureData))
                 {
@@ -79,7 +84,7 @@ namespace Vivify.PostProcessing
             _reusableCullingKeys.ForEach(n => _activeCullingTextureDatas.Remove(n));
             _reusableCullingKeys.Clear();
 
-            foreach ((string textureName, CullingTextureData textureData) in CullingTextureDatas)
+            foreach ((string textureName, CullingTextureTracker textureData) in CullingTextureDatas)
             {
                 if (_activeCullingTextureDatas.ContainsKey(textureData))
                 {

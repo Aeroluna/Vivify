@@ -9,13 +9,13 @@ namespace Vivify.Controllers
     {
         private readonly List<(GameObject, int)> _cachedLayers = new();
 
-        private CullingTextureData? _cullingTextureData;
+        private CullingTextureTracker? _cullingTextureData;
 
         internal abstract int DefaultCullingMask { get; }
 
         internal Camera Camera { get; private set; } = null!;
 
-        internal CullingTextureData? CullingTextureData
+        internal CullingTextureTracker? CullingTextureData
         {
             get => _cullingTextureData;
 

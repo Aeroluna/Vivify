@@ -31,13 +31,13 @@ namespace Vivify.Controllers
             _postProcessingController = postProcessingController;
         }
 
-        internal void Init(string key, CullingTextureData cullingTextureData)
+        internal void Init(string key, CullingTextureTracker cullingTextureTracker)
         {
             _key = key;
             Camera.CopyFrom(_postProcessingController.Camera);
-            Camera.depthTextureMode = cullingTextureData.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
+            Camera.depthTextureMode = cullingTextureTracker.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
             Camera.depth -= 1;
-            CullingTextureData = cullingTextureData;
+            CullingTextureData = cullingTextureTracker;
         }
 
         protected override void Awake()

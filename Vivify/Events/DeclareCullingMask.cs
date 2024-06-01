@@ -12,12 +12,10 @@ using static Vivify.VivifyController;
 namespace Vivify.Events
 {
     [CustomEvent(DECLARE_CULLING_TEXTURE)]
-    internal class DeclareCullingMask : ICustomEvent, IDisposable
+    internal class DeclareCullingMask : ICustomEvent
     {
         private readonly SiraLog _log;
         private readonly DeserializedData _deserializedData;
-
-        private readonly HashSet<IDisposable> _disposables = new();
 
         private DeclareCullingMask(
             SiraLog log,
@@ -25,14 +23,6 @@ namespace Vivify.Events
         {
             _log = log;
             _deserializedData = deserializedData;
-        }
-
-        public void Dispose()
-        {
-            foreach (IDisposable disposable in _disposables)
-            {
-                disposable.Dispose();
-            }
         }
 
         public void Callback(CustomEventData customEventData)
@@ -43,9 +33,8 @@ namespace Vivify.Events
             }
 
             string name = data.Name;
-            CullingTextureData textureData = new(data.Tracks, data.Whitelist, data.DepthTexture);
-            _disposables.Add(textureData);
-            PostProcessingController.CullingTextureDatas.Add(name, textureData);
+            CullingTextureTracker textureTracker = new(data.Tracks, data.Whitelist, data.DepthTexture);
+            PostProcessingController.CullingTextureDatas.Add(name, textureTracker);
             _log.Debug($"Created culling mask [{name}]");
             /*
                 GameObject[] gameObjects = Resources.FindObjectsOfTypeAll<GameObject>();

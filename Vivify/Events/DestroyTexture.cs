@@ -12,12 +12,10 @@ using static Vivify.VivifyController;
 namespace Vivify.Events
 {
     [CustomEvent(DECLARE_TEXTURE)]
-    internal class DestroyTexture : ICustomEvent, IDisposable
+    internal class DestroyTexture : ICustomEvent
     {
         private readonly SiraLog _log;
         private readonly DeserializedData _deserializedData;
-
-        private readonly HashSet<IDisposable> _disposables = new();
 
         private DestroyTexture(
             SiraLog log,
@@ -25,14 +23,6 @@ namespace Vivify.Events
         {
             _log = log;
             _deserializedData = deserializedData;
-        }
-
-        public void Dispose()
-        {
-            foreach (IDisposable disposable in _disposables)
-            {
-                disposable.Dispose();
-            }
         }
 
         public void Callback(CustomEventData customEventData)
@@ -45,11 +35,10 @@ namespace Vivify.Events
             string[] names = data.Name;
             foreach (string name in names)
             {
-                if (PostProcessingController.CullingTextureDatas.TryGetValue(name, out CullingTextureData? active))
+                if (PostProcessingController.CullingTextureDatas.TryGetValue(name, out CullingTextureTracker? active))
                 {
                     PostProcessingController.CullingTextureDatas.Remove(name);
                     active.Dispose();
-                    _disposables.Remove(active);
                     _log.Debug($"Destroyed culling texture [{name}]");
                 }
                 else if (PostProcessingController.DeclaredTextureDatas.Remove(name))

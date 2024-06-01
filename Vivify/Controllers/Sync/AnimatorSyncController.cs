@@ -16,6 +16,7 @@ namespace Vivify.Controllers.Sync
         {
             _animator = GetComponent<Animator>();
             _animator.updateMode = AnimatorUpdateMode.Normal;
+            _animator.Update(SongTime);
         }
     }
 }

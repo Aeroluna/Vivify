@@ -22,11 +22,11 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition=" !'$(DefineConstants.Contains(LATEST))' ">
-    <Version>0.0.8</Version>
+    <Version>0.0.10</Version>
     <GameVersion>1.29.1</GameVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(DefineConstants.Contains(LATEST))' ">
-    <Version>0.0.9</Version>
+    <Version>0.0.11</Version>
     <GameVersion>1.34.2</GameVersion>
   </PropertyGroup>
 

@@ -42,7 +42,7 @@ namespace Vivify.Events
             { "haloStrength", new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.haloStrength))) },
             { "reflectionBounces", new SettingHandler<float, int>(new RenderIntCapturedSetting(nameof(RenderSettings.reflectionBounces))) },
             { "reflectionIntensity", new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.reflectionIntensity))) },
-            { "subtractiveShadowColor", new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.subtractiveShadowColor))) },
+            { "subtractiveShadowColor", new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.subtractiveShadowColor))) }
         };
 
         private SetRenderSetting(

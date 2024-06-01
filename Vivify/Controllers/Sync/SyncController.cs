@@ -7,7 +7,8 @@ namespace Vivify.Controllers.Sync
     internal abstract class SyncController : MonoBehaviour
     {
         private AudioTimeSyncController _audioTimeSyncController = null!;
-        private float _songTime;
+
+        protected float SongTime { get; private set; }
 
         public abstract void Sync(float speed);
 
@@ -15,7 +16,7 @@ namespace Vivify.Controllers.Sync
         [UsedImplicitly]
         private void Construct(float startTime, AudioTimeSyncController audioTimeSyncController)
         {
-            _songTime = startTime;
+            SongTime = startTime;
             _audioTimeSyncController = audioTimeSyncController;
         }
 
@@ -23,8 +24,8 @@ namespace Vivify.Controllers.Sync
         {
             float deltaTime = Time.deltaTime;
             float songTime = _audioTimeSyncController.songTime;
-            float deltaSongTime = songTime - _songTime;
-            _songTime = songTime;
+            float deltaSongTime = songTime - SongTime;
+            SongTime = songTime;
 
             if (deltaTime > 0 && deltaSongTime > 0)
             {
