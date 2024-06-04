@@ -18,6 +18,7 @@ namespace Vivify.Installers
         {
             Container.BindInstance(_config);
             Container.BindInterfacesTo<AddComponentsToCamera>().AsSingle();
+            Container.BindInterfacesAndSelfTo<FeaturesModule>().AsSingle();
         }
     }
 }

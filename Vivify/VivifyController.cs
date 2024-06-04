@@ -63,19 +63,6 @@ namespace Vivify
 
         internal const int CULLINGLAYER = 22;
 
-        internal static HeckPatcher CorePatcher { get; } = new(HARMONY_ID + "Core");
-
-        internal static HeckPatcher FeaturesPatcher { get; } = new(HARMONY_ID + "Features", PatchType.Features);
-
-        internal static DataDeserializer Deserializer { get; } = DeserializerManager.Register<CustomDataManager>(ID);
-
-        internal static Module FeaturesModule { get; } = ModuleManager.Register<ModuleCallbacks>(
-            CAPABILITY,
-            2,
-            RequirementType.Condition,
-            null,
-            new[] { "Heck" });
-
         internal static void OnActiveSceneChanged(Scene current, Scene _)
         {
             if (current.name != "GameCore")

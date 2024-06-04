@@ -1,4 +1,5 @@
-﻿using IPA;
+﻿using Heck;
+using IPA;
 using IPA.Config.Stores;
 using IPA.Logging;
 using JetBrains.Annotations;
@@ -25,6 +26,8 @@ namespace Vivify
             zenjector.Install<VivifyPlayerInstaller>(Location.Player);
             zenjector.Install<VivifyMenuInstaller>(Location.Menu);
             zenjector.UseLogger(pluginLogger);
+
+            HeckPatchManager.Register(HARMONY_ID);
         }
 
         internal static Logger Log { get; private set; } = null!;
@@ -35,8 +38,6 @@ namespace Vivify
         public void OnEnable()
         {
             Collections.RegisterCapability(CAPABILITY);
-            CorePatcher.Enabled = true;
-            FeaturesModule.Enabled = true;
 
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
         }
@@ -46,9 +47,6 @@ namespace Vivify
         public void OnDisable()
         {
             Collections.DeregisterizeCapability(CAPABILITY);
-            CorePatcher.Enabled = false;
-            FeaturesPatcher.Enabled = false;
-            FeaturesModule.Enabled = false;
 
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
         }

@@ -8,9 +8,16 @@ namespace Vivify.Installers
     [UsedImplicitly]
     internal class VivifyPlayerInstaller : Installer
     {
+        private readonly FeaturesModule _featuresModule;
+
+        private VivifyPlayerInstaller(FeaturesModule featuresModule)
+        {
+            _featuresModule = featuresModule;
+        }
+
         public override void InstallBindings()
         {
-            if (!VivifyController.FeaturesPatcher.Enabled)
+            if (!_featuresModule.Active)
             {
                 return;
             }

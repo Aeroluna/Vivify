@@ -7,22 +7,38 @@ using static Vivify.VivifyController;
 
 namespace Vivify
 {
-    internal class CustomDataManager
+    internal class CustomDataDeserializer : IEarlyDeserializer, IObjectsDeserializer, ICustomEventsDeserializer
     {
-        [EarlyDeserializer]
-        internal static void DeserializerEarly(
+        private readonly TrackBuilder _trackBuilder;
+        private readonly CustomBeatmapData _beatmapData;
+        private readonly IDifficultyBeatmap _difficultyBeatmap;
+        private readonly Dictionary<string, List<object>> _pointDefinitions;
+        private readonly Dictionary<string, Track> _tracks;
+
+        private CustomDataDeserializer(
             TrackBuilder trackBuilder,
             CustomBeatmapData beatmapData,
-            IDifficultyBeatmap difficultyBeatmap)
+            IDifficultyBeatmap difficultyBeatmap,
+            Dictionary<string, List<object>> pointDefinitions,
+            Dictionary<string, Track> tracks)
         {
-            foreach (CustomEventData customEventData in beatmapData.customEventDatas)
+            _trackBuilder = trackBuilder;
+            _beatmapData = beatmapData;
+            _difficultyBeatmap = difficultyBeatmap;
+            _pointDefinitions = pointDefinitions;
+            _tracks = tracks;
+        }
+
+        public void DeserializeEarly()
+        {
+            foreach (CustomEventData customEventData in _beatmapData.customEventDatas)
             {
                 try
                 {
                     switch (customEventData.eventType)
                     {
                         case INSTANTIATE_PREFAB:
-                            trackBuilder.AddFromCustomData(customEventData.customData, false, false);
+                            _trackBuilder.AddFromCustomData(customEventData.customData, false, false);
                             break;
 
                         default:
@@ -31,45 +47,36 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Plugin.Log.DeserializeFailure(e, customEventData, difficultyBeatmap);
+                    Plugin.Log.DeserializeFailure(e, customEventData, _difficultyBeatmap);
                 }
             }
         }
 
-        [ObjectsDeserializer]
-        internal static Dictionary<BeatmapObjectData, IObjectCustomData> DeserializeObjects(
-            CustomBeatmapData beatmapData,
-            Dictionary<string, Track> beatmapTracks,
-            IDifficultyBeatmap difficultyBeatmap)
+        public Dictionary<BeatmapObjectData, IObjectCustomData> DeserializeObjects()
         {
-            bool v2 = beatmapData.version2_6_0AndEarlier;
+            bool v2 = _beatmapData.version2_6_0AndEarlier;
             Dictionary<BeatmapObjectData, IObjectCustomData> dictionary = new();
 
-            foreach (BeatmapObjectData beatmapObjectData in beatmapData.beatmapObjectDatas)
+            foreach (BeatmapObjectData beatmapObjectData in _beatmapData.beatmapObjectDatas)
             {
                 try
                 {
                     CustomData customData = ((ICustomData)beatmapObjectData).customData;
-                    dictionary.Add(beatmapObjectData, new VivifyObjectData(customData, beatmapTracks, v2));
+                    dictionary.Add(beatmapObjectData, new VivifyObjectData(customData, _tracks, v2));
                 }
                 catch (Exception e)
                 {
-                    Plugin.Log.DeserializeFailure(e, beatmapObjectData, difficultyBeatmap);
+                    Plugin.Log.DeserializeFailure(e, beatmapObjectData, _difficultyBeatmap);
                 }
             }
 
             return dictionary;
         }
 
-        [CustomEventsDeserializer]
-        private static Dictionary<CustomEventData, ICustomEventCustomData> DeserializeCustomEvents(
-            CustomBeatmapData beatmapData,
-            IDifficultyBeatmap difficultyBeatmap,
-            Dictionary<string, List<object>> pointDefinitions,
-            Dictionary<string, Track> tracks)
+        public Dictionary<CustomEventData, ICustomEventCustomData> DeserializeCustomEvents()
         {
             Dictionary<CustomEventData, ICustomEventCustomData> dictionary = new();
-            foreach (CustomEventData customEventData in beatmapData.customEventDatas)
+            foreach (CustomEventData customEventData in _beatmapData.customEventDatas)
             {
                 try
                 {
@@ -77,15 +84,15 @@ namespace Vivify
                     switch (customEventData.eventType)
                     {
                         case APPLY_POST_PROCESSING:
-                            dictionary.Add(customEventData, new ApplyPostProcessingData(data, pointDefinitions));
+                            dictionary.Add(customEventData, new ApplyPostProcessingData(data, _pointDefinitions));
                             break;
 
                         case ASSIGN_TRACK_PREFAB:
-                            dictionary.Add(customEventData, new AssignTrackPrefabData(data, tracks));
+                            dictionary.Add(customEventData, new AssignTrackPrefabData(data, _tracks));
                             break;
 
                         case DECLARE_CULLING_TEXTURE:
-                            dictionary.Add(customEventData, new DeclareCullingMaskData(data, tracks));
+                            dictionary.Add(customEventData, new DeclareCullingMaskData(data, _tracks));
                             break;
 
                         case DECLARE_TEXTURE:
@@ -101,15 +108,15 @@ namespace Vivify
                             break;
 
                         case INSTANTIATE_PREFAB:
-                            dictionary.Add(customEventData, new InstantiatePrefabData(data, tracks));
+                            dictionary.Add(customEventData, new InstantiatePrefabData(data, _tracks));
                             break;
 
                         case SET_MATERIAL_PROPERTY:
-                            dictionary.Add(customEventData, new SetMaterialPropertyData(data, pointDefinitions));
+                            dictionary.Add(customEventData, new SetMaterialPropertyData(data, _pointDefinitions));
                             break;
 
                         case SET_GLOBAL_PROPERTY:
-                            dictionary.Add(customEventData, new SetGlobalPropertyData(data, pointDefinitions));
+                            dictionary.Add(customEventData, new SetGlobalPropertyData(data, _pointDefinitions));
                             break;
 
                         case SET_CAMERA_PROPERTY:
@@ -117,11 +124,11 @@ namespace Vivify
                             break;
 
                         case SET_ANIMATOR_PROPERTY:
-                            dictionary.Add(customEventData, new SetAnimatorPropertyData(data, pointDefinitions));
+                            dictionary.Add(customEventData, new SetAnimatorPropertyData(data, _pointDefinitions));
                             break;
 
                         case SET_RENDER_SETTING:
-                            dictionary.Add(customEventData, new SetRenderSettingData(data, pointDefinitions));
+                            dictionary.Add(customEventData, new SetRenderSettingData(data, _pointDefinitions));
                             break;
 
                         default:
@@ -130,7 +137,7 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Plugin.Log.DeserializeFailure(e, customEventData, difficultyBeatmap);
+                    Plugin.Log.DeserializeFailure(e, customEventData, _difficultyBeatmap);
                 }
             }
 
