@@ -63,6 +63,8 @@ namespace Vivify
 
         internal const int CULLINGLAYER = 22;
 
+        internal static Capability Capability { get; } = new(CAPABILITY);
+
         internal static void OnActiveSceneChanged(Scene current, Scene _)
         {
             if (current.name != "GameCore")

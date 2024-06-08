@@ -4,7 +4,6 @@ using IPA.Config.Stores;
 using IPA.Logging;
 using JetBrains.Annotations;
 using SiraUtil.Zenject;
-using SongCore;
 using UnityEngine.SceneManagement;
 using Vivify.Installers;
 using Vivify.Managers;
@@ -37,8 +36,7 @@ namespace Vivify
         [OnEnable]
         public void OnEnable()
         {
-            Collections.RegisterCapability(CAPABILITY);
-
+            VivifyController.Capability.Register();
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
         }
 
@@ -46,8 +44,7 @@ namespace Vivify
         [OnDisable]
         public void OnDisable()
         {
-            Collections.DeregisterizeCapability(CAPABILITY);
-
+            VivifyController.Capability.Deregister();
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
         }
 #pragma warning restore CA1822
