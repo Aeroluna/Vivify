@@ -9,7 +9,7 @@ using Zenject;
 namespace Vivify.Controllers.Sync
 {
     [RequireComponent(typeof(VideoPlayer))]
-    internal class VideoPlayerSyncController : MonoBehaviour
+    internal class VideoPlayerSyncController : MonoBehaviour, ISync
     {
         private SiraLog _log = null!;
         private VideoPlayer _videoPlayer = null!;
@@ -19,6 +19,11 @@ namespace Vivify.Controllers.Sync
         private bool _seeking;
 
         private float SongTime => _audioTimeSyncController.songTime - _startTime;
+
+        public void SetStartTime(float time)
+        {
+            _startTime = time;
+        }
 
         [Inject]
         [UsedImplicitly]

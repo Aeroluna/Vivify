@@ -73,17 +73,7 @@ namespace Vivify.Events
                 _transformControllerFactory.Create(gameObject, data.Track);
             }
 
-            gameObject.GetComponentsInChildren<Animator>().Do(n => _instantiator.InstantiateComponent<AnimatorSyncController>(n.gameObject, new object[] { customEventData.time }));
-            gameObject.GetComponentsInChildren<ParticleSystem>().Do(n => _instantiator.InstantiateComponent<ParticleSystemSyncController>(n.gameObject, new object[] { customEventData.time }));
-            gameObject.GetComponentsInChildren<VideoPlayer>().Do(n =>
-            {
-                if (n.playOnAwake)
-                {
-                    _instantiator.InstantiateComponent<VideoPlayerSyncController>(
-                        n.gameObject,
-                        new object[] { customEventData.time });
-                }
-            });
+            _instantiator.SongSynchronize(gameObject, customEventData.time);
 
             string? id = data.Id;
             if (id != null)

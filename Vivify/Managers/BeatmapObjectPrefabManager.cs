@@ -7,6 +7,7 @@ using Heck.Animation;
 using Heck.ReLoad;
 using JetBrains.Annotations;
 using UnityEngine;
+using Vivify.Controllers.Sync;
 using Zenject;
 using Object = UnityEngine.Object;
 
@@ -15,6 +16,7 @@ namespace Vivify.Managers
     internal class BeatmapObjectPrefabManager : IDisposable
     {
         private readonly BeatmapObjectManager _beatmapObjectManager;
+        private readonly IInstantiator _instantiator;
         private readonly DeserializedData _deserializedData;
         private readonly ReLoader? _reLoader;
         private readonly Dictionary<Track, PrefabPool> _prefabPools = new();
@@ -25,10 +27,12 @@ namespace Vivify.Managers
         [UsedImplicitly]
         private BeatmapObjectPrefabManager(
             BeatmapObjectManager beatmapObjectManager,
+            IInstantiator instantiator,
             [Inject(Id = VivifyController.ID)] DeserializedData deserializedData,
             [InjectOptional] ReLoader? reLoader)
         {
             _beatmapObjectManager = beatmapObjectManager;
+            _instantiator = instantiator;
             _deserializedData = deserializedData;
             _reLoader = reLoader;
             if (reLoader != null)
@@ -52,9 +56,9 @@ namespace Vivify.Managers
             _prefabPools.Values.Do(n => n.Dispose());
         }
 
-        internal void Add(Track track, GameObject original)
+        internal void Add(Track track, GameObject prefab)
         {
-            _prefabPools.Add(track, new PrefabPool(original));
+            _prefabPools.Add(track, new PrefabPool(prefab, _instantiator));
         }
 
         private void HandleNoteWasSpawned(NoteController noteController)
@@ -110,14 +114,16 @@ namespace Vivify.Managers
         private class PrefabPool
         {
             private readonly GameObject _original;
+            private readonly IInstantiator _instantiator;
 
             private readonly Stack<GameObject> _inactive = new();
 
             private readonly Dictionary<NoteController, GameObject> _active = new();
 
-            internal PrefabPool(GameObject original)
+            internal PrefabPool(GameObject original, IInstantiator instantiator)
             {
                 _original = original;
+                _instantiator = instantiator;
             }
 
             internal void Dispose()
@@ -140,6 +146,8 @@ namespace Vivify.Managers
                 }
 
                 _active.Add(noteController, spawned);
+
+                _instantiator.SongSynchronize(spawned, noteController._noteMovement._floorMovement.startTime);
 
                 Transform transform = noteController.transform;
                 transform.GetComponentsInChildren<Renderer>().Do(n => n.enabled = false);

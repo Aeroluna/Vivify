@@ -4,13 +4,18 @@ using Zenject;
 
 namespace Vivify.Controllers.Sync
 {
-    internal abstract class SyncController : MonoBehaviour
+    internal abstract class SyncController : MonoBehaviour, ISync
     {
         private AudioTimeSyncController _audioTimeSyncController = null!;
 
         protected float SongTime { get; private set; }
 
         public abstract void Sync(float speed);
+
+        public void SetStartTime(float time)
+        {
+            SongTime = time;
+        }
 
         [Inject]
         [UsedImplicitly]
