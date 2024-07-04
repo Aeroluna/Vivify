@@ -80,12 +80,14 @@ namespace Vivify.Controllers.Sync
 
         private void OnDestroy()
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             if (_videoPlayer != null)
             {
                 _videoPlayer.errorReceived -= OnErrorRecieved;
                 _videoPlayer.prepareCompleted -= OnPrepareCompleted;
             }
 
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             if (_audioTimeSyncController != null)
             {
                 _audioTimeSyncController.stateChangedEvent -= OnStateChange;
@@ -136,6 +138,7 @@ namespace Vivify.Controllers.Sync
 
         private IEnumerator Prepare()
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             yield return new WaitUntil(() => _videoPlayer != null && _videoPlayer.isActiveAndEnabled);
             _videoPlayer.Prepare();
         }

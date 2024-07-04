@@ -35,7 +35,7 @@ namespace Vivify.Installers
             Container.BindInterfacesTo<DeclareCullingMask>().AsSingle();
             Container.BindInterfacesTo<DeclareRenderTexture>().AsSingle();
             Container.BindInterfacesTo<DestroyPrefab>().AsSingle();
-            Container.BindInterfacesTo<Events.InstantiatePrefab>().AsSingle();
+            Container.BindInterfacesTo<Vivify.Events.InstantiatePrefab>().AsSingle();
             Container.BindInterfacesTo<SetAnimatorProperty>().AsSingle();
             Container.BindInterfacesTo<SetCameraProperty>().AsSingle();
             Container.BindInterfacesTo<SetGlobalProperty>().AsSingle();

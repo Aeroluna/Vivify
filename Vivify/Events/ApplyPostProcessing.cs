@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using CustomJSONData.CustomBeatmap;
 using Heck;
+using Heck.Deserialize;
 using Heck.Event;
 using Heck.ReLoad;
 using SiraUtil.Logging;

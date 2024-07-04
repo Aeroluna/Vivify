@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using CustomJSONData;
 using CustomJSONData.CustomBeatmap;
-using Heck;
 using Heck.Animation;
+using Heck.Deserialize;
 using static Vivify.VivifyController;
 
 namespace Vivify
@@ -11,22 +12,22 @@ namespace Vivify
     {
         private readonly TrackBuilder _trackBuilder;
         private readonly CustomBeatmapData _beatmapData;
-        private readonly IDifficultyBeatmap _difficultyBeatmap;
         private readonly Dictionary<string, List<object>> _pointDefinitions;
         private readonly Dictionary<string, Track> _tracks;
+        private readonly float _bpm;
 
         private CustomDataDeserializer(
             TrackBuilder trackBuilder,
             CustomBeatmapData beatmapData,
-            IDifficultyBeatmap difficultyBeatmap,
             Dictionary<string, List<object>> pointDefinitions,
-            Dictionary<string, Track> tracks)
+            Dictionary<string, Track> tracks,
+            float bpm)
         {
             _trackBuilder = trackBuilder;
             _beatmapData = beatmapData;
-            _difficultyBeatmap = difficultyBeatmap;
             _pointDefinitions = pointDefinitions;
             _tracks = tracks;
+            _bpm = bpm;
         }
 
         public void DeserializeEarly()
@@ -47,14 +48,14 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Plugin.Log.DeserializeFailure(e, customEventData, _difficultyBeatmap);
+                    Plugin.Log.DeserializeFailure(e, customEventData, _bpm);
                 }
             }
         }
 
         public Dictionary<BeatmapObjectData, IObjectCustomData> DeserializeObjects()
         {
-            bool v2 = _beatmapData.version2_6_0AndEarlier;
+            bool v2 = _beatmapData.version.IsVersion2();
             Dictionary<BeatmapObjectData, IObjectCustomData> dictionary = new();
 
             foreach (BeatmapObjectData beatmapObjectData in _beatmapData.beatmapObjectDatas)
@@ -66,7 +67,7 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Plugin.Log.DeserializeFailure(e, beatmapObjectData, _difficultyBeatmap);
+                    Plugin.Log.DeserializeFailure(e, beatmapObjectData, _bpm);
                 }
             }
 
@@ -137,7 +138,7 @@ namespace Vivify
                 }
                 catch (Exception e)
                 {
-                    Plugin.Log.DeserializeFailure(e, customEventData, _difficultyBeatmap);
+                    Plugin.Log.DeserializeFailure(e, customEventData, _bpm);
                 }
             }
 

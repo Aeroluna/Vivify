@@ -18,18 +18,46 @@ namespace Vivify.Managers
         private readonly AssetBundle? _mainBundle;
 
         [UsedImplicitly]
-        private AssetBundleManager(SiraLog log, IDifficultyBeatmap difficultyBeatmap, Config config)
+        private AssetBundleManager(
+            SiraLog log,
+            IReadonlyBeatmapData beatmapData,
+#if LATEST
+            BeatmapLevel beatmapLevel,
+#else
+            IDifficultyBeatmap difficultyBeatmap,
+#endif
+            Config config)
         {
+#if LATEST
+            if (beatmapLevel.previewMediaData is not FileSystemPreviewMediaData fileSystemPreviewMediaData)
+            {
+                throw new ArgumentException(
+                    $"Was not correct type. Expected: {nameof(FileSystemPreviewMediaData)}, was: {beatmapLevel.previewMediaData.GetType().Name}.",
+                    nameof(beatmapLevel));
+            }
+#else
             if (difficultyBeatmap is not CustomDifficultyBeatmap customDifficultyBeatmap)
             {
                 throw new ArgumentException(
                     $"Was not correct type. Expected: {nameof(CustomDifficultyBeatmap)}, was: {difficultyBeatmap.GetType().Name}.",
                     nameof(difficultyBeatmap));
             }
+#endif
+
+            if (beatmapData is not CustomBeatmapData customBeatmapData)
+            {
+                throw new ArgumentException(
+                    $"Was not correct type. Expected: {nameof(CustomBeatmapData)}, was: {beatmapData.GetType().Name}.",
+                    nameof(beatmapData));
+            }
 
             _log = log;
 
+#if LATEST
+            string path = Path.Combine(Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!, BUNDLE + BUNDLE_SUFFIX);
+#else
             string path = Path.Combine(((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath, BUNDLE + BUNDLE_SUFFIX);
+#endif
             if (!File.Exists(path))
             {
                 _log.Error($"[{BUNDLE + BUNDLE_SUFFIX}] not found");
@@ -42,7 +70,7 @@ namespace Vivify.Managers
             }
             else
             {
-                CustomData levelCustomData = ((CustomBeatmapSaveData)customDifficultyBeatmap.beatmapSaveData).levelCustomData;
+                CustomData levelCustomData = customBeatmapData.levelCustomData;
                 uint? assetBundleChecksum = levelCustomData.Get<CustomData>(ASSET_BUNDLE)?.Get<uint>(BUNDLE_SUFFIX);
                 if (assetBundleChecksum != null)
                 {

@@ -59,11 +59,11 @@ dotnet_naming_symbols.static_readonly_symbols.applicable_accessibilities = publi
 dotnet_naming_symbols.static_readonly_symbols.applicable_kinds = field
 dotnet_naming_symbols.static_readonly_symbols.required_modifiers = static,readonly
 dotnet_naming_symbols.unity_serialized_field_symbols.applicable_accessibilities = *
-dotnet_naming_symbols.unity_serialized_field_symbols.applicable_kinds = 
+dotnet_naming_symbols.unity_serialized_field_symbols.applicable_kinds =
 dotnet_naming_symbols.unity_serialized_field_symbols.resharper_applicable_kinds = unity_serialised_field
 dotnet_naming_symbols.unity_serialized_field_symbols.resharper_required_modifiers = instance
 dotnet_naming_symbols.unity_serialized_field_symbols_1.applicable_accessibilities = *
-dotnet_naming_symbols.unity_serialized_field_symbols_1.applicable_kinds = 
+dotnet_naming_symbols.unity_serialized_field_symbols_1.applicable_kinds =
 dotnet_naming_symbols.unity_serialized_field_symbols_1.resharper_applicable_kinds = unity_serialised_field
 dotnet_naming_symbols.unity_serialized_field_symbols_1.resharper_required_modifiers = instance
 dotnet_style_parentheses_in_arithmetic_binary_operators = never_if_unnecessary:none
@@ -140,3 +140,7 @@ indent_size = 2
 indent_style = space
 indent_size = 4
 tab_width = 4
+
+[{*.xml,*.props,*.csproj}]
+indent_style = space
+indent_size = 2

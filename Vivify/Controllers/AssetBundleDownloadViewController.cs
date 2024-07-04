@@ -16,6 +16,9 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 using Zenject;
 using static Vivify.VivifyController;
+#if LATEST
+using CustomJSONData;
+#endif
 
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 namespace Vivify.Controllers
@@ -72,13 +75,24 @@ namespace Vivify.Controllers
 
         public bool Init(StartStandardLevelParameters standardLevelParameters)
         {
+#if LATEST
+            if (standardLevelParameters.BeatmapLevel.previewMediaData is not FileSystemPreviewMediaData fileSystemPreviewMediaData)
+            {
+                return false;
+            }
+
+            CustomData beatmapCustomData = standardLevelParameters.BeatmapLevel.GetBeatmapCustomData(standardLevelParameters.BeatmapKey);
+            CustomData levelCustomData = standardLevelParameters.BeatmapLevel.GetLevelCustomData();
+#else
             if (standardLevelParameters.DifficultyBeatmap is not CustomDifficultyBeatmap customDifficultyBeatmap)
             {
                 return false;
             }
 
-            CustomBeatmapSaveData saveData = (CustomBeatmapSaveData)customDifficultyBeatmap.beatmapSaveData;
+            Version3CustomBeatmapSaveData saveData = (Version3CustomBeatmapSaveData)customDifficultyBeatmap.beatmapSaveData;
             CustomData beatmapCustomData = saveData.beatmapCustomData;
+            CustomData levelCustomData = saveData.levelCustomData;
+#endif
 
             // check is vivify map
             string[] requirements = beatmapCustomData.Get<List<object>>("_requirements")?.Cast<string>().ToArray() ?? Array.Empty<string>();
@@ -88,13 +102,16 @@ namespace Vivify.Controllers
             }
 
             // check if bundle already downloaded
+#if LATEST
+            string path = Path.Combine(Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!, BUNDLE + BUNDLE_SUFFIX);
+#else
             string path = Path.Combine(((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath, BUNDLE + BUNDLE_SUFFIX);
+#endif
             if (File.Exists(path))
             {
                 return false;
             }
 
-            CustomData levelCustomData = saveData.levelCustomData;
             uint assetBundleChecksum = levelCustomData.GetRequired<CustomData>(ASSET_BUNDLE).GetRequired<uint>(BUNDLE_SUFFIX);
             _doAbort = false;
             _downloadFinished = false;

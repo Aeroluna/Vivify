@@ -51,7 +51,7 @@ namespace Vivify
         internal const string ASSET_BUNDLE = "_assetBundle";
         internal const string BUNDLE = "bundle";
 
-#if LATEST
+#if !V1_29_1
         internal const string BUNDLE_SUFFIX = "_windows2021";
 #else
         internal const string BUNDLE_SUFFIX = "_windows2019";

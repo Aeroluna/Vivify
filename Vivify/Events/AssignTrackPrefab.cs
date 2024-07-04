@@ -1,5 +1,6 @@
 ﻿using CustomJSONData.CustomBeatmap;
 using Heck;
+using Heck.Deserialize;
 using Heck.Event;
 using SiraUtil.Logging;
 using UnityEngine;

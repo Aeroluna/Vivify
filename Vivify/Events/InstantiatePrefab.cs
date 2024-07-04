@@ -1,16 +1,14 @@
 ﻿using CustomJSONData.CustomBeatmap;
-using HarmonyLib;
 using Heck;
 using Heck.Animation.Transform;
+using Heck.Deserialize;
 using Heck.Event;
 using SiraUtil.Logging;
 using UnityEngine;
-using UnityEngine.Video;
 using Vivify.Controllers.Sync;
 using Vivify.Managers;
 using Zenject;
 using static Vivify.VivifyController;
-using Object = UnityEngine.Object;
 
 namespace Vivify.Events
 {

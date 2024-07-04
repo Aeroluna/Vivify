@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.Animation;
+using Heck.Deserialize;
 using Heck.Event;
 using SiraUtil.Logging;
 using UnityEngine;

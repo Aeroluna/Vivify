@@ -31,7 +31,7 @@ namespace Vivify.Controllers.Sync
                     {
                         instantiator.InstantiateComponent<VideoPlayerSyncController>(
                             n.gameObject,
-                            new object[] {startTime});
+                            new object[] { startTime });
                     }
                 });
             }

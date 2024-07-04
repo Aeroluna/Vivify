@@ -1,6 +1,7 @@
 ﻿using CustomJSONData.CustomBeatmap;
 using HarmonyLib;
 using Heck;
+using Heck.Deserialize;
 using Heck.Event;
 using Vivify.Managers;
 using Zenject;

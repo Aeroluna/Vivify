@@ -5,6 +5,7 @@ using System.Linq;
 using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.Animation;
+using Heck.Deserialize;
 using Heck.Event;
 using JetBrains.Annotations;
 using SiraUtil.Logging;
@@ -112,6 +113,26 @@ namespace Vivify.Events
 
                         break;
 
+                    case MaterialPropertyType.Vector:
+                        if (property is AnimatedMaterialProperty<Vector4> vectorAnimated)
+                        {
+                            if (noDuration)
+                            {
+                                Shader.SetGlobalVector(name, vectorAnimated.PointDefinition.Interpolate(1));
+                            }
+                            else
+                            {
+                                StartCoroutine(vectorAnimated.PointDefinition, name, MaterialPropertyType.Vector, duration, startTime, easing);
+                            }
+                        }
+                        else
+                        {
+                            List<float> vector = ((List<object>)value).Select(Convert.ToSingle).ToList();
+                            Shader.SetGlobalVector(name, new Vector4(vector[0], vector[1], vector[2], vector[3]));
+                        }
+
+                        break;
+
                     default:
                         _log.Warn($"{type} not currently supported");
                         break;
@@ -150,7 +171,7 @@ namespace Vivify.Events
                             break;
 
                         case MaterialPropertyType.Vector:
-                            Shader.SetGlobalVector(name, (points as PointDefinition<Vector3>)!.Interpolate(time));
+                            Shader.SetGlobalVector(name, (points as PointDefinition<Vector4>)!.Interpolate(time));
                             break;
 
                         default:

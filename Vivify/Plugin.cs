@@ -1,4 +1,4 @@
-﻿using Heck;
+﻿using Heck.Patcher;
 using IPA;
 using IPA.Config.Stores;
 using IPA.Logging;
@@ -36,7 +36,7 @@ namespace Vivify
         [OnEnable]
         public void OnEnable()
         {
-            VivifyController.Capability.Register();
+            Capability.Register();
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
         }
 
@@ -44,7 +44,7 @@ namespace Vivify
         [OnDisable]
         public void OnDisable()
         {
-            VivifyController.Capability.Deregister();
+            Capability.Deregister();
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
         }
 #pragma warning restore CA1822
