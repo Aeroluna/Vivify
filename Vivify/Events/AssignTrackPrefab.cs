@@ -1,9 +1,10 @@
-﻿using CustomJSONData.CustomBeatmap;
+﻿using System.Collections.Generic;
+using CustomJSONData.CustomBeatmap;
 using Heck;
+using Heck.Animation;
 using Heck.Deserialize;
 using Heck.Event;
 using SiraUtil.Logging;
-using UnityEngine;
 using Vivify.Managers;
 using Zenject;
 using static Vivify.VivifyController;
@@ -14,22 +15,20 @@ namespace Vivify.Events
     internal class AssignTrackPrefab : ICustomEvent
     {
         private readonly SiraLog _log;
-        private readonly AssetBundleManager _assetBundleManager;
         private readonly DeserializedData _deserializedData;
         private readonly BeatmapObjectPrefabManager _beatmapObjectPrefabManager;
 
         private AssignTrackPrefab(
             SiraLog log,
-            AssetBundleManager assetBundleManager,
             [Inject(Id = ID)] DeserializedData deserializedData,
             BeatmapObjectPrefabManager beatmapObjectPrefabManager)
         {
             _log = log;
-            _assetBundleManager = assetBundleManager;
             _deserializedData = deserializedData;
             _beatmapObjectPrefabManager = beatmapObjectPrefabManager;
         }
 
+        // ReSharper disable InvertIf
         public void Callback(CustomEventData customEventData)
         {
             if (!_deserializedData.Resolve(customEventData, out AssignTrackPrefabData? data))
@@ -37,14 +36,21 @@ namespace Vivify.Events
                 return;
             }
 
-            string? assetName = data.NoteAsset;
-            if (assetName == null || !_assetBundleManager.TryGetAsset(assetName, out GameObject? prefab))
-            {
-                return;
-            }
+            AddAsset(_beatmapObjectPrefabManager.ColorNotePrefabs, data.ColorNoteAsset);
+            AddAsset(_beatmapObjectPrefabManager.BombNotePrefabs, data.BombNoteAsset);
+            AddAsset(_beatmapObjectPrefabManager.BurstSliderPrefabs, data.BurstSliderAsset);
+            AddAsset(_beatmapObjectPrefabManager.BurstSliderElementPrefabs, data.BurstSliderElementAsset);
+            AddAsset(_beatmapObjectPrefabManager.ColorNoteDebrisPrefabs, data.ColorNoteDebrisAsset);
+            AddAsset(_beatmapObjectPrefabManager.BurstSliderDebrisPrefabs, data.BurstSliderDebrisAsset);
+            AddAsset(_beatmapObjectPrefabManager.BurstSliderElementDebrisPrefabs, data.BurstSliderElementDebrisAsset);
 
-            _log.Debug($"Assigned note prefab: [{assetName}]");
-            _beatmapObjectPrefabManager.Add(data.Track, prefab);
+            return;
+
+            void AddAsset(Dictionary<Track, BeatmapObjectPrefabManager.PrefabPool> prefabPoolDictionary, string? field)
+            {
+                _log.Debug($"Assigned prefab: [{field ?? "null"}]");
+                _beatmapObjectPrefabManager.AssignPrefab(prefabPoolDictionary, data.Track, field);
+            }
         }
     }
 }

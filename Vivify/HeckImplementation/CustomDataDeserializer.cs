@@ -55,7 +55,6 @@ namespace Vivify
 
         public Dictionary<BeatmapObjectData, IObjectCustomData> DeserializeObjects()
         {
-            bool v2 = _beatmapData.version.IsVersion2();
             Dictionary<BeatmapObjectData, IObjectCustomData> dictionary = new();
 
             foreach (BeatmapObjectData beatmapObjectData in _beatmapData.beatmapObjectDatas)
@@ -63,7 +62,7 @@ namespace Vivify
                 try
                 {
                     CustomData customData = ((ICustomData)beatmapObjectData).customData;
-                    dictionary.Add(beatmapObjectData, new VivifyObjectData(customData, _tracks, v2));
+                    dictionary.Add(beatmapObjectData, new VivifyObjectData(customData, _tracks));
                 }
                 catch (Exception e)
                 {

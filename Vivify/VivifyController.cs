@@ -22,8 +22,8 @@ namespace Vivify
         internal const string DEPTH_TEXTURE = "depthTexture";
         internal const string ID_FIELD = "id";
 
-        internal const string XRATIO = "xRatio";
-        internal const string YRATIO = "yRatio";
+        internal const string X_RATIO = "xRatio";
+        internal const string Y_RATIO = "yRatio";
         internal const string WIDTH = "width";
         internal const string HEIGHT = "height";
         internal const string FORMAT = "colorFormat";
@@ -31,7 +31,13 @@ namespace Vivify
 
         internal const string CAMERA_DEPTH_TEXTURE_MODE = "depthTextureMode";
 
-        internal const string NOTE_PREFAB = "note";
+        internal const string NOTE_PREFAB = "colorNotes";
+        internal const string BOMB_PREFAB = "bombNotes";
+        internal const string CHAIN_PREFAB = "burstSliders";
+        internal const string CHAIN_ELEMENT_PREFAB = "burstSliderElements";
+        internal const string NOTE_DEBRIS_PREFAB = "colorNoteDebris";
+        internal const string CHAIN_DEBRIS_PREFAB = "burstSliderDebris";
+        internal const string CHAIN_ELEMENT_DEBRIS_PREFAB = "burstSliderElementDebris";
 
         internal const string APPLY_POST_PROCESSING = "Blit";
         internal const string ASSIGN_TRACK_PREFAB = "AssignTrackPrefab";
@@ -61,7 +67,7 @@ namespace Vivify
         internal const string ID = "Vivify";
         internal const string HARMONY_ID = "aeroluna.Vivify";
 
-        internal const int CULLINGLAYER = 22;
+        internal const int CULLING_LAYER = 22;
 
         internal static Capability Capability { get; } = new(CAPABILITY);
 

@@ -24,7 +24,7 @@ namespace Vivify.Controllers
                 _cullingTextureData = value;
 
                 // flip culling mask when whitelist mode enabled
-                Camera.cullingMask = value?.Whitelist ?? false ? 1 << CULLINGLAYER : DefaultCullingMask;
+                Camera.cullingMask = value?.Whitelist ?? false ? 1 << CULLING_LAYER : DefaultCullingMask;
             }
         }
 
@@ -47,7 +47,7 @@ namespace Vivify.Controllers
             {
                 GameObject renderedObject = gameObjects[i];
                 _cachedLayers.Add((renderedObject, renderedObject.layer));
-                renderedObject.layer = CULLINGLAYER;
+                renderedObject.layer = CULLING_LAYER;
             }
         }
 

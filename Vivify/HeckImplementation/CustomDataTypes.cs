@@ -38,10 +38,9 @@ namespace Vivify
     {
         internal VivifyObjectData(
             CustomData customData,
-            Dictionary<string, Track> beatmapTracks,
-            bool v2)
+            Dictionary<string, Track> beatmapTracks)
         {
-            Track = customData.GetNullableTrackArray(beatmapTracks, v2)?.ToList();
+            Track = customData.GetNullableTrackArray(beatmapTracks, false)?.ToList();
         }
 
         internal List<Track>? Track { get; }
@@ -420,8 +419,8 @@ namespace Vivify
         {
             Name = customData.GetRequired<string>(ID_FIELD);
             PropertyId = Shader.PropertyToID(Name);
-            XRatio = customData.Get<float?>(XRATIO) ?? 1;
-            YRatio = customData.Get<float?>(YRATIO) ?? 1;
+            XRatio = customData.Get<float?>(X_RATIO) ?? 1;
+            YRatio = customData.Get<float?>(Y_RATIO) ?? 1;
             Width = customData.Get<int?>(WIDTH);
             Height = customData.Get<int?>(HEIGHT);
             Format = customData.GetStringToEnum<RenderTextureFormat?>(FORMAT);
@@ -493,11 +492,29 @@ namespace Vivify
             Dictionary<string, Track> beatmapTracks)
         {
             Track = customData.GetTrack(beatmapTracks, false);
-            NoteAsset = customData.Get<string>(NOTE_PREFAB);
+            ColorNoteAsset = customData.Get<string>(NOTE_PREFAB);
+            BombNoteAsset = customData.Get<string>(BOMB_PREFAB);
+            BurstSliderAsset = customData.Get<string>(CHAIN_PREFAB);
+            BurstSliderElementAsset = customData.Get<string>(CHAIN_ELEMENT_PREFAB);
+            ColorNoteDebrisAsset = customData.Get<string>(NOTE_DEBRIS_PREFAB);
+            BurstSliderDebrisAsset = customData.Get<string>(CHAIN_DEBRIS_PREFAB);
+            BurstSliderElementDebrisAsset = customData.Get<string>(CHAIN_ELEMENT_DEBRIS_PREFAB);
         }
 
         internal Track Track { get; }
 
-        internal string? NoteAsset { get; }
+        internal string? ColorNoteAsset { get; }
+
+        internal string? BombNoteAsset { get; }
+
+        internal string? BurstSliderAsset { get; }
+
+        internal string? BurstSliderElementAsset { get; }
+
+        internal string? ColorNoteDebrisAsset { get; }
+
+        internal string? BurstSliderDebrisAsset { get; }
+
+        internal string? BurstSliderElementDebrisAsset { get; }
     }
 }

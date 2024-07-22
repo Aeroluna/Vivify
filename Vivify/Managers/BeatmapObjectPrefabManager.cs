@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CustomJSONData.CustomBeatmap;
 using HarmonyLib;
 using Heck.Animation;
 using Heck.Deserialize;
@@ -15,24 +16,28 @@ namespace Vivify.Managers
 {
     internal class BeatmapObjectPrefabManager : IDisposable
     {
+        private readonly AssetBundleManager _assetBundleManager;
         private readonly BeatmapObjectManager _beatmapObjectManager;
         private readonly IInstantiator _instantiator;
+        private readonly Dictionary<string, Track> _beatmapTracks;
         private readonly DeserializedData _deserializedData;
         private readonly ReLoader? _reLoader;
-        private readonly Dictionary<Track, PrefabPool> _prefabPools = new();
-        private readonly Dictionary<NoteController, PrefabPool> _activePools = new();
 
-        private readonly Dictionary<NoteController, MPBControllerHijacker> _hijackers = new();
+        private readonly Dictionary<string, PrefabPool> _prefabPools = new();
 
         [UsedImplicitly]
         private BeatmapObjectPrefabManager(
+            AssetBundleManager assetBundleManager,
             BeatmapObjectManager beatmapObjectManager,
             IInstantiator instantiator,
+            Dictionary<string, Track> beatmapTracks,
             [Inject(Id = VivifyController.ID)] DeserializedData deserializedData,
             [InjectOptional] ReLoader? reLoader)
         {
+            _assetBundleManager = assetBundleManager;
             _beatmapObjectManager = beatmapObjectManager;
             _instantiator = instantiator;
+            _beatmapTracks = beatmapTracks;
             _deserializedData = deserializedData;
             _reLoader = reLoader;
             if (reLoader != null)
@@ -43,6 +48,24 @@ namespace Vivify.Managers
             beatmapObjectManager.noteWasSpawnedEvent += HandleNoteWasSpawned;
             beatmapObjectManager.noteWasDespawnedEvent += HandleNoteWasDespawned;
         }
+
+        internal Dictionary<Track, PrefabPool> ColorNotePrefabs { get; } = new();
+
+        internal Dictionary<Track, PrefabPool> BombNotePrefabs { get; } = new();
+
+        internal Dictionary<Track, PrefabPool> BurstSliderPrefabs { get; } = new();
+
+        internal Dictionary<Track, PrefabPool> BurstSliderElementPrefabs { get; } = new();
+
+        internal Dictionary<Track, PrefabPool> ColorNoteDebrisPrefabs { get; } = new();
+
+        internal Dictionary<Track, PrefabPool> BurstSliderDebrisPrefabs { get; } = new();
+
+        internal Dictionary<Track, PrefabPool> BurstSliderElementDebrisPrefabs { get; } = new();
+
+        internal Dictionary<Component, PrefabPool> ActivePools { get; } = new();
+
+        internal Dictionary<Component, MPBControllerHijacker> Hijackers { get; } = new();
 
         public void Dispose()
         {
@@ -56,69 +79,138 @@ namespace Vivify.Managers
             _prefabPools.Values.Do(n => n.Dispose());
         }
 
-        internal void Add(Track track, GameObject prefab)
+        internal void AssignPrefab(Dictionary<Track, PrefabPool> prefabDictionary, Track track, string? assetName)
         {
-            _prefabPools.Add(track, new PrefabPool(prefab, _instantiator));
-        }
-
-        private void HandleNoteWasSpawned(NoteController noteController)
-        {
-            if (!_deserializedData.Resolve(noteController.noteData, out VivifyObjectData? data) || data.Track == null)
+            if (assetName == null)
             {
+                prefabDictionary.Remove(track);
                 return;
             }
 
-            foreach (Track track in data.Track)
+            if (!_prefabPools.TryGetValue(assetName, out PrefabPool prefabPool))
             {
-                if (!_prefabPools.TryGetValue(track, out PrefabPool prefabPool))
+                if (!_assetBundleManager.TryGetAsset(assetName, out GameObject? prefab))
+                {
+                    return;
+                }
+
+                _prefabPools[assetName] = prefabPool = new PrefabPool(prefab, _instantiator);
+            }
+
+            prefabDictionary[track] = prefabPool;
+        }
+
+        internal void Spawn(List<Track> tracks, Dictionary<Track, PrefabPool> prefabPools, Component component, float startTime)
+        {
+            foreach (Track track in tracks)
+            {
+                if (!prefabPools.TryGetValue(track, out PrefabPool prefabPool))
                 {
                     continue;
                 }
 
-                GameObject spawned = prefabPool.Spawn(noteController);
-                if (!_hijackers.TryGetValue(noteController, out MPBControllerHijacker hijacker))
+                GameObject spawned = prefabPool.Spawn(component, startTime);
+                if (!Hijackers.TryGetValue(component, out MPBControllerHijacker hijacker))
                 {
-                    hijacker = new MPBControllerHijacker(noteController);
-                    _hijackers.Add(noteController, hijacker);
+                    hijacker = new MPBControllerHijacker(component);
+                    Hijackers.Add(component, hijacker);
                 }
 
                 hijacker.Activate(spawned);
-                _activePools.Add(noteController, prefabPool);
+                ActivePools.Add(component, prefabPool);
                 return;
             }
         }
 
-        private void HandleNoteWasDespawned(NoteController noteController)
+        internal void Despawn(Component component)
         {
-            if (!_activePools.TryGetValue(noteController, out PrefabPool pool))
+            if (!ActivePools.TryGetValue(component, out PrefabPool pool))
             {
                 return;
             }
 
-            if (_hijackers.TryGetValue(noteController, out MPBControllerHijacker hijacker))
+            if (Hijackers.TryGetValue(component, out MPBControllerHijacker hijacker))
             {
                 hijacker.Deactivate();
             }
 
-            pool.Despawn(noteController);
-            _activePools.Remove(noteController);
+            pool.Despawn(component);
+            ActivePools.Remove(component);
+        }
+
+        private void HandleNoteWasSpawned(NoteController noteController)
+        {
+            NoteData noteData = noteController.noteData;
+            List<Track>? track;
+            if (noteData.gameplayType == NoteData.GameplayType.BurstSliderElement)
+            {
+                // unfortunately burst slider elements are created on the fly so we cant deserialize them before the map begins
+                if (noteData is not CustomNoteData customNoteData)
+                {
+                    return;
+                }
+
+                track = customNoteData.customData.GetNullableTrackArray(_beatmapTracks, false)?.ToList();
+            }
+            else
+            {
+                if (!_deserializedData.Resolve(noteData, out VivifyObjectData? data) || (track = data.Track) == null)
+                {
+                    return;
+                }
+
+                track = data.Track;
+            }
+
+            if (track == null)
+            {
+                return;
+            }
+
+            Dictionary<Track, PrefabPool>? prefabPoolDictionary =
+                noteController.noteData.gameplayType switch
+                {
+                    NoteData.GameplayType.Normal => ColorNotePrefabs,
+                    NoteData.GameplayType.Bomb => BombNotePrefabs,
+                    NoteData.GameplayType.BurstSliderHead => BurstSliderPrefabs,
+                    NoteData.GameplayType.BurstSliderElement => BurstSliderElementPrefabs,
+                    _ => null
+                };
+
+            if (prefabPoolDictionary == null)
+            {
+                return;
+            }
+
+            Spawn(track, prefabPoolDictionary, noteController, noteController._noteMovement._floorMovement.startTime);
+        }
+
+        private void HandleNoteWasDespawned(NoteController noteController)
+        {
+            Despawn(noteController);
         }
 
         private void OnRewind()
         {
-            _activePools.Clear();
-            _prefabPools.Values.Do(n => n.Dispose());
-            _prefabPools.Clear();
+            ActivePools.Do(n => n.Value.Despawn(n.Key));
+            ActivePools.Clear();
+            ColorNotePrefabs.Clear();
+            BombNotePrefabs.Clear();
+            BurstSliderPrefabs.Clear();
+            BurstSliderElementPrefabs.Clear();
+            ColorNoteDebrisPrefabs.Clear();
+            BurstSliderDebrisPrefabs.Clear();
+            BurstSliderElementDebrisPrefabs.Clear();
         }
 
-        private class PrefabPool
+        internal class PrefabPool
         {
             private readonly GameObject _original;
             private readonly IInstantiator _instantiator;
 
             private readonly Stack<GameObject> _inactive = new();
 
-            private readonly Dictionary<NoteController, GameObject> _active = new();
+            private readonly Dictionary<Component, GameObject> _active = new();
 
             internal PrefabPool(GameObject original, IInstantiator instantiator)
             {
@@ -132,7 +224,7 @@ namespace Vivify.Managers
                 _active.Values.Do(Object.Destroy);
             }
 
-            internal GameObject Spawn(NoteController noteController)
+            internal GameObject Spawn(Component component, float startTime)
             {
                 GameObject spawned;
                 if (_inactive.Count == 0)
@@ -145,49 +237,49 @@ namespace Vivify.Managers
                     spawned.SetActive(true);
                 }
 
-                _active.Add(noteController, spawned);
+                _active.Add(component, spawned);
 
-                _instantiator.SongSynchronize(spawned, noteController._noteMovement._floorMovement.startTime);
+                _instantiator.SongSynchronize(spawned, startTime);
 
-                Transform transform = noteController.transform;
+                Transform transform = component.transform;
                 transform.GetComponentsInChildren<Renderer>().Do(n => n.enabled = false);
                 spawned.transform.SetParent(transform.GetChild(0), false);
                 return spawned;
             }
 
-            internal void Despawn(NoteController noteController)
+            internal void Despawn(Component component)
             {
-                if (!_active.TryGetValue(noteController, out GameObject spawned))
+                if (!_active.TryGetValue(component, out GameObject spawned))
                 {
                     return;
                 }
 
                 spawned.SetActive(false);
                 _inactive.Push(spawned);
-                _active.Remove(noteController);
+                _active.Remove(component);
 
                 spawned.transform.SetParent(null, false);
-                noteController.transform.GetComponentsInChildren<Renderer>().Do(n => n.enabled = true);
+                component.transform.GetComponentsInChildren<Renderer>().Do(n => n.enabled = true);
             }
         }
 
-        private class MPBControllerHijacker
+        internal class MPBControllerHijacker
         {
             private readonly MaterialPropertyBlockController _materialPropertyBlockController;
 
             private Renderer[]? _cachedRenderers;
             private List<int>? _cachedNumberOfMaterialsInRenderers;
 
-            internal MPBControllerHijacker(Component noteController)
+            internal MPBControllerHijacker(Component component)
             {
                 // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
-                if (noteController is GameNoteController)
+                if (component is GameNoteController or BurstSliderGameNoteController)
                 {
-                    _materialPropertyBlockController = noteController.transform.GetChild(0).GetComponent<MaterialPropertyBlockController>();
+                    _materialPropertyBlockController = component.transform.GetChild(0).GetComponent<MaterialPropertyBlockController>();
                 }
                 else
                 {
-                    _materialPropertyBlockController = noteController.GetComponent<MaterialPropertyBlockController>();
+                    _materialPropertyBlockController = component.GetComponent<MaterialPropertyBlockController>();
                 }
             }
 

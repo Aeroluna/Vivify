@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Vivify.Events;
+using Vivify.HarmonyPatches;
 using Vivify.Managers;
 using Zenject;
 
@@ -25,6 +26,7 @@ namespace Vivify.Installers
             Container.BindInterfacesAndSelfTo<AssetBundleManager>().AsSingle();
             Container.BindInterfacesAndSelfTo<PrefabManager>().AsSingle();
 
+            Container.BindInterfacesTo<SpawnDebrisPrefab>().AsSingle();
             Container.BindInterfacesAndSelfTo<BeatmapObjectPrefabManager>().AsSingle();
 
             Container.BindInterfacesTo<QualitySettingsManager>().AsSingle();
