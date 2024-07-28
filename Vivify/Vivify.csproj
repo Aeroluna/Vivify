@@ -12,7 +12,7 @@
     <PluginId>Vivify</PluginId>
     <PluginName>Vivify</PluginName>
     <Author>Aeroluna</Author>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Description>Bring your map to life!</Description>
   </PropertyGroup>
   <ItemGroup>

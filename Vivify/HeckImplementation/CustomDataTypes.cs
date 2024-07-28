@@ -492,29 +492,14 @@ namespace Vivify
             Dictionary<string, Track> beatmapTracks)
         {
             Track = customData.GetTrack(beatmapTracks, false);
-            ColorNoteAsset = customData.Get<string>(NOTE_PREFAB);
-            BombNoteAsset = customData.Get<string>(BOMB_PREFAB);
-            BurstSliderAsset = customData.Get<string>(CHAIN_PREFAB);
-            BurstSliderElementAsset = customData.Get<string>(CHAIN_ELEMENT_PREFAB);
-            ColorNoteDebrisAsset = customData.Get<string>(NOTE_DEBRIS_PREFAB);
-            BurstSliderDebrisAsset = customData.Get<string>(CHAIN_DEBRIS_PREFAB);
-            BurstSliderElementDebrisAsset = customData.Get<string>(CHAIN_ELEMENT_DEBRIS_PREFAB);
+            foreach ((string key, object? value) in customData.Where(n => n.Key != TRACK))
+            {
+                Assets.Add(key, (string?)value);
+            }
         }
 
         internal Track Track { get; }
 
-        internal string? ColorNoteAsset { get; }
-
-        internal string? BombNoteAsset { get; }
-
-        internal string? BurstSliderAsset { get; }
-
-        internal string? BurstSliderElementAsset { get; }
-
-        internal string? ColorNoteDebrisAsset { get; }
-
-        internal string? BurstSliderDebrisAsset { get; }
-
-        internal string? BurstSliderElementDebrisAsset { get; }
+        internal Dictionary<string, string?> Assets { get; } = new();
     }
 }

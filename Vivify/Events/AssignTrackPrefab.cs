@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.Animation;
 using Heck.Deserialize;
 using Heck.Event;
+using IPA.Utilities;
 using SiraUtil.Logging;
 using Vivify.Managers;
 using Zenject;
@@ -36,20 +38,22 @@ namespace Vivify.Events
                 return;
             }
 
-            AddAsset(_beatmapObjectPrefabManager.ColorNotePrefabs, data.ColorNoteAsset);
-            AddAsset(_beatmapObjectPrefabManager.BombNotePrefabs, data.BombNoteAsset);
-            AddAsset(_beatmapObjectPrefabManager.BurstSliderPrefabs, data.BurstSliderAsset);
-            AddAsset(_beatmapObjectPrefabManager.BurstSliderElementPrefabs, data.BurstSliderElementAsset);
-            AddAsset(_beatmapObjectPrefabManager.ColorNoteDebrisPrefabs, data.ColorNoteDebrisAsset);
-            AddAsset(_beatmapObjectPrefabManager.BurstSliderDebrisPrefabs, data.BurstSliderDebrisAsset);
-            AddAsset(_beatmapObjectPrefabManager.BurstSliderElementDebrisPrefabs, data.BurstSliderElementDebrisAsset);
-
-            return;
-
-            void AddAsset(Dictionary<Track, BeatmapObjectPrefabManager.PrefabPool> prefabPoolDictionary, string? field)
+            foreach ((string? key, string? value) in data.Assets)
             {
-                _log.Debug($"Assigned prefab: [{field ?? "null"}]");
-                _beatmapObjectPrefabManager.AssignPrefab(prefabPoolDictionary, data.Track, field);
+                Dictionary<Track, BeatmapObjectPrefabManager.PrefabPool> prefabPoolDictionary = key switch
+                {
+                    NOTE_PREFAB => _beatmapObjectPrefabManager.ColorNotePrefabs,
+                    BOMB_PREFAB => _beatmapObjectPrefabManager.BombNotePrefabs,
+                    CHAIN_PREFAB => _beatmapObjectPrefabManager.BurstSliderPrefabs,
+                    CHAIN_ELEMENT_PREFAB => _beatmapObjectPrefabManager.BurstSliderElementPrefabs,
+                    NOTE_DEBRIS_PREFAB => _beatmapObjectPrefabManager.ColorNoteDebrisPrefabs,
+                    CHAIN_DEBRIS_PREFAB => _beatmapObjectPrefabManager.BurstSliderDebrisPrefabs,
+                    CHAIN_ELEMENT_DEBRIS_PREFAB => _beatmapObjectPrefabManager.BurstSliderElementDebrisPrefabs,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+
+                _log.Debug($"Assigned prefab: [{value ?? "null"}]");
+                _beatmapObjectPrefabManager.AssignPrefab(prefabPoolDictionary, data.Track, value);
             }
         }
     }
