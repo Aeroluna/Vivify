@@ -8,7 +8,7 @@ using Heck.Animation.Transform;
 using Heck.Deserialize;
 using IPA.Utilities;
 using UnityEngine;
-using Vivify.Managers;
+using Vivify.ObjectPrefab.Managers;
 using static Heck.HeckController;
 using static Vivify.VivifyController;
 
@@ -35,7 +35,7 @@ namespace Vivify
         Trigger
     }
 
-    internal class VivifyObjectData : IObjectCustomData
+    internal class VivifyObjectData : IObjectCustomData, ICopyable<IObjectCustomData>
     {
         internal VivifyObjectData(
             CustomData customData,
@@ -44,7 +44,18 @@ namespace Vivify
             Track = customData.GetNullableTrackArray(beatmapTracks, false)?.ToList();
         }
 
-        internal List<Track>? Track { get; }
+        internal VivifyObjectData(
+            VivifyObjectData original)
+        {
+            Track = original.Track;
+        }
+
+        internal IReadOnlyList<Track>? Track { get; }
+
+        public IObjectCustomData Copy()
+        {
+            return new VivifyObjectData(this);
+        }
     }
 
     internal class AnimatedMaterialProperty<T> : MaterialProperty
@@ -516,26 +527,118 @@ namespace Vivify
         internal TransformData TransformData { get; }
     }
 
-    internal class AssignTrackPrefabData : ICustomEventCustomData
+    internal class AssignObjectPrefabData : ICustomEventCustomData
     {
-        private readonly string[] _excludedStrings = { TRACK, ASSIGN_PREFAB_LOAD_MODE };
-
-        internal AssignTrackPrefabData(
+        internal AssignObjectPrefabData(
             CustomData customData,
             Dictionary<string, Track> beatmapTracks)
         {
-            Track = customData.GetTrack(beatmapTracks, false);
             LoadMode = customData.GetStringToEnum<LoadMode>(ASSIGN_PREFAB_LOAD_MODE);
-            foreach ((string key, object? value) in customData.Where(n => _excludedStrings.All(m => n.Key != m)))
+            foreach ((string key, object? value) in customData.Where(n => n.Key != ASSIGN_PREFAB_LOAD_MODE))
             {
-                Assets.Add(key, (string?)value);
+                CustomData objectData =
+                    (CustomData?)value ?? throw new InvalidOperationException($"Null value for [{key}]");
+
+                string? baseString = string.Empty;
+                if (objectData.TryGetValue(ASSET, out object? baseAsset))
+                {
+                    baseString = (string?)baseAsset;
+                }
+
+                switch (key)
+                {
+                    case SABER_A_PREFAB:
+                    case SABER_B_PREFAB:
+                        string? trailString = string.Empty;
+                        if (objectData.TryGetValue(SABER_TRAIL_ASSET, out object? trailAsset))
+                        {
+                            trailString = (string?)trailAsset;
+                        }
+
+                        Assets.Add(
+                            key,
+                            new SaberPrefabInfo(
+                                baseString,
+                                trailString,
+                                objectData.GetVector3(SABER_TRAIL_TOP_POS),
+                                objectData.GetVector3(SABER_TRAIL_BOTTOM_POS),
+                                objectData.Get<float?>(SABER_TRAIL_DURATION),
+                                objectData.Get<int?>(SABER_TRAIL_SAMPLE_FREQ),
+                                objectData.Get<int?>(SABER_TRAIL_GRANULARITY)));
+                        break;
+
+                    default:
+                        string? debrisString = string.Empty;
+                        if (objectData.TryGetValue(DEBRIS_ASSET, out object? debrisAsset))
+                        {
+                            debrisString = (string?)debrisAsset;
+                        }
+
+                        List<Track> tracks = objectData.GetTrackArray(beatmapTracks, false).ToList();
+
+                        Assets.Add(key, new ObjectPrefabInfo(baseString, debrisString, tracks));
+                        break;
+                }
             }
         }
 
-        internal Dictionary<string, string?> Assets { get; } = new();
+        internal interface IPrefabInfo
+        {
+        }
+
+        internal Dictionary<string, IPrefabInfo> Assets { get; } = new();
 
         internal LoadMode LoadMode { get; }
 
-        internal Track Track { get; }
+        internal struct ObjectPrefabInfo : IPrefabInfo
+        {
+            internal ObjectPrefabInfo(string? asset, string? debrisAsset, IReadOnlyList<Track> track)
+            {
+                Asset = asset;
+                DebrisAsset = debrisAsset;
+                Track = track;
+            }
+
+            internal string? Asset { get; }
+
+            internal string? DebrisAsset { get; }
+
+            internal IReadOnlyList<Track> Track { get; }
+        }
+
+        internal struct SaberPrefabInfo : IPrefabInfo
+        {
+            internal SaberPrefabInfo(
+                string? asset,
+                string? trailAsset,
+                Vector3? topPos,
+                Vector3? bottomPos,
+                float? duration,
+                int? samplingFrequency,
+                int? granularity)
+            {
+                Asset = asset;
+                TrailAsset = trailAsset;
+                TopPos = topPos;
+                BottomPos = bottomPos;
+                Duration = duration;
+                SamplingFrequency = samplingFrequency;
+                Granularity = granularity;
+            }
+
+            internal string? Asset { get; }
+
+            internal string? TrailAsset { get; }
+
+            internal Vector3? TopPos { get; }
+
+            internal Vector3? BottomPos { get; }
+
+            internal float? Duration { get; }
+
+            internal int? SamplingFrequency { get; }
+
+            internal int? Granularity { get; }
+        }
     }
 }

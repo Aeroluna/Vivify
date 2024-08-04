@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using Vivify.Events;
-using Vivify.HarmonyPatches;
 using Vivify.Managers;
+using Vivify.ObjectPrefab.Managers;
 using Zenject;
 
 namespace Vivify.Installers
@@ -26,18 +26,20 @@ namespace Vivify.Installers
             Container.BindInterfacesAndSelfTo<AssetBundleManager>().AsSingle();
             Container.BindInterfacesAndSelfTo<PrefabManager>().AsSingle();
 
-            Container.BindInterfacesTo<SpawnDebrisPrefab>().AsSingle();
+            Container.BindInterfacesAndSelfTo<NotePrefabManager>().AsSingle();
+            Container.BindInterfacesAndSelfTo<DebrisPrefabManager>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SaberPrefabManager>().AsSingle();
             Container.BindInterfacesAndSelfTo<BeatmapObjectPrefabManager>().AsSingle();
 
             Container.BindInterfacesTo<QualitySettingsManager>().AsSingle();
 
             // Custom Events
             Container.BindInterfacesTo<ApplyPostProcessing>().AsSingle();
-            Container.BindInterfacesTo<AssignTrackPrefab>().AsSingle();
+            Container.BindInterfacesTo<AssignObjectPrefab>().AsSingle();
             Container.BindInterfacesTo<DeclareCullingMask>().AsSingle();
             Container.BindInterfacesTo<DeclareRenderTexture>().AsSingle();
             Container.BindInterfacesTo<DestroyPrefab>().AsSingle();
-            Container.BindInterfacesTo<Vivify.Events.InstantiatePrefab>().AsSingle();
+            Container.BindInterfacesTo<Events.InstantiatePrefab>().AsSingle();
             Container.BindInterfacesTo<SetAnimatorProperty>().AsSingle();
             Container.BindInterfacesTo<SetCameraProperty>().AsSingle();
             Container.BindInterfacesTo<SetGlobalProperty>().AsSingle();

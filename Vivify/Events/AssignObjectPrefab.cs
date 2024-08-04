@@ -1,0 +1,169 @@
+﻿using CustomJSONData.CustomBeatmap;
+using Heck;
+using Heck.Deserialize;
+using Heck.Event;
+using IPA.Utilities;
+using SiraUtil.Logging;
+using Vivify.ObjectPrefab.Collections;
+using Vivify.ObjectPrefab.Managers;
+using Vivify.ObjectPrefab.Pools;
+using Zenject;
+using static Vivify.VivifyController;
+
+namespace Vivify.Events
+{
+    [CustomEvent(ASSIGN_OBJECT_PREFAB)]
+    internal class AssignObjectPrefab : ICustomEvent
+    {
+        private readonly BeatmapObjectPrefabManager _beatmapObjectPrefabManager;
+        private readonly DebrisPrefabManager _debrisPrefabManager;
+        private readonly DeserializedData _deserializedData;
+        private readonly SiraLog _log;
+        private readonly NotePrefabManager _notePrefabManager;
+        private readonly SaberPrefabManager _saberPrefabManager;
+
+        private AssignObjectPrefab(
+            SiraLog log,
+            [Inject(Id = ID)] DeserializedData deserializedData,
+            BeatmapObjectPrefabManager beatmapObjectPrefabManager,
+            NotePrefabManager notePrefabManager,
+            DebrisPrefabManager debrisPrefabManager,
+            SaberPrefabManager saberPrefabManager)
+        {
+            _log = log;
+            _deserializedData = deserializedData;
+            _beatmapObjectPrefabManager = beatmapObjectPrefabManager;
+            _notePrefabManager = notePrefabManager;
+            _debrisPrefabManager = debrisPrefabManager;
+            _saberPrefabManager = saberPrefabManager;
+        }
+
+        public void Callback(CustomEventData customEventData)
+        {
+            if (!_deserializedData.Resolve(customEventData, out AssignObjectPrefabData? data))
+            {
+                return;
+            }
+
+            foreach ((string? key, AssignObjectPrefabData.IPrefabInfo value) in data.Assets)
+            {
+                IPrefabCollection? prefabCollection = key switch
+                {
+                    NOTE_PREFAB => _notePrefabManager.ColorNotePrefabs,
+                    BOMB_PREFAB => _notePrefabManager.BombNotePrefabs,
+                    CHAIN_PREFAB => _notePrefabManager.BurstSliderPrefabs,
+                    CHAIN_ELEMENT_PREFAB => _notePrefabManager.BurstSliderElementPrefabs,
+                    SABER_A_PREFAB => _saberPrefabManager.SaberAPrefabs,
+                    SABER_B_PREFAB => _saberPrefabManager.SaberBPrefabs,
+                    _ => null
+                };
+
+                if (prefabCollection == null)
+                {
+                    _log.Error($"[{key}] not recognized");
+                    continue;
+                }
+
+                switch (value)
+                {
+                    case AssignObjectPrefabData.ObjectPrefabInfo objectPrefabInfo:
+                    {
+                        if (objectPrefabInfo.Track == null)
+                        {
+                            _log.Error("No track defined");
+                            continue;
+                        }
+
+                        string? asset = objectPrefabInfo.Asset;
+                        if (asset != string.Empty)
+                        {
+                            _log.Debug(
+                                $"Assigned track prefab: [{asset ?? "null"}] for [{key}] with load mode [{data.LoadMode}]");
+                            _beatmapObjectPrefabManager.AssignTrackPrefab(
+                                (PrefabDictionary)prefabCollection,
+                                objectPrefabInfo.Track,
+                                asset,
+                                data.LoadMode);
+                        }
+
+                        string? debrisAsset = objectPrefabInfo.DebrisAsset;
+                        if (debrisAsset != string.Empty)
+                        {
+                            PrefabDictionary? debrisPrefabs = key switch
+                            {
+                                NOTE_PREFAB => _debrisPrefabManager.ColorNoteDebrisPrefabs,
+                                CHAIN_PREFAB => _debrisPrefabManager.BurstSliderDebrisPrefabs,
+                                CHAIN_ELEMENT_PREFAB => _debrisPrefabManager.BurstSliderElementDebrisPrefabs,
+                                _ => null
+                            };
+
+                            if (debrisPrefabs == null)
+                            {
+                                _log.Error($"[{key}] debris not recognized");
+                                continue;
+                            }
+
+                            _log.Debug(
+                                $"Assigned debris track prefab [{debrisAsset ?? "null"}] for [{key}] with load mode [{data.LoadMode}]");
+                            _beatmapObjectPrefabManager.AssignTrackPrefab(
+                                debrisPrefabs,
+                                objectPrefabInfo.Track,
+                                debrisAsset,
+                                data.LoadMode);
+                        }
+
+                        break;
+                    }
+
+                    case AssignObjectPrefabData.SaberPrefabInfo saberPrefabInfo:
+                    {
+                        string? asset = saberPrefabInfo.Asset;
+                        if (asset != string.Empty)
+                        {
+                            _log.Debug(
+                                $"Assigned prefab [{asset ?? "null"}] for [{key}] with load mode [{data.LoadMode}]");
+                            _beatmapObjectPrefabManager.AssignGameObjectPrefab(
+                                (PrefabList)prefabCollection,
+                                asset,
+                                data.LoadMode,
+                                customEventData.time);
+                        }
+
+                        string? trail = saberPrefabInfo.TrailAsset;
+                        if (trail != string.Empty)
+                        {
+                            TrailList? trailMaterials = key switch
+                            {
+                                SABER_A_PREFAB => _saberPrefabManager.SaberATrailMaterials,
+                                SABER_B_PREFAB => _saberPrefabManager.SaberBTrailMaterials,
+                                _ => null
+                            };
+
+                            if (trailMaterials == null)
+                            {
+                                _log.Error($"[{key}] trail not recognized");
+                                continue;
+                            }
+
+                            _log.Debug(
+                                $"Assigned trail material [{trail ?? "null"}] for [{key}] with load mode [{data.LoadMode}]");
+                            _beatmapObjectPrefabManager.AssignTrail(
+                                trailMaterials,
+                                trail,
+                                new TrailProperties(
+                                    saberPrefabInfo.TopPos,
+                                    saberPrefabInfo.BottomPos,
+                                    saberPrefabInfo.Duration,
+                                    saberPrefabInfo.SamplingFrequency,
+                                    saberPrefabInfo.Granularity),
+                                data.LoadMode,
+                                customEventData.time);
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}

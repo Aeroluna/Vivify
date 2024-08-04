@@ -9,11 +9,11 @@ namespace Vivify
 {
     internal class CustomDataDeserializer : IEarlyDeserializer, IObjectsDeserializer, ICustomEventsDeserializer
     {
-        private readonly TrackBuilder _trackBuilder;
         private readonly CustomBeatmapData _beatmapData;
-        private readonly Dictionary<string, List<object>> _pointDefinitions;
-        private readonly Dictionary<string, Track> _tracks;
         private readonly float _bpm;
+        private readonly Dictionary<string, List<object>> _pointDefinitions;
+        private readonly TrackBuilder _trackBuilder;
+        private readonly Dictionary<string, Track> _tracks;
 
         private CustomDataDeserializer(
             TrackBuilder trackBuilder,
@@ -27,49 +27,6 @@ namespace Vivify
             _pointDefinitions = pointDefinitions;
             _tracks = tracks;
             _bpm = bpm;
-        }
-
-        public void DeserializeEarly()
-        {
-            foreach (CustomEventData customEventData in _beatmapData.customEventDatas)
-            {
-                try
-                {
-                    switch (customEventData.eventType)
-                    {
-                        case INSTANTIATE_PREFAB:
-                            _trackBuilder.AddFromCustomData(customEventData.customData, false, false);
-                            break;
-
-                        default:
-                            continue;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.DeserializeFailure(e, customEventData, _bpm);
-                }
-            }
-        }
-
-        public Dictionary<BeatmapObjectData, IObjectCustomData> DeserializeObjects()
-        {
-            Dictionary<BeatmapObjectData, IObjectCustomData> dictionary = new();
-
-            foreach (BeatmapObjectData beatmapObjectData in _beatmapData.beatmapObjectDatas)
-            {
-                try
-                {
-                    CustomData customData = ((ICustomData)beatmapObjectData).customData;
-                    dictionary.Add(beatmapObjectData, new VivifyObjectData(customData, _tracks));
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.DeserializeFailure(e, beatmapObjectData, _bpm);
-                }
-            }
-
-            return dictionary;
         }
 
         public Dictionary<CustomEventData, ICustomEventCustomData> DeserializeCustomEvents()
@@ -86,8 +43,8 @@ namespace Vivify
                             dictionary.Add(customEventData, new ApplyPostProcessingData(data, _pointDefinitions));
                             break;
 
-                        case ASSIGN_TRACK_PREFAB:
-                            dictionary.Add(customEventData, new AssignTrackPrefabData(data, _tracks));
+                        case ASSIGN_OBJECT_PREFAB:
+                            dictionary.Add(customEventData, new AssignObjectPrefabData(data, _tracks));
                             break;
 
                         case DECLARE_CULLING_TEXTURE:
@@ -137,6 +94,49 @@ namespace Vivify
                 catch (Exception e)
                 {
                     Plugin.Log.DeserializeFailure(e, customEventData, _bpm);
+                }
+            }
+
+            return dictionary;
+        }
+
+        public void DeserializeEarly()
+        {
+            foreach (CustomEventData customEventData in _beatmapData.customEventDatas)
+            {
+                try
+                {
+                    switch (customEventData.eventType)
+                    {
+                        case INSTANTIATE_PREFAB:
+                            _trackBuilder.AddFromCustomData(customEventData.customData, false, false);
+                            break;
+
+                        default:
+                            continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.DeserializeFailure(e, customEventData, _bpm);
+                }
+            }
+        }
+
+        public Dictionary<BeatmapObjectData, IObjectCustomData> DeserializeObjects()
+        {
+            Dictionary<BeatmapObjectData, IObjectCustomData> dictionary = new();
+
+            foreach (BeatmapObjectData beatmapObjectData in _beatmapData.beatmapObjectDatas)
+            {
+                try
+                {
+                    CustomData customData = ((ICustomData)beatmapObjectData).customData;
+                    dictionary.Add(beatmapObjectData, new VivifyObjectData(customData, _tracks));
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.DeserializeFailure(e, beatmapObjectData, _bpm);
                 }
             }
 

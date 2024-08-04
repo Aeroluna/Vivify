@@ -36,12 +36,18 @@ namespace Vivify
         internal const string BOMB_PREFAB = "bombNotes";
         internal const string CHAIN_PREFAB = "burstSliders";
         internal const string CHAIN_ELEMENT_PREFAB = "burstSliderElements";
-        internal const string NOTE_DEBRIS_PREFAB = "colorNoteDebris";
-        internal const string CHAIN_DEBRIS_PREFAB = "burstSliderDebris";
-        internal const string CHAIN_ELEMENT_DEBRIS_PREFAB = "burstSliderElementDebris";
+        internal const string DEBRIS_ASSET = "debrisAsset";
+        internal const string SABER_A_PREFAB = "saberA";
+        internal const string SABER_B_PREFAB = "saberB";
+        internal const string SABER_TRAIL_ASSET = "trailAsset";
+        internal const string SABER_TRAIL_TOP_POS = "trailTopPos";
+        internal const string SABER_TRAIL_BOTTOM_POS = "trailBottomPos";
+        internal const string SABER_TRAIL_DURATION = "trailDuration";
+        internal const string SABER_TRAIL_SAMPLE_FREQ = "trailSamplingFrequency";
+        internal const string SABER_TRAIL_GRANULARITY = "trailGranularity";
 
         internal const string APPLY_POST_PROCESSING = "Blit";
-        internal const string ASSIGN_TRACK_PREFAB = "AssignTrackPrefab";
+        internal const string ASSIGN_OBJECT_PREFAB = "AssignObjectPrefab";
         internal const string DECLARE_CULLING_TEXTURE = "DeclareCullingTexture";
         internal const string DECLARE_TEXTURE = "DeclareRenderTexture";
         internal const string DESTROY_TEXTURE = "DestroyTexture";

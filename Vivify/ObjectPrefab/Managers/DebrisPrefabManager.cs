@@ -1,30 +1,51 @@
-﻿using System.Collections.Generic;
-using Heck.Animation;
+﻿using System;
 using Heck.Deserialize;
+using Heck.ReLoad;
 using JetBrains.Annotations;
 using SiraUtil.Affinity;
-using Vivify.Managers;
+using Vivify.ObjectPrefab.Collections;
 using Zenject;
 
-namespace Vivify.HarmonyPatches
+namespace Vivify.ObjectPrefab.Managers
 {
-    internal class SpawnDebrisPrefab : IAffinity
+    internal class DebrisPrefabManager : IAffinity, IDisposable
     {
         private readonly AudioTimeSyncController _audioTimeSyncController;
         private readonly BeatmapObjectPrefabManager _beatmapObjectPrefabManager;
         private readonly DeserializedData _deserializedData;
+        private readonly ReLoader? _reLoader;
 
         private NoteData? _noteData;
 
         [UsedImplicitly]
-        private SpawnDebrisPrefab(
+        private DebrisPrefabManager(
             BeatmapObjectPrefabManager beatmapObjectPrefabManager,
             AudioTimeSyncController audioTimeSyncController,
-            [Inject(Id = VivifyController.ID)] DeserializedData deserializedData)
+            [Inject(Id = VivifyController.ID)] DeserializedData deserializedData,
+            [InjectOptional] ReLoader? reLoader)
         {
             _beatmapObjectPrefabManager = beatmapObjectPrefabManager;
             _audioTimeSyncController = audioTimeSyncController;
             _deserializedData = deserializedData;
+            _reLoader = reLoader;
+            if (reLoader != null)
+            {
+                reLoader.Rewinded += OnRewind;
+            }
+        }
+
+        internal PrefabDictionary BurstSliderDebrisPrefabs { get; } = new();
+
+        internal PrefabDictionary BurstSliderElementDebrisPrefabs { get; } = new();
+
+        internal PrefabDictionary ColorNoteDebrisPrefabs { get; } = new();
+
+        public void Dispose()
+        {
+            if (_reLoader != null)
+            {
+                _reLoader.Rewinded -= OnRewind;
+            }
         }
 
         [AffinityPostfix]
@@ -32,6 +53,13 @@ namespace Vivify.HarmonyPatches
         private void DespawnPrefab(NoteDebris noteDebris)
         {
             _beatmapObjectPrefabManager.Despawn(noteDebris);
+        }
+
+        private void OnRewind()
+        {
+            ColorNoteDebrisPrefabs.Clear();
+            BurstSliderDebrisPrefabs.Clear();
+            BurstSliderElementDebrisPrefabs.Clear();
         }
 
         [AffinityPrefix]
@@ -52,13 +80,12 @@ namespace Vivify.HarmonyPatches
                 return;
             }
 
-            Dictionary<Track, HashSet<BeatmapObjectPrefabManager.PrefabPool?>>? prefabPoolDictionary =
+            PrefabDictionary? prefabPoolDictionary =
                 _noteData.gameplayType switch
                 {
-                    NoteData.GameplayType.Normal => _beatmapObjectPrefabManager.ColorNoteDebrisPrefabs,
-                    NoteData.GameplayType.BurstSliderHead => _beatmapObjectPrefabManager.BurstSliderDebrisPrefabs,
-                    NoteData.GameplayType.BurstSliderElement => _beatmapObjectPrefabManager
-                        .BurstSliderElementDebrisPrefabs,
+                    NoteData.GameplayType.Normal => ColorNoteDebrisPrefabs,
+                    NoteData.GameplayType.BurstSliderHead => BurstSliderDebrisPrefabs,
+                    NoteData.GameplayType.BurstSliderElement => BurstSliderElementDebrisPrefabs,
                     _ => null
                 };
 
