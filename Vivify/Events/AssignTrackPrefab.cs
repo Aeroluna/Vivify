@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.Animation;
@@ -16,9 +15,9 @@ namespace Vivify.Events
     [CustomEvent(ASSIGN_TRACK_PREFAB)]
     internal class AssignTrackPrefab : ICustomEvent
     {
-        private readonly SiraLog _log;
-        private readonly DeserializedData _deserializedData;
         private readonly BeatmapObjectPrefabManager _beatmapObjectPrefabManager;
+        private readonly DeserializedData _deserializedData;
+        private readonly SiraLog _log;
 
         private AssignTrackPrefab(
             SiraLog log,
@@ -30,7 +29,6 @@ namespace Vivify.Events
             _beatmapObjectPrefabManager = beatmapObjectPrefabManager;
         }
 
-        // ReSharper disable InvertIf
         public void Callback(CustomEventData customEventData)
         {
             if (!_deserializedData.Resolve(customEventData, out AssignTrackPrefabData? data))
@@ -40,7 +38,7 @@ namespace Vivify.Events
 
             foreach ((string? key, string? value) in data.Assets)
             {
-                Dictionary<Track, BeatmapObjectPrefabManager.PrefabPool> prefabPoolDictionary = key switch
+                Dictionary<Track, HashSet<BeatmapObjectPrefabManager.PrefabPool?>>? prefabPoolDictionary = key switch
                 {
                     NOTE_PREFAB => _beatmapObjectPrefabManager.ColorNotePrefabs,
                     BOMB_PREFAB => _beatmapObjectPrefabManager.BombNotePrefabs,
@@ -49,11 +47,16 @@ namespace Vivify.Events
                     NOTE_DEBRIS_PREFAB => _beatmapObjectPrefabManager.ColorNoteDebrisPrefabs,
                     CHAIN_DEBRIS_PREFAB => _beatmapObjectPrefabManager.BurstSliderDebrisPrefabs,
                     CHAIN_ELEMENT_DEBRIS_PREFAB => _beatmapObjectPrefabManager.BurstSliderElementDebrisPrefabs,
-                    _ => throw new ArgumentOutOfRangeException()
+                    _ => null
                 };
 
-                _log.Debug($"Assigned prefab: [{value ?? "null"}]");
-                _beatmapObjectPrefabManager.AssignPrefab(prefabPoolDictionary, data.Track, value);
+                if (prefabPoolDictionary == null)
+                {
+                    continue;
+                }
+
+                _log.Debug($"Assigned prefab: [{value ?? "null"}], with load mode [{data.LoadMode}]");
+                _beatmapObjectPrefabManager.AssignPrefab(prefabPoolDictionary, data.Track, value, data.LoadMode);
             }
         }
     }

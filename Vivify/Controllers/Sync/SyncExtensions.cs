@@ -13,27 +13,39 @@ namespace Vivify.Controllers.Sync
 
             if (syncs.Length > 0)
             {
-                syncs.Do(n => n.SetStartTime(startTime));
+                foreach (ISync sync in syncs)
+                {
+                    sync.SetStartTime(startTime);
+                }
             }
             else
             {
-                gameObject.GetComponentsInChildren<Animator>().Do(n =>
-                    instantiator.InstantiateComponent<AnimatorSyncController>(
-                        n.gameObject,
-                        new object[] { startTime }));
-                gameObject.GetComponentsInChildren<ParticleSystem>().Do(n =>
-                    instantiator.InstantiateComponent<ParticleSystemSyncController>(
-                        n.gameObject,
-                        new object[] { startTime }));
-                gameObject.GetComponentsInChildren<VideoPlayer>().Do(n =>
-                {
-                    if (n.playOnAwake)
-                    {
-                        instantiator.InstantiateComponent<VideoPlayerSyncController>(
-                            n.gameObject,
-                            new object[] { startTime });
-                    }
-                });
+                gameObject
+                    .GetComponentsInChildren<Animator>()
+                    .Do(
+                        n =>
+                            instantiator.InstantiateComponent<AnimatorSyncController>(
+                                n.gameObject,
+                                new object[] { startTime }));
+                gameObject
+                    .GetComponentsInChildren<ParticleSystem>()
+                    .Do(
+                        n =>
+                            instantiator.InstantiateComponent<ParticleSystemSyncController>(
+                                n.gameObject,
+                                new object[] { startTime }));
+                gameObject
+                    .GetComponentsInChildren<VideoPlayer>()
+                    .Do(
+                        n =>
+                        {
+                            if (n.playOnAwake)
+                            {
+                                instantiator.InstantiateComponent<VideoPlayerSyncController>(
+                                    n.gameObject,
+                                    new object[] { startTime });
+                            }
+                        });
             }
         }
     }

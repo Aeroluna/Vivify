@@ -8,6 +8,7 @@ using Heck.Animation.Transform;
 using Heck.Deserialize;
 using IPA.Utilities;
 using UnityEngine;
+using Vivify.Managers;
 using static Heck.HeckController;
 using static Vivify.VivifyController;
 
@@ -56,7 +57,8 @@ namespace Vivify
             Dictionary<string, List<object>> pointDefinitions)
             : base(rawData, materialPropertyType, value)
         {
-            PointDefinition = rawData.GetPointData<T>(VALUE, pointDefinitions) ?? throw new JsonNotDefinedException(VALUE);
+            PointDefinition = rawData.GetPointData<T>(VALUE, pointDefinitions) ??
+                              throw new JsonNotDefinedException(VALUE);
         }
 
         internal PointDefinition<T> PointDefinition { get; }
@@ -77,7 +79,9 @@ namespace Vivify
 
         internal object Value { get; }
 
-        internal static MaterialProperty CreateMaterialProperty(CustomData rawData, Dictionary<string, List<object>> pointDefinitions)
+        internal static MaterialProperty CreateMaterialProperty(
+            CustomData rawData,
+            Dictionary<string, List<object>> pointDefinitions)
         {
             MaterialPropertyType type = rawData.GetStringToEnumRequired<MaterialPropertyType>(TYPE);
             object value = rawData.GetRequired<object>(VALUE);
@@ -85,9 +89,21 @@ namespace Vivify
             {
                 return type switch
                 {
-                    MaterialPropertyType.Color => new AnimatedMaterialProperty<Vector4>(rawData, type, value, pointDefinitions),
-                    MaterialPropertyType.Float => new AnimatedMaterialProperty<float>(rawData, type, value, pointDefinitions),
-                    MaterialPropertyType.Vector => new AnimatedMaterialProperty<Vector4>(rawData, type, value, pointDefinitions),
+                    MaterialPropertyType.Color => new AnimatedMaterialProperty<Vector4>(
+                        rawData,
+                        type,
+                        value,
+                        pointDefinitions),
+                    MaterialPropertyType.Float => new AnimatedMaterialProperty<float>(
+                        rawData,
+                        type,
+                        value,
+                        pointDefinitions),
+                    MaterialPropertyType.Vector => new AnimatedMaterialProperty<Vector4>(
+                        rawData,
+                        type,
+                        value,
+                        pointDefinitions),
                     _ => throw new InvalidOperationException($"[{type}] not currently supported.")
                 };
             }
@@ -105,7 +121,8 @@ namespace Vivify
             Dictionary<string, List<object>> pointDefinitions)
             : base(rawData, animatorPropertyType, value)
         {
-            PointDefinition = rawData.GetPointData<float>(VALUE, pointDefinitions) ?? throw new JsonNotDefinedException(VALUE);
+            PointDefinition = rawData.GetPointData<float>(VALUE, pointDefinitions) ??
+                              throw new JsonNotDefinedException(VALUE);
         }
 
         internal PointDefinition<float> PointDefinition { get; }
@@ -126,7 +143,9 @@ namespace Vivify
 
         internal object Value { get; }
 
-        internal static AnimatorProperty CreateAnimatorProperty(CustomData rawData, Dictionary<string, List<object>> pointDefinitions)
+        internal static AnimatorProperty CreateAnimatorProperty(
+            CustomData rawData,
+            Dictionary<string, List<object>> pointDefinitions)
         {
             AnimatorPropertyType type = rawData.GetStringToEnumRequired<AnimatorPropertyType>(TYPE);
             object value;
@@ -154,7 +173,11 @@ namespace Vivify
 
         internal string Name { get; }
 
-        internal static RenderSettingProperty CreateRenderSettingProperty<T>(string name, object value, CustomData rawData, Dictionary<string, List<object>> pointDefinitions)
+        internal static RenderSettingProperty CreateRenderSettingProperty<T>(
+            string name,
+            object value,
+            CustomData rawData,
+            Dictionary<string, List<object>> pointDefinitions)
             where T : struct
         {
             return value is List<object>
@@ -172,7 +195,8 @@ namespace Vivify
             Dictionary<string, List<object>> pointDefinitions)
             : base(name)
         {
-            PointDefinition = rawData.GetPointData<T>(name, pointDefinitions) ?? throw new JsonNotDefinedException(name);
+            PointDefinition = rawData.GetPointData<T>(name, pointDefinitions) ??
+                              throw new JsonNotDefinedException(name);
         }
 
         internal PointDefinition<T> PointDefinition { get; }
@@ -213,25 +237,26 @@ namespace Vivify
                 null => null,
                 string destString => new[] { destString },
                 List<object> destArray => destArray.Select(n => (string)n).ToArray(),
-                _ => throw new InvalidCastException($"[{DESTINATION}] was not an allowable type. Was [{destRaw.GetType().FullName}].")
+                _ => throw new InvalidCastException(
+                    $"[{DESTINATION}] was not an allowable type. Was [{destRaw.GetType().FullName}].")
             };
         }
 
-        internal Functions Easing { get; }
+        internal string? Asset { get; }
 
         internal float Duration { get; }
 
+        internal Functions Easing { get; }
+
+        internal int? Pass { get; }
+
         internal int Priority { get; }
+
+        internal List<MaterialProperty>? Properties { get; }
 
         internal string? Source { get; }
 
         internal string[]? Target { get; }
-
-        internal string? Asset { get; }
-
-        internal int? Pass { get; }
-
-        internal List<MaterialProperty>? Properties { get; }
     }
 
     internal class SetMaterialPropertyData : ICustomEventCustomData
@@ -247,11 +272,11 @@ namespace Vivify
                 .ToList();
         }
 
-        internal Functions Easing { get; }
+        internal string Asset { get; }
 
         internal float Duration { get; }
 
-        internal string Asset { get; }
+        internal Functions Easing { get; }
 
         internal List<MaterialProperty> Properties { get; }
     }
@@ -268,9 +293,9 @@ namespace Vivify
                 .ToList();
         }
 
-        internal Functions Easing { get; }
-
         internal float Duration { get; }
+
+        internal Functions Easing { get; }
 
         internal List<MaterialProperty> Properties { get; }
     }
@@ -282,8 +307,11 @@ namespace Vivify
             List<object>? depthTextureModeStrings = customData.Get<List<object>?>(CAMERA_DEPTH_TEXTURE_MODE);
             if (depthTextureModeStrings != null)
             {
-                DepthTextureMode = depthTextureModeStrings.Aggregate(UnityEngine.DepthTextureMode.None, (current, depthTextureModeString) =>
-                    current | (DepthTextureMode)Enum.Parse(typeof(DepthTextureMode), (string)depthTextureModeString));
+                DepthTextureMode = depthTextureModeStrings.Aggregate(
+                    UnityEngine.DepthTextureMode.None,
+                    (current, depthTextureModeString) =>
+                        current |
+                        (DepthTextureMode)Enum.Parse(typeof(DepthTextureMode), (string)depthTextureModeString));
             }
         }
 
@@ -303,9 +331,9 @@ namespace Vivify
                 .ToList();
         }
 
-        internal Functions Easing { get; }
-
         internal float Duration { get; }
+
+        internal Functions Easing { get; }
 
         internal string Id { get; }
 
@@ -322,7 +350,8 @@ namespace Vivify
             Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
 
             string[] excludedStrings = { DURATION, EASING };
-            List<KeyValuePair<string, object?>> propertyKeys = customData.Where(n => excludedStrings.All(m => m != n.Key)).ToList();
+            List<KeyValuePair<string, object?>> propertyKeys =
+                customData.Where(n => excludedStrings.All(m => m != n.Key)).ToList();
             foreach ((string? key, object? value) in propertyKeys)
             {
                 if (value == null)
@@ -388,13 +417,13 @@ namespace Vivify
             DepthTexture = customData.Get<bool?>(DEPTH_TEXTURE) ?? false;
         }
 
+        internal bool DepthTexture { get; }
+
         internal string Name { get; }
 
         internal IEnumerable<Track> Tracks { get; }
 
         internal bool Whitelist { get; }
-
-        internal bool DepthTexture { get; }
     }
 
     internal class DestroyTextureData : ICustomEventCustomData
@@ -406,7 +435,8 @@ namespace Vivify
             {
                 string nameString => new[] { nameString },
                 List<object> nameArray => nameArray.Select(n => (string)n).ToArray(),
-                _ => throw new InvalidCastException($"[{ID_FIELD}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
+                _ => throw new InvalidCastException(
+                    $"[{ID_FIELD}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
             };
         }
 
@@ -431,21 +461,21 @@ namespace Vivify
             }
         }
 
-        internal int PropertyId { get; }
+        internal FilterMode? FilterMode { get; }
+
+        internal RenderTextureFormat? Format { get; }
+
+        internal int? Height { get; }
 
         internal string Name { get; }
+
+        internal int PropertyId { get; }
+
+        internal int? Width { get; }
 
         internal float XRatio { get; }
 
         internal float YRatio { get; }
-
-        internal int? Width { get; }
-
-        internal int? Height { get; }
-
-        internal RenderTextureFormat? Format { get; }
-
-        internal FilterMode? FilterMode { get; }
     }
 
     internal class DestroyPrefabData : ICustomEventCustomData
@@ -457,7 +487,8 @@ namespace Vivify
             {
                 string nameString => new[] { nameString },
                 List<object> nameArray => nameArray.Select(n => (string)n).ToArray(),
-                _ => throw new InvalidCastException($"[{ID_FIELD}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
+                _ => throw new InvalidCastException(
+                    $"[{ID_FIELD}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
             };
         }
 
@@ -478,28 +509,33 @@ namespace Vivify
 
         internal string Asset { get; }
 
-        internal TransformData TransformData { get; }
-
         internal string? Id { get; }
 
         internal Track? Track { get; }
+
+        internal TransformData TransformData { get; }
     }
 
     internal class AssignTrackPrefabData : ICustomEventCustomData
     {
+        private readonly string[] _excludedStrings = { TRACK, ASSIGN_PREFAB_LOAD_MODE };
+
         internal AssignTrackPrefabData(
             CustomData customData,
             Dictionary<string, Track> beatmapTracks)
         {
             Track = customData.GetTrack(beatmapTracks, false);
-            foreach ((string key, object? value) in customData.Where(n => n.Key != TRACK))
+            LoadMode = customData.GetStringToEnum<LoadMode>(ASSIGN_PREFAB_LOAD_MODE);
+            foreach ((string key, object? value) in customData.Where(n => _excludedStrings.All(m => n.Key != m)))
             {
                 Assets.Add(key, (string?)value);
             }
         }
 
-        internal Track Track { get; }
-
         internal Dictionary<string, string?> Assets { get; } = new();
+
+        internal LoadMode LoadMode { get; }
+
+        internal Track Track { get; }
     }
 }

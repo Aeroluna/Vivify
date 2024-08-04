@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CustomJSONData;
 using CustomJSONData.CustomBeatmap;
 using Heck.Animation;
 using Heck.Deserialize;

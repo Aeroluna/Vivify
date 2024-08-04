@@ -31,6 +31,7 @@ namespace Vivify
 
         internal const string CAMERA_DEPTH_TEXTURE_MODE = "depthTextureMode";
 
+        internal const string ASSIGN_PREFAB_LOAD_MODE = "loadMode";
         internal const string NOTE_PREFAB = "colorNotes";
         internal const string BOMB_PREFAB = "bombNotes";
         internal const string CHAIN_PREFAB = "burstSliders";
