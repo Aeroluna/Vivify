@@ -29,11 +29,11 @@ internal class PostProcessingController : CullingCameraController
 
     private SiraLog _log = null!;
 
-    internal static Dictionary<string, CullingTextureTracker> CullingTextureDatas { get; private set; } = new();
+    internal static Dictionary<string, CullingTextureTracker> CullingTextureDatas { get; } = new();
 
-    internal static Dictionary<string, DeclareRenderTextureData> DeclaredTextureDatas { get; private set; } = new();
+    internal static Dictionary<string, DeclareRenderTextureData> DeclaredTextureDatas { get; } = new();
 
-    internal static HashSet<MaterialData> PostProcessingMaterial { get; private set; } = [];
+    internal static List<MaterialData> PostProcessingMaterial { get; } = [];
 
     internal override int DefaultCullingMask => _defaultCullingMask ?? Camera.cullingMask;
 
@@ -44,10 +44,10 @@ internal class PostProcessingController : CullingCameraController
             cullingTextureTracker.Dispose();
         }
 
-        CullingTextureDatas = new Dictionary<string, CullingTextureTracker>();
-        DeclaredTextureDatas = new Dictionary<string, DeclareRenderTextureData>();
+        CullingTextureDatas.Clear();
+        DeclaredTextureDatas.Clear();
 
-        PostProcessingMaterial = [];
+        PostProcessingMaterial.Clear();
     }
 
     protected override void Awake()
@@ -81,7 +81,11 @@ internal class PostProcessingController : CullingCameraController
             _reusableCullingKeys.Add(textureData);
         }
 
-        _reusableCullingKeys.ForEach(n => _activeCullingTextureDatas.Remove(n));
+        foreach (CullingTextureTracker cullingTextureTracker in _reusableCullingKeys)
+        {
+            _activeCullingTextureDatas.Remove(cullingTextureTracker);
+        }
+
         _reusableCullingKeys.Clear();
 
         foreach ((string textureName, CullingTextureTracker textureData) in CullingTextureDatas)
@@ -142,7 +146,11 @@ internal class PostProcessingController : CullingCameraController
             _reusableDeclaredKeys.Add(value);
         }
 
-        _reusableDeclaredKeys.ForEach(n => _activeDeclaredTextures.Remove(n));
+        foreach (DeclareRenderTextureData declareRenderTextureData in _reusableDeclaredKeys)
+        {
+            _activeDeclaredTextures.Remove(declareRenderTextureData);
+        }
+
         _reusableDeclaredKeys.Clear();
 
         // instantiate RenderTextureHolders
@@ -254,12 +262,12 @@ internal class PostProcessingController : CullingCameraController
         // blit all passes
         RenderTexture main = RenderTexture.GetTemporary(src.descriptor);
         Graphics.Blit(src, main);
-        IEnumerable<MaterialData> sortedDatas = PostProcessingMaterial.OrderBy(n => n.Priority).Reverse();
-        foreach (MaterialData materialData in sortedDatas)
+        for (int i = PostProcessingMaterial.Count - 1; i >= 0; i--)
         {
+            MaterialData materialData = PostProcessingMaterial[i];
             if (materialData.Frame != null && materialData.Frame != Time.frameCount)
             {
-                PostProcessingMaterial.Remove(materialData);
+                PostProcessingMaterial.RemoveAt(i);
                 continue;
             }
 
@@ -388,7 +396,7 @@ internal class PostProcessingController : CullingCameraController
     }
 }
 
-internal class MaterialData
+internal class MaterialData : IComparable<MaterialData>
 {
     internal MaterialData(
         Material? material,
@@ -417,4 +425,6 @@ internal class MaterialData
     internal string Source { get; }
 
     internal string[] Targets { get; }
+
+    public int CompareTo(MaterialData other) => Priority.CompareTo(other.Priority);
 }

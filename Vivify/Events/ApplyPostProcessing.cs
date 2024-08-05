@@ -8,6 +8,7 @@ using Heck.Event;
 using Heck.ReLoad;
 using SiraUtil.Logging;
 using UnityEngine;
+using Vivify.Extras;
 using Vivify.Managers;
 using Vivify.PostProcessing;
 using Zenject;
@@ -84,7 +85,7 @@ internal class ApplyPostProcessing : ICustomEvent, IDisposable
 
         if (duration == 0)
         {
-            PostProcessingController.PostProcessingMaterial.Add(
+            PostProcessingController.PostProcessingMaterial.InsertIntoSortedList(
                 new MaterialData(material, data.Priority, data.Source, data.Target, data.Pass, Time.frameCount));
             _log.Debug($"Applied material [{assetName}] for single frame");
             return;
@@ -96,7 +97,7 @@ internal class ApplyPostProcessing : ICustomEvent, IDisposable
         }
 
         MaterialData materialData = new(material, data.Priority, data.Source, data.Target, data.Pass);
-        PostProcessingController.PostProcessingMaterial.Add(materialData);
+        PostProcessingController.PostProcessingMaterial.InsertIntoSortedList(materialData);
         _log.Debug($"Applied material [{assetName}] for [{duration}] seconds");
         _coroutineDummy.StartCoroutine(KillPostProcessingCoroutine(materialData, duration, customEventData.time));
     }
