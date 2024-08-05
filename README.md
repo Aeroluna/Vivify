@@ -21,8 +21,8 @@ This documentation assumes basic understanding of custom events and tracks.
 - [`DestroyPrefab`](#destroyprefab)
 - [`SetAnimatorProperty`](#setanimatorproperty)
 - [`SetCameraProperty`](#setcameraproperty)
-- [`AssignTrackPrefab`](#assigntrackprefab)
-- ['SetRenderSetting'](#setrendersetting)
+- [`AssignObjectPrefab`](#assignobjectprefab)
+- [`SetRenderSetting`](#setrendersetting)
 
 ## Setting up Unity
 First, you should to download the Unity Hub at https://unity3d.com/get-unity/download. Beat Saber 1.29.1 uses version 2019.4.28f and Beat Saber 1.30.0+ uses 2021.3.16f1. For maximum compatibility, you should use 2019.4.28f found in the [archive](https://unity3d.com/get-unity/download/archive) and use Swifter's VivifyTemplate to build your bundles https://github.com/Swifter1243/VivifyTemplate. 2019 bundles built without using that script will have nonfunctioning shader keywords in 2021.
@@ -395,20 +395,60 @@ Allows setting animator properties. This will search the prefab for all Animator
 
 Remember to clear the `depthTextureMode` to `[]` after you are done using it as rendering a depth texture can impact performance. See https://docs.unity3d.com/Manual/SL-CameraDepthTexture.html for more info. Note: if the player has the Smoke option enabled, the `depthTextureMode` will always have `Depth`.
 
-## AssignTrackPrefab
+## AssignObjectPrefab
 ```js
 {
   "b": float, // Time in beats.
-  "t": "AssignTrackPrefab",
+  "t": "AssignObjectPrefab",
   "d": {
-    "track": string, // Only objects on this track will be affected.
-    "note": string // File path to the desired prefab to replace notes.
+    "loadMode": string, // (Optional) How to load the asset (Single, Additive).
+    "object": {} // See below
   }
 }
 ```
 
-Replaces all objects on the track with the assigned prefab.
-If replacing a note, all materials on the prefab will have `_Color` and `_Cutout` properties set automatically.
+Assigns prefabs to a specific object. Setting any asset to `null` is equivalent to resetting to the default model. Most objects will have their per-instance properties set automatically. (See section "Adding per-instance properties to GPU instancing shaders" at https://docs.unity3d.com/Manual/gpu-instancing-shader.html)
+- `loadMode`: `Single, Additive`
+  - `Single`: Clears all loaded prefabs on the object and adds a prefab
+  - `Additive`: Adds a prefab to the currently loaded prefabs.
+- `colorNotes`:
+  - `track`: `string` Only notes on this track(s) will be affected.
+  - `asset`: `string` (Optional) File path to the desired prefab. Only applies to directional notes. Sets properties `_Color` and `_Cutout`.
+  - `anyDirectionAsset`: `string` (Optional) Only applies to dot notes. Sets same properties as directional notes.
+  - `debrisAsset`: `string` (Optional) Applies to cut debris. Sets properties `_Cutout`, `_Color`, `_CutPlane`, and `_CutoutTexOffset`.
+- `burstSliders`:
+  - `track`: `string` See above.
+  - `asset`: `string` (Optional) See above.
+  - `debrisAsset`: `string` (Optional) See above.
+- `burstSliderElemeents`:
+  - `track`: `string` See above.
+  - `asset`: `string` (Optional) See above.
+  - `debrisAsset`: `string` (Optional) See above.
+- `saber`:
+  - `type`: `string` Which saber to affect. `Left`, `Right` or `Both`.
+  - `asset`: `string` (Optional) File path to the desired prefab. Sets property `_Color`.
+  - `trailAsset`: `string` (Optional) File path to the material to replace the saber. Sets property `_Color` and sets vertex colors for a gradient.
+  - `trailTopPos`: `vector3` (Optional) Vector3 position of the top of the trail. Defaults to [0, 0, 1]
+  - `trailBottomPos`: `vector3` (Optional) Vector3 position of the top of the trail. Defaults to [0, 0, 0]
+  - `trailDuration`: `float` (Optional) Age of most distant segment of trail. Defaults to 0.4
+  - `trailSamplingFrequency`: `int` (Optional) Saber position snapshots taken per second. Defaults to 50
+  - `trailGranularity`: `int` (Optional) Segments count in final trail mesh. Defaults to 60
+  
+```js
+// Example
+// Adds a cool particle system to your sabers!
+{
+  "b": 70.0,
+  "t": "AssignObjectPrefab",
+  "d": {
+    "loadMode": "Additive",
+    "saber": {
+      "type": "Both",
+      "asset": "assets/path/to/cool/particlesystem.prefab"
+    }
+  }
+}
+```
 
 ## SetRenderSetting
 ```js
