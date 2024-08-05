@@ -95,8 +95,8 @@ namespace Vivify.ObjectPrefab.Managers
 
         private void OnSaberBChanged(float time)
         {
-            _beatmapObjectPrefabManager.Despawn(SaberModelControllerA);
-            _beatmapObjectPrefabManager.Spawn<PrefabPool, GameObject>(SaberBPrefabs, SaberModelControllerA, time);
+            _beatmapObjectPrefabManager.Despawn(SaberModelControllerB);
+            _beatmapObjectPrefabManager.Spawn<PrefabPool, GameObject>(SaberBPrefabs, SaberModelControllerB, time);
         }
 
         private void OnSaberBTrailChanged(float time)

@@ -9,6 +9,7 @@ namespace Vivify.ObjectPrefab.Hijackers
     {
         private readonly IInstantiator _instantiator;
         private readonly Renderer[] _originalRenderers;
+        private readonly Saber _saber;
         private readonly SaberModelController _saberModelController;
         private SetSaberGlowColor[]? _cachedSetSaberGlowColors;
 
@@ -17,6 +18,7 @@ namespace Vivify.ObjectPrefab.Hijackers
             _saberModelController = saberModelController;
             _instantiator = instantiator;
             _originalRenderers = saberModelController.GetComponentsInChildren<Renderer>();
+            _saber = saberModelController.transform.parent.GetComponent<Saber>();
         }
 
         public void Activate(List<GameObject> gameObjects, bool hideOriginal)
@@ -34,7 +36,7 @@ namespace Vivify.ObjectPrefab.Hijackers
                 }
 
                 newColors[i] = setSaberManyColor;
-                setSaberManyColor.SetColors();
+                setSaberManyColor.saberType = _saber.saberType;
             }
 
             if (hideOriginal)
