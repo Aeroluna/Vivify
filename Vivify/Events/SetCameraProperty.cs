@@ -6,30 +6,29 @@ using Vivify.Controllers;
 using Zenject;
 using static Vivify.VivifyController;
 
-namespace Vivify.Events
-{
-    [CustomEvent(SET_CAMERA_PROPERTY)]
-    internal class SetCameraProperty : ICustomEvent
-    {
-        private readonly DeserializedData _deserializedData;
+namespace Vivify.Events;
 
-        private SetCameraProperty(
-            [Inject(Id = ID)] DeserializedData deserializedData)
+[CustomEvent(SET_CAMERA_PROPERTY)]
+internal class SetCameraProperty : ICustomEvent
+{
+    private readonly DeserializedData _deserializedData;
+
+    private SetCameraProperty(
+        [Inject(Id = ID)] DeserializedData deserializedData)
+    {
+        _deserializedData = deserializedData;
+    }
+
+    public void Callback(CustomEventData customEventData)
+    {
+        if (!_deserializedData.Resolve(customEventData, out SetCameraPropertyData? data))
         {
-            _deserializedData = deserializedData;
+            return;
         }
 
-        public void Callback(CustomEventData customEventData)
+        if (data.DepthTextureMode.HasValue)
         {
-            if (!_deserializedData.Resolve(customEventData, out SetCameraPropertyData? data))
-            {
-                return;
-            }
-
-            if (data.DepthTextureMode.HasValue)
-            {
-                CameraPropertyController.DepthTextureMode = data.DepthTextureMode.Value;
-            }
+            CameraPropertyController.DepthTextureMode = data.DepthTextureMode.Value;
         }
     }
 }

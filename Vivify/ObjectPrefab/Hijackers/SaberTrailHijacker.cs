@@ -1,34 +1,33 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Vivify.ObjectPrefab.Hijackers
+namespace Vivify.ObjectPrefab.Hijackers;
+
+internal class SaberTrailHijacker : IHijacker<FollowedSaberTrail>
 {
-    internal class SaberTrailHijacker : IHijacker<FollowedSaberTrail>
+    private readonly SaberTrail _saberTrail;
+
+    internal SaberTrailHijacker(SaberTrail saberTrail)
     {
-        private readonly SaberTrail _saberTrail;
+        _saberTrail = saberTrail;
+    }
 
-        internal SaberTrailHijacker(SaberTrail saberTrail)
+    public void Activate(List<FollowedSaberTrail> followedSaberTrails, bool hideOriginal)
+    {
+        Transform parent = _saberTrail.transform.parent;
+        foreach (FollowedSaberTrail followedSaberTrail in followedSaberTrails)
         {
-            _saberTrail = saberTrail;
+            followedSaberTrail.Init(_saberTrail, parent);
         }
 
-        public void Activate(List<FollowedSaberTrail> followedSaberTrails, bool hideOriginal)
+        if (hideOriginal)
         {
-            Transform parent = _saberTrail.transform.parent;
-            foreach (FollowedSaberTrail followedSaberTrail in followedSaberTrails)
-            {
-                followedSaberTrail.Init(_saberTrail, parent);
-            }
-
-            if (hideOriginal)
-            {
-                _saberTrail._trailRenderer._meshRenderer.enabled = false;
-            }
+            _saberTrail._trailRenderer._meshRenderer.enabled = false;
         }
+    }
 
-        public void Deactivate()
-        {
-            _saberTrail._trailRenderer._meshRenderer.enabled = true;
-        }
+    public void Deactivate()
+    {
+        _saberTrail._trailRenderer._meshRenderer.enabled = true;
     }
 }

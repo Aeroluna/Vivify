@@ -7,105 +7,104 @@ using Vivify.ObjectPrefab.Collections;
 using Vivify.ObjectPrefab.Pools;
 using Zenject;
 
-namespace Vivify.ObjectPrefab.Managers
+namespace Vivify.ObjectPrefab.Managers;
+
+internal class SaberPrefabManager : IDisposable
 {
-    internal class SaberPrefabManager : IDisposable
+    private readonly BeatmapObjectPrefabManager _beatmapObjectPrefabManager;
+    private readonly ReLoader? _reLoader;
+    private readonly Saber _saberA;
+    private readonly Saber _saberB;
+    private readonly SaberModelManager _saberModelManager;
+
+    private SaberModelController? _saberModelControllerA;
+    private SaberModelController? _saberModelControllerB;
+
+    [UsedImplicitly]
+    internal SaberPrefabManager(
+        BeatmapObjectPrefabManager beatmapObjectPrefabManager,
+        SaberManager saberManager,
+        SaberModelManager saberModelManager,
+        [InjectOptional] ReLoader? reLoader)
     {
-        private readonly BeatmapObjectPrefabManager _beatmapObjectPrefabManager;
-        private readonly ReLoader? _reLoader;
-        private readonly Saber _saberA;
-        private readonly Saber _saberB;
-        private readonly SaberModelManager _saberModelManager;
-
-        private SaberModelController? _saberModelControllerA;
-        private SaberModelController? _saberModelControllerB;
-
-        [UsedImplicitly]
-        internal SaberPrefabManager(
-            BeatmapObjectPrefabManager beatmapObjectPrefabManager,
-            SaberManager saberManager,
-            SaberModelManager saberModelManager,
-            [InjectOptional] ReLoader? reLoader)
+        _beatmapObjectPrefabManager = beatmapObjectPrefabManager;
+        _saberModelManager = saberModelManager;
+        _saberA = saberManager.SaberForType(SaberType.SaberA);
+        _saberB = saberManager.SaberForType(SaberType.SaberB);
+        _reLoader = reLoader;
+        if (reLoader != null)
         {
-            _beatmapObjectPrefabManager = beatmapObjectPrefabManager;
-            _saberModelManager = saberModelManager;
-            _saberA = saberManager.SaberForType(SaberType.SaberA);
-            _saberB = saberManager.SaberForType(SaberType.SaberB);
-            _reLoader = reLoader;
-            if (reLoader != null)
-            {
-                reLoader.Rewinded += OnRewind;
-            }
-
-            SaberAPrefabs.Changed += OnSaberAChanged;
-            SaberBPrefabs.Changed += OnSaberBChanged;
-            SaberATrailMaterials.Changed += OnSaberATrailChanged;
-            SaberBTrailMaterials.Changed += OnSaberBTrailChanged;
+            reLoader.Rewinded += OnRewind;
         }
 
-        internal PrefabList SaberAPrefabs { get; } = new();
+        SaberAPrefabs.Changed += OnSaberAChanged;
+        SaberBPrefabs.Changed += OnSaberBChanged;
+        SaberATrailMaterials.Changed += OnSaberATrailChanged;
+        SaberBTrailMaterials.Changed += OnSaberBTrailChanged;
+    }
 
-        internal TrailList SaberATrailMaterials { get; } = new();
+    internal PrefabList SaberAPrefabs { get; } = new();
 
-        internal PrefabList SaberBPrefabs { get; } = new();
+    internal TrailList SaberATrailMaterials { get; } = new();
 
-        internal TrailList SaberBTrailMaterials { get; } = new();
+    internal PrefabList SaberBPrefabs { get; } = new();
 
-        private SaberModelController SaberModelControllerA =>
-            (_saberModelControllerA ??= _saberModelManager.GetSaberModelController(_saberA)) ??
-            throw new InvalidOperationException($"Could not find SaberModelController for [{_saberA.saberType}]");
+    internal TrailList SaberBTrailMaterials { get; } = new();
 
-        private SaberModelController SaberModelControllerB =>
-            (_saberModelControllerB ??= _saberModelManager.GetSaberModelController(_saberB)) ??
-            throw new InvalidOperationException($"Could not find SaberModelController for [{_saberB.saberType}]");
+    private SaberModelController SaberModelControllerA =>
+        (_saberModelControllerA ??= _saberModelManager.GetSaberModelController(_saberA)) ??
+        throw new InvalidOperationException($"Could not find SaberModelController for [{_saberA.saberType}]");
 
-        public void Dispose()
+    private SaberModelController SaberModelControllerB =>
+        (_saberModelControllerB ??= _saberModelManager.GetSaberModelController(_saberB)) ??
+        throw new InvalidOperationException($"Could not find SaberModelController for [{_saberB.saberType}]");
+
+    public void Dispose()
+    {
+        if (_reLoader != null)
         {
-            if (_reLoader != null)
-            {
-                _reLoader.Rewinded -= OnRewind;
-            }
-
-            SaberAPrefabs.Changed -= OnSaberAChanged;
-            SaberBPrefabs.Changed -= OnSaberBChanged;
-            SaberATrailMaterials.Changed -= OnSaberATrailChanged;
-            SaberBTrailMaterials.Changed -= OnSaberBTrailChanged;
+            _reLoader.Rewinded -= OnRewind;
         }
 
-        private void OnRewind()
-        {
-            SaberAPrefabs.Clear();
-            SaberBPrefabs.Clear();
-        }
+        SaberAPrefabs.Changed -= OnSaberAChanged;
+        SaberBPrefabs.Changed -= OnSaberBChanged;
+        SaberATrailMaterials.Changed -= OnSaberATrailChanged;
+        SaberBTrailMaterials.Changed -= OnSaberBTrailChanged;
+    }
 
-        private void OnSaberAChanged(float time)
-        {
-            _beatmapObjectPrefabManager.Despawn(SaberModelControllerA);
-            _beatmapObjectPrefabManager.Spawn<PrefabPool, GameObject>(SaberAPrefabs, SaberModelControllerA, time);
-        }
+    private void OnRewind()
+    {
+        SaberAPrefabs.Clear();
+        SaberBPrefabs.Clear();
+    }
 
-        private void OnSaberATrailChanged(float time)
-        {
-            _beatmapObjectPrefabManager.Despawn(SaberModelControllerA._saberTrail);
-            _beatmapObjectPrefabManager.Spawn<TrailPool, FollowedSaberTrail>(
-                SaberATrailMaterials,
-                SaberModelControllerA._saberTrail,
-                time);
-        }
+    private void OnSaberAChanged(float time)
+    {
+        _beatmapObjectPrefabManager.Despawn(SaberModelControllerA);
+        _beatmapObjectPrefabManager.Spawn<PrefabPool, GameObject>(SaberAPrefabs, SaberModelControllerA, time);
+    }
 
-        private void OnSaberBChanged(float time)
-        {
-            _beatmapObjectPrefabManager.Despawn(SaberModelControllerB);
-            _beatmapObjectPrefabManager.Spawn<PrefabPool, GameObject>(SaberBPrefabs, SaberModelControllerB, time);
-        }
+    private void OnSaberATrailChanged(float time)
+    {
+        _beatmapObjectPrefabManager.Despawn(SaberModelControllerA._saberTrail);
+        _beatmapObjectPrefabManager.Spawn<TrailPool, FollowedSaberTrail>(
+            SaberATrailMaterials,
+            SaberModelControllerA._saberTrail,
+            time);
+    }
 
-        private void OnSaberBTrailChanged(float time)
-        {
-            _beatmapObjectPrefabManager.Despawn(SaberModelControllerB._saberTrail);
-            _beatmapObjectPrefabManager.Spawn<TrailPool, FollowedSaberTrail>(
-                SaberBTrailMaterials,
-                SaberModelControllerB._saberTrail,
-                time);
-        }
+    private void OnSaberBChanged(float time)
+    {
+        _beatmapObjectPrefabManager.Despawn(SaberModelControllerB);
+        _beatmapObjectPrefabManager.Spawn<PrefabPool, GameObject>(SaberBPrefabs, SaberModelControllerB, time);
+    }
+
+    private void OnSaberBTrailChanged(float time)
+    {
+        _beatmapObjectPrefabManager.Despawn(SaberModelControllerB._saberTrail);
+        _beatmapObjectPrefabManager.Spawn<TrailPool, FollowedSaberTrail>(
+            SaberBTrailMaterials,
+            SaberModelControllerB._saberTrail,
+            time);
     }
 }

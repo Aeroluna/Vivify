@@ -1,16 +1,15 @@
 ﻿using UnityEngine;
 
-namespace Vivify.PostProcessing
+namespace Vivify.PostProcessing;
+
+internal class RenderTextureHolder
 {
-    internal class RenderTextureHolder
+    internal RenderTextureHolder(DeclareRenderTextureData data)
     {
-        internal RenderTextureHolder(DeclareRenderTextureData data)
-        {
-            Data = data;
-        }
-
-        internal DeclareRenderTextureData Data { get; }
-
-        internal RenderTexture? Texture { get; set; }
+        Data = data;
     }
+
+    internal DeclareRenderTextureData Data { get; }
+
+    internal RenderTexture? Texture { get; set; }
 }

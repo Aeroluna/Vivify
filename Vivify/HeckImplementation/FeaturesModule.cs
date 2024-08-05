@@ -3,26 +3,25 @@ using Heck;
 using Heck.Module;
 using static Vivify.VivifyController;
 
-namespace Vivify
+namespace Vivify;
+
+[Module(ID, 2, LoadType.Active, ["Heck"])]
+[ModulePatcher(HARMONY_ID + "Features", PatchType.Features)]
+[ModuleDataDeserializer(ID, typeof(CustomDataDeserializer))]
+internal class FeaturesModule : IModule
 {
-    [Module(ID, 2, LoadType.Active, new[] { "Heck" })]
-    [ModulePatcher(HARMONY_ID + "Features", PatchType.Features)]
-    [ModuleDataDeserializer(ID, typeof(CustomDataDeserializer))]
-    internal class FeaturesModule : IModule
+    internal bool Active { get; private set; }
+
+    [ModuleCondition]
+    private static bool Condition(
+        Capabilities capabilities)
     {
-        internal bool Active { get; private set; }
+        return capabilities.Requirements.Contains(CAPABILITY);
+    }
 
-        [ModuleCondition]
-        private static bool Condition(
-            Capabilities capabilities)
-        {
-            return capabilities.Requirements.Contains(CAPABILITY);
-        }
-
-        [ModuleCallback]
-        private void Callback(bool value)
-        {
-            Active = value;
-        }
+    [ModuleCallback]
+    private void Callback(bool value)
+    {
+        Active = value;
     }
 }

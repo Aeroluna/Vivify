@@ -7,30 +7,29 @@ using Vivify.Managers;
 using Zenject;
 using static Vivify.VivifyController;
 
-namespace Vivify.Events
+namespace Vivify.Events;
+
+[CustomEvent(DESTROY_PREFAB)]
+internal class DestroyPrefab : ICustomEvent
 {
-    [CustomEvent(DESTROY_PREFAB)]
-    internal class DestroyPrefab : ICustomEvent
+    private readonly DeserializedData _deserializedData;
+    private readonly PrefabManager _prefabManager;
+
+    private DestroyPrefab(
+        PrefabManager prefabManager,
+        [Inject(Id = ID)] DeserializedData deserializedData)
     {
-        private readonly PrefabManager _prefabManager;
-        private readonly DeserializedData _deserializedData;
+        _prefabManager = prefabManager;
+        _deserializedData = deserializedData;
+    }
 
-        private DestroyPrefab(
-            PrefabManager prefabManager,
-            [Inject(Id = ID)] DeserializedData deserializedData)
+    public void Callback(CustomEventData customEventData)
+    {
+        if (!_deserializedData.Resolve(customEventData, out DestroyPrefabData? data))
         {
-            _prefabManager = prefabManager;
-            _deserializedData = deserializedData;
+            return;
         }
 
-        public void Callback(CustomEventData customEventData)
-        {
-            if (!_deserializedData.Resolve(customEventData, out DestroyPrefabData? data))
-            {
-                return;
-            }
-
-            data.Id.Do(_prefabManager.Destroy);
-        }
+        data.Id.Do(_prefabManager.Destroy);
     }
 }

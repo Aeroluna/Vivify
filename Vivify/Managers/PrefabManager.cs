@@ -10,89 +10,88 @@ using UnityEngine;
 using Zenject;
 using Object = UnityEngine.Object;
 
-namespace Vivify.Managers
+namespace Vivify.Managers;
+
+internal class PrefabManager : IDisposable
 {
-    internal class PrefabManager : IDisposable
+    private readonly SiraLog _log;
+    private readonly Dictionary<string, InstantiatedPrefab> _prefabs = new();
+    private readonly ReLoader? _reLoader;
+
+    [UsedImplicitly]
+    private PrefabManager(SiraLog log, [InjectOptional] ReLoader? reLoader)
     {
-        private readonly SiraLog _log;
-        private readonly ReLoader? _reLoader;
-        private readonly Dictionary<string, InstantiatedPrefab> _prefabs = new();
-
-        [UsedImplicitly]
-        private PrefabManager(SiraLog log, [InjectOptional] ReLoader? reLoader)
+        _log = log;
+        _reLoader = reLoader;
+        if (reLoader != null)
         {
-            _log = log;
-            _reLoader = reLoader;
-            if (reLoader != null)
-            {
-                reLoader.Rewinded += DestroyAllPrefabs;
-            }
+            reLoader.Rewinded += DestroyAllPrefabs;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_reLoader != null)
+        {
+            _reLoader.Rewinded -= DestroyAllPrefabs;
+        }
+    }
+
+    internal void Add(string id, GameObject prefab, Track? track)
+    {
+        _prefabs.Add(id, new InstantiatedPrefab(prefab, track));
+    }
+
+    internal void Destroy(string id)
+    {
+        if (!TryGetPrefab(id, out InstantiatedPrefab? prefab))
+        {
+            return;
         }
 
-        public void Dispose()
+        _log.Debug($"Destroying [{id}]");
+
+        prefab.Track?.RemoveGameObject(prefab.GameObject);
+
+        Object.Destroy(prefab.GameObject);
+        _prefabs.Remove(id);
+    }
+
+    internal bool TryGetPrefab(string id, [NotNullWhen(true)] out InstantiatedPrefab? prefab)
+    {
+        bool result = _prefabs.TryGetValue(id, out prefab);
+        if (!result)
         {
-            if (_reLoader != null)
-            {
-                _reLoader.Rewinded -= DestroyAllPrefabs;
-            }
+            _log.Error($"No prefab with id [{id}] detected");
         }
 
-        internal void Add(string id, GameObject prefab, Track? track)
+        return result;
+    }
+
+    private void DestroyAllPrefabs()
+    {
+        foreach ((string _, InstantiatedPrefab prefab) in _prefabs)
         {
-            _prefabs.Add(id, new InstantiatedPrefab(prefab, track));
-        }
-
-        internal void Destroy(string id)
-        {
-            if (!TryGetPrefab(id, out InstantiatedPrefab? prefab))
-            {
-                return;
-            }
-
-            _log.Debug($"Destroying [{id}]");
-
             prefab.Track?.RemoveGameObject(prefab.GameObject);
-
             Object.Destroy(prefab.GameObject);
-            _prefabs.Remove(id);
         }
 
-        internal bool TryGetPrefab(string id, [NotNullWhen(true)] out InstantiatedPrefab? prefab)
-        {
-            bool result = _prefabs.TryGetValue(id, out prefab);
-            if (!result)
-            {
-                _log.Error($"No prefab with id [{id}] detected");
-            }
-
-            return result;
-        }
-
-        private void DestroyAllPrefabs()
-        {
-            foreach ((string _, InstantiatedPrefab prefab) in _prefabs)
-            {
-                prefab.Track?.RemoveGameObject(prefab.GameObject);
-                Object.Destroy(prefab.GameObject);
-            }
-
-            _prefabs.Clear();
-        }
+        _prefabs.Clear();
     }
+}
 
-    internal class InstantiatedPrefab
+internal class InstantiatedPrefab
+{
+    internal InstantiatedPrefab(GameObject gameObject, Track? track)
     {
-        internal InstantiatedPrefab(GameObject gameObject, Track? track)
-        {
-            GameObject = gameObject;
-            Track = track;
-            Animators = gameObject.GetComponentsInChildren<Animator>();
-        }
-
-        internal GameObject GameObject { get; }
-
-        internal Track? Track { get; }
-
-        internal Animator[] Animators { get; }
+        GameObject = gameObject;
+        Track = track;
+        Animators = gameObject.GetComponentsInChildren<Animator>();
     }
+
+    internal Animator[] Animators { get; }
+
+    internal GameObject GameObject { get; }
+
+    internal Track? Track { get; }
 }

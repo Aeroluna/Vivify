@@ -4,13 +4,17 @@ hide:
 ---
 
 # Vivify
+
 Bring your map to life.
 
-If you use any of these features, you MUST add "Vivify" as a requirement for your map for them to function, you can go [Here](https://github.com/Kylemc1413/SongCore/blob/master/README.md) to see how adding suggestions/requirements to the info.dat works. Also, Vivify will only load on v3 maps.
+If you use any of these features, you MUST add "Vivify" as a requirement for your map for them to function, you can
+go [Here](https://github.com/Kylemc1413/SongCore/blob/master/README.md) to see how adding suggestions/requirements to
+the info.dat works. Also, Vivify will only load on v3 maps.
 
 This documentation assumes basic understanding of custom events and tracks.
 
 ### Event Types
+
 - [`SetMaterialProperty`](#setmaterialproperty)
 - [`SetGlobalProperty`](#setglobalproperty)
 - [`Blit`](#blit)
@@ -25,13 +29,22 @@ This documentation assumes basic understanding of custom events and tracks.
 - [`SetRenderSetting`](#setrendersetting)
 
 ## Setting up Unity
-First, you should to download the Unity Hub at https://unity3d.com/get-unity/download. Beat Saber 1.29.1 uses version 2019.4.28f and Beat Saber 1.30.0+ uses 2021.3.16f1. For maximum compatibility, you should use 2019.4.28f found in the [archive](https://unity3d.com/get-unity/download/archive) and use Swifter's VivifyTemplate to build your bundles https://github.com/Swifter1243/VivifyTemplate. 2019 bundles built without using that script will have nonfunctioning shader keywords in 2021.
 
-Make sure you have `Virtual Reality Supported` enabled in your project and your stereo rendering mode is set to `Single Pass`. (Edit > Project Settings > Player > XR Settings > Deprecated Settings > Virtual Reality Supported).
+First, you should to download the Unity Hub at https://unity3d.com/get-unity/download. Beat Saber 1.29.1 uses version
+2019.4.28f and Beat Saber 1.30.0+ uses 2021.3.16f1. For maximum compatibility, you should use 2019.4.28f found in
+the [archive](https://unity3d.com/get-unity/download/archive) and use Swifter's VivifyTemplate to build your
+bundles https://github.com/Swifter1243/VivifyTemplate. 2019 bundles built without using that script will have
+nonfunctioning shader keywords in 2021.
+
+Make sure you have `Virtual Reality Supported` enabled in your project and your stereo rendering mode is set
+to `Single Pass`. (Edit > Project Settings > Player > XR Settings > Deprecated Settings > Virtual Reality Supported).
 
 ## Writing VR shaders
 
-Beat Saber v1.29.1 uses Single Pass Stereo renderering (See https://docs.unity3d.com/2019.4/Documentation/Manual/SinglePassStereoRendering.html for more info). Use the unity built-in function `UnityStereoTransformScreenSpaceTex` to fix your shaders in vr.
+Beat Saber v1.29.1 uses Single Pass Stereo renderering (
+See https://docs.unity3d.com/2019.4/Documentation/Manual/SinglePassStereoRendering.html for more info). Use the unity
+built-in function `UnityStereoTransformScreenSpaceTex` to fix your shaders in vr.
+
 ```csharp
 sampler2D _MainTex;
 
@@ -41,16 +54,26 @@ fixed4 frag (v2f i) : SV_Target
 }
 ```
 
-Beat Saber v1.30.0+ uses Single Pass Instanced rendering. Any incompatible shaders will only appear in the left eye. To make your shader compatible with this vr rendering method, add instancing support to your shader. See https://docs.unity3d.com/Manual/SinglePassInstancing.html for how to add instancing support. Look under "Post-Processing shaders" to see how to sample a screen space texture.
+Beat Saber v1.30.0+ uses Single Pass Instanced rendering. Any incompatible shaders will only appear in the left eye. To
+make your shader compatible with this vr rendering method, add instancing support to your shader.
+See https://docs.unity3d.com/Manual/SinglePassInstancing.html for how to add instancing support. Look under "
+Post-Processing shaders" to see how to sample a screen space texture.
 
-A tip for writing shaders, there are many commonly used structs/functions in UnityCG.cginc. As a few examples, `appdata_base`, `appdata_img`, `appdata_full`, and `v2f_img` can usually be used instead of writing your own structs and since most image effect shaders use the same vertex function, the include file has a `vert_img` that can be used with `#pragma vertex vert_img`.
+A tip for writing shaders, there are many commonly used structs/functions in UnityCG.cginc. As a few
+examples, `appdata_base`, `appdata_img`, `appdata_full`, and `v2f_img` can usually be used instead of writing your own
+structs and since most image effect shaders use the same vertex function, the include file has a `vert_img` that can be
+used with `#pragma vertex vert_img`.
 
 ### Creating an asset bundle
+
 Use https://github.com/Swifter1243/VivifyTemplate to create the bundle. (TODO: more instructions here)
 
-(Optional) See https://docs.unity3d.com/Manual/AssetBundles-Browser.html. this tool allows you to browse the contents of a built asset bundle.
+(Optional) See https://docs.unity3d.com/Manual/AssetBundles-Browser.html. this tool allows you to browse the contents of
+a built asset bundle.
 
-Bundles should be placed in your map folder and called either `bundle_windows2019`, `bundle_windows2021`. Although Quest support does not exist yet, bundles should still be built for them and be called `bundle_android2021`.
+Bundles should be placed in your map folder and called either `bundle_windows2019`, `bundle_windows2021`. Although Quest
+support does not exist yet, bundles should still be built for them and be called `bundle_android2021`.
+
 ```
 Map Folder
 ├── bundle_windows2019
@@ -61,9 +84,14 @@ Map Folder
 ├── ExpertPlusStandard.dat
 └── info.dat
 ```
-When referencing an asset's file path in an event, remember to write in all lower case. You can use the above Asset Bundle Browser tool to see the path of specific assets.
 
-By default when Vivify will check against a checksum when loading an asset bundle, but this checksum check can be disabled by enabling debug mode using the "-aerolunaisthebestmodder" launch parameter. You can add the checksum to the map by using the `"_assetBundle"` field in the info.dat.
+When referencing an asset's file path in an event, remember to write in all lower case. You can use the above Asset
+Bundle Browser tool to see the path of specific assets.
+
+By default when Vivify will check against a checksum when loading an asset bundle, but this checksum check can be
+disabled by enabling debug mode using the "-aerolunaisthebestmodder" launch parameter. You can add the checksum to the
+map by using the `"_assetBundle"` field in the info.dat.
+
 ```js
   ...
   "_environmentName": "DefaultEnvironment",
@@ -81,7 +109,10 @@ By default when Vivify will check against a checksum when loading an asset bundl
 ```
 
 ## Quality Settings
-Want realtime reflection probes? Here you go. See https://docs.unity3d.com/ScriptReference/QualitySettings.html for better descriptions of each setting.
+
+Want realtime reflection probes? Here you go. See https://docs.unity3d.com/ScriptReference/QualitySettings.html for
+better descriptions of each setting.
+
 ```js
   ...
   "_difficulty": "ExpertPlus",
@@ -98,6 +129,7 @@ Want realtime reflection probes? Here you go. See https://docs.unity3d.com/Scrip
 ```
 
 Currently provided settings:
+
 - `"_anisotropicFiltering"`: (0 - 2) Disable, Enable, ForceEnable.
 - `"_antiAliasing"`: (0, 2, 4, 8)
 - `"_pixelLightCount"`: (int)
@@ -112,6 +144,7 @@ Currently provided settings:
 - `"_softParticles"`: (bool)
 
 ## SetMaterialProperty
+
 ```js
 {
   "b": float, // Time in beats.
@@ -132,6 +165,7 @@ Currently provided settings:
 Allows setting material properties, e.g. Texture, Float, Color.
 
 ## SetGlobalProperty
+
 ```js
 {
   "b": float, // Time in beats.
@@ -148,13 +182,17 @@ Allows setting material properties, e.g. Texture, Float, Color.
 }
 ```
 
-Allows setting global properties, e.g. Texture, Float, Color. These will persist even after the map ends, do not rely on their default value.
+Allows setting global properties, e.g. Texture, Float, Color. These will persist even after the map ends, do not rely on
+their default value.
 
 ### Property types
+
 - Texture: Must be a string that is a direct path file to a texture.
 - Float: May either be a direct value (`"value": 10.4`) or a point definition (`"value": [[0,0], [10, 1]]`).
-- Color: May either be a RGBA array (`"value": [0, 1, 0]`) or a point definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
-- Vector: May either be an array (`"value": [0, 1, 0]`) or a point definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
+- Color: May either be a RGBA array (`"value": [0, 1, 0]`) or a point
+  definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
+- Vector: May either be an array (`"value": [0, 1, 0]`) or a point
+  definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
 
 ```js
 // Example
@@ -181,6 +219,7 @@ Allows setting global properties, e.g. Texture, Float, Color. These will persist
 ```
 
 ## Blit
+
 ```js
 {
   "b": float, // Time in beats.
@@ -198,7 +237,8 @@ Allows setting global properties, e.g. Texture, Float, Color. These will persist
 }
 ```
 
-Assigns a material to the camera. A duration of 0 will run for exactly one frame. If a destination is the same as source, a temporary render texture will be created as a buffer.
+Assigns a material to the camera. A duration of 0 will run for exactly one frame. If a destination is the same as
+source, a temporary render texture will be created as a buffer.
 
 This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from within.
 
@@ -222,6 +262,7 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
 ```
 
 ## DeclareCullingTexture
+
 ```js
 {
   "b": float, // Time in beats.
@@ -235,7 +276,9 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
 }
 ```
 
-Declares a culling mask where the selected tracks are culled (or if whitelist = true, only the selected tracks are rendered) of which Vivify will automatically create a texture for you to sample from your shader. If the named field is `_Main` then the culling will apply to the main camera.
+Declares a culling mask where the selected tracks are culled (or if whitelist = true, only the selected tracks are
+rendered) of which Vivify will automatically create a texture for you to sample from your shader. If the named field
+is `_Main` then the culling will apply to the main camera.
 
 ```js
 // Example
@@ -266,6 +309,7 @@ fixed4 frag(v2f i) : SV_Target
 ```
 
 ## DeclareRenderTexture
+
 ```js
 {
   "b": float, // Time in beats.
@@ -282,7 +326,8 @@ fixed4 frag(v2f i) : SV_Target
 }
 ```
 
-Declares a RenderTexture to be used anywhere. They are set as a global variable and can be accessed by declaring a sampler named what you put in "id".
+Declares a RenderTexture to be used anywhere. They are set as a global variable and can be accessed by declaring a
+sampler named what you put in "id".
 
 ```js
 // Example
@@ -313,6 +358,7 @@ Declares a RenderTexture to be used anywhere. They are set as a global variable 
 ```
 
 ## DestroyTexture
+
 ```js
 {
   "b": float, // Time in beats.
@@ -323,9 +369,12 @@ Declares a RenderTexture to be used anywhere. They are set as a global variable 
 }
 ```
 
-Destroys a texture. It is important to destroy any textures created through `DeclareCullingTexture` because the scene will have to be rendered again for each active culling texture. This can also be used for textures created through `DeclareRenderTexture` to free up memory.
+Destroys a texture. It is important to destroy any textures created through `DeclareCullingTexture` because the scene
+will have to be rendered again for each active culling texture. This can also be used for textures created
+through `DeclareRenderTexture` to free up memory.
 
 ## InstantiatePrefab
+
 ```js
 {
   "b": float, // Time in beats.
@@ -342,9 +391,12 @@ Destroys a texture. It is important to destroy any textures created through `Dec
   }
 }
 ```
-Instantiates a prefab in the scene. If left-handed option is enabled, then the position, rotation, and scale will be mirrored.
+
+Instantiates a prefab in the scene. If left-handed option is enabled, then the position, rotation, and scale will be
+mirrored.
 
 ## DestroyPrefab
+
 ```js
 {
   "b": float, // Time in beats.
@@ -354,9 +406,11 @@ Instantiates a prefab in the scene. If left-handed option is enabled, then the p
   }
 }
 ```
+
 Destroys a prefab in the scene.
 
 ## SetAnimatorProperty
+
 ```js
 {
   "b": float, // Time in beats.
@@ -377,12 +431,16 @@ Destroys a prefab in the scene.
 Allows setting animator properties. This will search the prefab for all Animator components.
 
 ### Property types
-- Bool: May either be a direct value (`"value": true`) or a point definition (`"value": [[0,0], [1, 1]]`). Any value greater than or equal to 1 is true.
+
+- Bool: May either be a direct value (`"value": true`) or a point definition (`"value": [[0,0], [1, 1]]`). Any value
+  greater than or equal to 1 is true.
 - Float: May either be a direct value (`"value": 10.4`) or a point definition (`"value": [[0,0], [10, 1]]`).
-- Integer: May either be a direct value (`"value": 10`) or a point definition (`"value": [[0,0], [10, 1]]`). Value will be rounded.
+- Integer: May either be a direct value (`"value": 10`) or a point definition (`"value": [[0,0], [10, 1]]`). Value will
+  be rounded.
 - Trigger: Must be `true` to set trigger or `false` to reset trigger.
 
 ## SetCameraProperty
+
 ```js
 {
   "b": float, // Time in beats.
@@ -393,9 +451,12 @@ Allows setting animator properties. This will search the prefab for all Animator
 }
 ```
 
-Remember to clear the `depthTextureMode` to `[]` after you are done using it as rendering a depth texture can impact performance. See https://docs.unity3d.com/Manual/SL-CameraDepthTexture.html for more info. Note: if the player has the Smoke option enabled, the `depthTextureMode` will always have `Depth`.
+Remember to clear the `depthTextureMode` to `[]` after you are done using it as rendering a depth texture can impact
+performance. See https://docs.unity3d.com/Manual/SL-CameraDepthTexture.html for more info. Note: if the player has the
+Smoke option enabled, the `depthTextureMode` will always have `Depth`.
 
 ## AssignObjectPrefab
+
 ```js
 {
   "b": float, // Time in beats.
@@ -407,33 +468,39 @@ Remember to clear the `depthTextureMode` to `[]` after you are done using it as 
 }
 ```
 
-Assigns prefabs to a specific object. Setting any asset to `null` is equivalent to resetting to the default model. Most objects will have their per-instance properties set automatically. (See section "Adding per-instance properties to GPU instancing shaders" at https://docs.unity3d.com/Manual/gpu-instancing-shader.html)
+Assigns prefabs to a specific object. Setting any asset to `null` is equivalent to resetting to the default model. Most
+objects will have their per-instance properties set automatically. (See section "Adding per-instance properties to GPU
+instancing shaders" at https://docs.unity3d.com/Manual/gpu-instancing-shader.html)
+
 - `loadMode`: `Single, Additive`
-  - `Single`: Clears all loaded prefabs on the object and adds a prefab
-  - `Additive`: Adds a prefab to the currently loaded prefabs.
+    - `Single`: Clears all loaded prefabs on the object and adds a prefab
+    - `Additive`: Adds a prefab to the currently loaded prefabs.
 - `colorNotes`:
-  - `track`: `string` Only notes on this track(s) will be affected.
-  - `asset`: `string` (Optional) File path to the desired prefab. Only applies to directional notes. Sets properties `_Color` and `_Cutout`.
-  - `anyDirectionAsset`: `string` (Optional) Only applies to dot notes. Sets same properties as directional notes.
-  - `debrisAsset`: `string` (Optional) Applies to cut debris. Sets properties `_Cutout`, `_Color`, `_CutPlane`, and `_CutoutTexOffset`.
+    - `track`: `string` Only notes on this track(s) will be affected.
+    - `asset`: `string` (Optional) File path to the desired prefab. Only applies to directional notes. Sets
+      properties `_Color` and `_Cutout`.
+    - `anyDirectionAsset`: `string` (Optional) Only applies to dot notes. Sets same properties as directional notes.
+    - `debrisAsset`: `string` (Optional) Applies to cut debris. Sets properties `_Cutout`, `_Color`, `_CutPlane`,
+      and `_CutoutTexOffset`.
 - `burstSliders`:
-  - `track`: `string` See above.
-  - `asset`: `string` (Optional) See above.
-  - `debrisAsset`: `string` (Optional) See above.
+    - `track`: `string` See above.
+    - `asset`: `string` (Optional) See above.
+    - `debrisAsset`: `string` (Optional) See above.
 - `burstSliderElemeents`:
-  - `track`: `string` See above.
-  - `asset`: `string` (Optional) See above.
-  - `debrisAsset`: `string` (Optional) See above.
+    - `track`: `string` See above.
+    - `asset`: `string` (Optional) See above.
+    - `debrisAsset`: `string` (Optional) See above.
 - `saber`:
-  - `type`: `string` Which saber to affect. `Left`, `Right` or `Both`.
-  - `asset`: `string` (Optional) File path to the desired prefab. Sets property `_Color`.
-  - `trailAsset`: `string` (Optional) File path to the material to replace the saber. Sets property `_Color` and sets vertex colors for a gradient.
-  - `trailTopPos`: `vector3` (Optional) Vector3 position of the top of the trail. Defaults to [0, 0, 1]
-  - `trailBottomPos`: `vector3` (Optional) Vector3 position of the top of the trail. Defaults to [0, 0, 0]
-  - `trailDuration`: `float` (Optional) Age of most distant segment of trail. Defaults to 0.4
-  - `trailSamplingFrequency`: `int` (Optional) Saber position snapshots taken per second. Defaults to 50
-  - `trailGranularity`: `int` (Optional) Segments count in final trail mesh. Defaults to 60
-  
+    - `type`: `string` Which saber to affect. `Left`, `Right` or `Both`.
+    - `asset`: `string` (Optional) File path to the desired prefab. Sets property `_Color`.
+    - `trailAsset`: `string` (Optional) File path to the material to replace the saber. Sets property `_Color` and sets
+      vertex colors for a gradient.
+    - `trailTopPos`: `vector3` (Optional) Vector3 position of the top of the trail. Defaults to [0, 0, 1]
+    - `trailBottomPos`: `vector3` (Optional) Vector3 position of the top of the trail. Defaults to [0, 0, 0]
+    - `trailDuration`: `float` (Optional) Age of most distant segment of trail. Defaults to 0.4
+    - `trailSamplingFrequency`: `int` (Optional) Saber position snapshots taken per second. Defaults to 50
+    - `trailGranularity`: `int` (Optional) Segments count in final trail mesh. Defaults to 60
+
 ```js
 // Example
 // Adds a cool particle system to your sabers!
@@ -451,6 +518,7 @@ Assigns prefabs to a specific object. Setting any asset to `null` is equivalent 
 ```
 
 ## SetRenderSetting
+
 ```js
 {
   "b": float, // Time in beats.
@@ -466,6 +534,7 @@ Assigns prefabs to a specific object. Setting any asset to `null` is equivalent 
 Property does not have to be a point definition. See https://docs.unity3d.com/ScriptReference/RenderSettings.html.
 
 Currently provided settings:
+
 - `"ambientEquatorColor"`: (color)
 - `"ambientGroundColor"`: (color)
 - `"ambientIntensity"`: (float)

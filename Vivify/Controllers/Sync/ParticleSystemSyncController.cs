@@ -1,21 +1,20 @@
 ﻿using UnityEngine;
 
-namespace Vivify.Controllers.Sync
+namespace Vivify.Controllers.Sync;
+
+[RequireComponent(typeof(ParticleSystem))]
+internal class ParticleSystemSyncController : SyncController
 {
-    [RequireComponent(typeof(ParticleSystem))]
-    internal class ParticleSystemSyncController : SyncController
+    private ParticleSystem _particleSystem = null!;
+
+    public override void Sync(float speed)
     {
-        private ParticleSystem _particleSystem = null!;
+        ParticleSystem.MainModule particleSystemMain = _particleSystem.main;
+        particleSystemMain.simulationSpeed = speed;
+    }
 
-        public override void Sync(float speed)
-        {
-            ParticleSystem.MainModule particleSystemMain = _particleSystem.main;
-            particleSystemMain.simulationSpeed = speed;
-        }
-
-        private void Awake()
-        {
-            _particleSystem = GetComponent<ParticleSystem>();
-        }
+    private void Awake()
+    {
+        _particleSystem = GetComponent<ParticleSystem>();
     }
 }

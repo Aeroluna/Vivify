@@ -5,61 +5,60 @@ using Vivify.Controllers.Sync;
 using Zenject;
 using Object = UnityEngine.Object;
 
-namespace Vivify.ObjectPrefab.Pools
+namespace Vivify.ObjectPrefab.Pools;
+
+internal class PrefabPool : IPrefabPool<GameObject>
 {
-    internal class PrefabPool : IPrefabPool<GameObject>
+    private readonly Dictionary<Component, GameObject> _active = new();
+    private readonly Stack<GameObject> _inactive = new();
+    private readonly IInstantiator _instantiator;
+    private readonly GameObject _original;
+
+    internal PrefabPool(GameObject original, IInstantiator instantiator)
     {
-        private readonly Dictionary<Component, GameObject> _active = new();
-        private readonly Stack<GameObject> _inactive = new();
-        private readonly IInstantiator _instantiator;
-        private readonly GameObject _original;
+        _original = original;
+        _instantiator = instantiator;
+    }
 
-        internal PrefabPool(GameObject original, IInstantiator instantiator)
+    public void Despawn(Component component)
+    {
+        if (!_active.TryGetValue(component, out GameObject spawned))
         {
-            _original = original;
-            _instantiator = instantiator;
+            return;
         }
 
-        public void Despawn(Component component)
+        spawned.SetActive(false);
+        _inactive.Push(spawned);
+        _active.Remove(component);
+
+        spawned.transform.SetParent(null, false);
+    }
+
+    public void Dispose()
+    {
+        _inactive.Do(Object.Destroy);
+        _active.Values.Do(Object.Destroy);
+    }
+
+    public GameObject Spawn(Component component, float startTime)
+    {
+        GameObject spawned;
+        if (_inactive.Count == 0)
         {
-            if (!_active.TryGetValue(component, out GameObject spawned))
-            {
-                return;
-            }
-
-            spawned.SetActive(false);
-            _inactive.Push(spawned);
-            _active.Remove(component);
-
-            spawned.transform.SetParent(null, false);
+            spawned = Object.Instantiate(_original);
+        }
+        else
+        {
+            spawned = _inactive.Pop();
+            spawned.SetActive(true);
         }
 
-        public void Dispose()
-        {
-            _inactive.Do(Object.Destroy);
-            _active.Values.Do(Object.Destroy);
-        }
+        _active.Add(component, spawned);
 
-        public GameObject Spawn(Component component, float startTime)
-        {
-            GameObject spawned;
-            if (_inactive.Count == 0)
-            {
-                spawned = Object.Instantiate(_original);
-            }
-            else
-            {
-                spawned = _inactive.Pop();
-                spawned.SetActive(true);
-            }
+        _instantiator.SongSynchronize(spawned, startTime);
 
-            _active.Add(component, spawned);
-
-            _instantiator.SongSynchronize(spawned, startTime);
-
-            Transform transform = component.transform;
-            spawned.transform.SetParent(transform.GetChild(0), false);
-            return spawned;
-        }
+        Transform transform = component.transform;
+        spawned.transform.SetParent(transform.GetChild(0), false);
+        return spawned;
     }
 }

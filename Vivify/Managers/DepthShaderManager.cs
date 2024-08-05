@@ -1,31 +1,30 @@
 ﻿using System.IO;
 using UnityEngine;
 
-namespace Vivify.Managers
+namespace Vivify.Managers;
+
+internal static class DepthShaderManager
 {
-    internal static class DepthShaderManager
+    private const string PATH = "Vivify.Resources.DepthBlitShaders";
+
+    internal static Material DepthArrayMaterial { get; private set; } = null!;
+
+    internal static Material DepthMaterial { get; private set; } = null!;
+
+    internal static void LoadFromMemory()
     {
-        private const string PATH = "Vivify.Resources.DepthBlitShaders";
+        byte[] bytes;
 
-        internal static Material DepthMaterial { get; private set; } = null!;
-
-        internal static Material DepthArrayMaterial { get; private set; } = null!;
-
-        internal static void LoadFromMemory()
+        using (Stream stream = typeof(DepthShaderManager).Assembly.GetManifestResourceStream(PATH)!)
+        using (MemoryStream memoryStream = new())
         {
-            byte[] bytes;
-
-            using (Stream stream = typeof(DepthShaderManager).Assembly.GetManifestResourceStream(PATH)!)
-            using (MemoryStream memoryStream = new())
-            {
-                stream.CopyTo(memoryStream);
-                bytes = memoryStream.ToArray();
-            }
-
-            AssetBundle bundle = AssetBundle.LoadFromMemory(bytes, 511639300);
-            DepthMaterial = bundle.LoadAsset<Material>("assets/depthblit.mat");
-            DepthArrayMaterial = bundle.LoadAsset<Material>("assets/depthblitarrayslice.mat");
-            bundle.Unload(false);
+            stream.CopyTo(memoryStream);
+            bytes = memoryStream.ToArray();
         }
+
+        AssetBundle bundle = AssetBundle.LoadFromMemory(bytes, 511639300);
+        DepthMaterial = bundle.LoadAsset<Material>("assets/depthblit.mat");
+        DepthArrayMaterial = bundle.LoadAsset<Material>("assets/depthblitarrayslice.mat");
+        bundle.Unload(false);
     }
 }

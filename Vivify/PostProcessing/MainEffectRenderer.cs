@@ -1,32 +1,31 @@
 ﻿using UnityEngine;
 
-namespace Vivify.PostProcessing
+namespace Vivify.PostProcessing;
+
+// SetTargetBuffers for some reason causes OnRenderImage to recieve a null source.
+// This class allows anyone to apply effects to any render texture
+internal class MainEffectRenderer
 {
-    // SetTargetBuffers for some reason causes OnRenderImage to recieve a null source.
-    // This class allows anyone to apply effects to any render texture
-    internal class MainEffectRenderer
+    private readonly MainEffectContainerSO _mainEffectContainer;
+    private readonly MainEffectController _mainEffectController;
+
+    internal MainEffectRenderer(MainEffectController mainEffectController)
     {
-        private readonly MainEffectController _mainEffectController;
-        private readonly MainEffectContainerSO _mainEffectContainer;
+        _mainEffectController = mainEffectController;
+        _mainEffectContainer = _mainEffectController._mainEffectContainer;
+    }
 
-        internal MainEffectRenderer(MainEffectController mainEffectController)
+    internal void Render(RenderTexture src, RenderTexture dest)
+    {
+        if (_mainEffectContainer.mainEffect.hasPostProcessEffect)
         {
-            _mainEffectController = mainEffectController;
-            _mainEffectContainer = _mainEffectController._mainEffectContainer;
+            _mainEffectController.OnPreRender();
+            _mainEffectController.ImageEffectControllerCallback(src, dest);
+            _mainEffectController.OnPostRender();
         }
-
-        internal void Render(RenderTexture src, RenderTexture dest)
+        else
         {
-            if (_mainEffectContainer.mainEffect.hasPostProcessEffect)
-            {
-                _mainEffectController.OnPreRender();
-                _mainEffectController.ImageEffectControllerCallback(src, dest);
-                _mainEffectController.OnPostRender();
-            }
-            else
-            {
-                Graphics.Blit(src, dest);
-            }
+            Graphics.Blit(src, dest);
         }
     }
 }

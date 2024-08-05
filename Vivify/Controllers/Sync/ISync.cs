@@ -1,7 +1,6 @@
-﻿namespace Vivify.Controllers.Sync
+﻿namespace Vivify.Controllers.Sync;
+
+internal interface ISync
 {
-    internal interface ISync
-    {
-        public void SetStartTime(float time);
-    }
+    public void SetStartTime(float time);
 }

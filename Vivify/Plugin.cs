@@ -9,44 +9,43 @@ using Vivify.Installers;
 using Vivify.Managers;
 using static Vivify.VivifyController;
 
-namespace Vivify
+namespace Vivify;
+
+[Plugin(RuntimeOptions.DynamicInit)]
+internal class Plugin
 {
-    [Plugin(RuntimeOptions.DynamicInit)]
-    internal class Plugin
+    [UsedImplicitly]
+    [Init]
+    public Plugin(Logger pluginLogger, IPA.Config.Config conf, Zenjector zenjector)
     {
-        [UsedImplicitly]
-        [Init]
-        public Plugin(Logger pluginLogger, IPA.Config.Config conf, Zenjector zenjector)
-        {
-            Log = pluginLogger;
+        Log = pluginLogger;
 
-            DepthShaderManager.LoadFromMemory();
-            zenjector.Install<VivifyAppInstaller>(Location.App, conf.Generated<Config>());
-            zenjector.Install<VivifyPlayerInstaller>(Location.Player);
-            zenjector.Install<VivifyMenuInstaller>(Location.Menu);
-            zenjector.UseLogger(pluginLogger);
+        DepthShaderManager.LoadFromMemory();
+        zenjector.Install<VivifyAppInstaller>(Location.App, conf.Generated<Config>());
+        zenjector.Install<VivifyPlayerInstaller>(Location.Player);
+        zenjector.Install<VivifyMenuInstaller>(Location.Menu);
+        zenjector.UseLogger(pluginLogger);
 
-            HeckPatchManager.Register(HARMONY_ID);
-        }
+        HeckPatchManager.Register(HARMONY_ID);
+    }
 
-        internal static Logger Log { get; private set; } = null!;
+    internal static Logger Log { get; private set; } = null!;
 
 #pragma warning disable CA1822
-        [UsedImplicitly]
-        [OnEnable]
-        public void OnEnable()
-        {
-            Capability.Register();
-            SceneManager.activeSceneChanged += OnActiveSceneChanged;
-        }
-
-        [UsedImplicitly]
-        [OnDisable]
-        public void OnDisable()
-        {
-            Capability.Deregister();
-            SceneManager.activeSceneChanged -= OnActiveSceneChanged;
-        }
-#pragma warning restore CA1822
+    [UsedImplicitly]
+    [OnEnable]
+    public void OnEnable()
+    {
+        Capability.Register();
+        SceneManager.activeSceneChanged += OnActiveSceneChanged;
     }
+
+    [UsedImplicitly]
+    [OnDisable]
+    public void OnDisable()
+    {
+        Capability.Deregister();
+        SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+    }
+#pragma warning restore CA1822
 }

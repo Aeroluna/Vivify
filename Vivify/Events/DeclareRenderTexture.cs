@@ -7,31 +7,30 @@ using Vivify.PostProcessing;
 using Zenject;
 using static Vivify.VivifyController;
 
-namespace Vivify.Events
+namespace Vivify.Events;
+
+[CustomEvent(DECLARE_TEXTURE)]
+internal class DeclareRenderTexture : ICustomEvent
 {
-    [CustomEvent(DECLARE_TEXTURE)]
-    internal class DeclareRenderTexture : ICustomEvent
+    private readonly DeserializedData _deserializedData;
+    private readonly SiraLog _log;
+
+    private DeclareRenderTexture(
+        SiraLog log,
+        [Inject(Id = ID)] DeserializedData deserializedData)
     {
-        private readonly SiraLog _log;
-        private readonly DeserializedData _deserializedData;
+        _log = log;
+        _deserializedData = deserializedData;
+    }
 
-        private DeclareRenderTexture(
-            SiraLog log,
-            [Inject(Id = ID)] DeserializedData deserializedData)
+    public void Callback(CustomEventData customEventData)
+    {
+        if (!_deserializedData.Resolve(customEventData, out DeclareRenderTextureData? data))
         {
-            _log = log;
-            _deserializedData = deserializedData;
+            return;
         }
 
-        public void Callback(CustomEventData customEventData)
-        {
-            if (!_deserializedData.Resolve(customEventData, out DeclareRenderTextureData? data))
-            {
-                return;
-            }
-
-            PostProcessingController.DeclaredTextureDatas.Add(data.Name, data);
-            _log.Debug($"Created texture [{data.Name}]");
-        }
+        PostProcessingController.DeclaredTextureDatas.Add(data.Name, data);
+        _log.Debug($"Created texture [{data.Name}]");
     }
 }

@@ -8,45 +8,44 @@ using Vivify.TrackGameObject;
 using Zenject;
 using static Vivify.VivifyController;
 
-namespace Vivify.Events
+namespace Vivify.Events;
+
+[CustomEvent(DECLARE_CULLING_TEXTURE)]
+internal class DeclareCullingMask : ICustomEvent
 {
-    [CustomEvent(DECLARE_CULLING_TEXTURE)]
-    internal class DeclareCullingMask : ICustomEvent
+    private readonly DeserializedData _deserializedData;
+    private readonly SiraLog _log;
+
+    private DeclareCullingMask(
+        SiraLog log,
+        [Inject(Id = ID)] DeserializedData deserializedData)
     {
-        private readonly SiraLog _log;
-        private readonly DeserializedData _deserializedData;
+        _log = log;
+        _deserializedData = deserializedData;
+    }
 
-        private DeclareCullingMask(
-            SiraLog log,
-            [Inject(Id = ID)] DeserializedData deserializedData)
+    public void Callback(CustomEventData customEventData)
+    {
+        if (!_deserializedData.Resolve(customEventData, out DeclareCullingMaskData? data))
         {
-            _log = log;
-            _deserializedData = deserializedData;
+            return;
         }
 
-        public void Callback(CustomEventData customEventData)
-        {
-            if (!_deserializedData.Resolve(customEventData, out DeclareCullingMaskData? data))
+        string name = data.Name;
+        CullingTextureTracker textureTracker = new(data.Tracks, data.Whitelist, data.DepthTexture);
+        PostProcessingController.CullingTextureDatas.Add(name, textureTracker);
+        _log.Debug($"Created culling mask [{name}]");
+        /*
+            GameObject[] gameObjects = Resources.FindObjectsOfTypeAll<GameObject>();
+            List<int> layers = new List<int>();
+            gameObjects.Select(n => n.layer).ToList().ForEach(n =>
             {
-                return;
-            }
-
-            string name = data.Name;
-            CullingTextureTracker textureTracker = new(data.Tracks, data.Whitelist, data.DepthTexture);
-            PostProcessingController.CullingTextureDatas.Add(name, textureTracker);
-            _log.Debug($"Created culling mask [{name}]");
-            /*
-                GameObject[] gameObjects = Resources.FindObjectsOfTypeAll<GameObject>();
-                List<int> layers = new List<int>();
-                gameObjects.Select(n => n.layer).ToList().ForEach(n =>
+                if (!layers.Contains(n))
                 {
-                    if (!layers.Contains(n))
-                    {
-                        layers.Add(n);
-                    }
-                });
-                layers.Sort();
-                Plugin.Logger.Log($"used layers: {string.Join(", ", layers)}");*/
-        }
+                    layers.Add(n);
+                }
+            });
+            layers.Sort();
+            Plugin.Logger.Log($"used layers: {string.Join(", ", layers)}");*/
     }
 }

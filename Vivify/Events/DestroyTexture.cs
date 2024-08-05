@@ -8,46 +8,45 @@ using Vivify.TrackGameObject;
 using Zenject;
 using static Vivify.VivifyController;
 
-namespace Vivify.Events
-{
-    [CustomEvent(DECLARE_TEXTURE)]
-    internal class DestroyTexture : ICustomEvent
-    {
-        private readonly SiraLog _log;
-        private readonly DeserializedData _deserializedData;
+namespace Vivify.Events;
 
-        private DestroyTexture(
-            SiraLog log,
-            [Inject(Id = ID)] DeserializedData deserializedData)
+[CustomEvent(DECLARE_TEXTURE)]
+internal class DestroyTexture : ICustomEvent
+{
+    private readonly DeserializedData _deserializedData;
+    private readonly SiraLog _log;
+
+    private DestroyTexture(
+        SiraLog log,
+        [Inject(Id = ID)] DeserializedData deserializedData)
+    {
+        _log = log;
+        _deserializedData = deserializedData;
+    }
+
+    public void Callback(CustomEventData customEventData)
+    {
+        if (!_deserializedData.Resolve(customEventData, out DestroyTextureData? data))
         {
-            _log = log;
-            _deserializedData = deserializedData;
+            return;
         }
 
-        public void Callback(CustomEventData customEventData)
+        string[] names = data.Name;
+        foreach (string name in names)
         {
-            if (!_deserializedData.Resolve(customEventData, out DestroyTextureData? data))
+            if (PostProcessingController.CullingTextureDatas.TryGetValue(name, out CullingTextureTracker? active))
             {
-                return;
+                PostProcessingController.CullingTextureDatas.Remove(name);
+                active.Dispose();
+                _log.Debug($"Destroyed culling texture [{name}]");
             }
-
-            string[] names = data.Name;
-            foreach (string name in names)
+            else if (PostProcessingController.DeclaredTextureDatas.Remove(name))
             {
-                if (PostProcessingController.CullingTextureDatas.TryGetValue(name, out CullingTextureTracker? active))
-                {
-                    PostProcessingController.CullingTextureDatas.Remove(name);
-                    active.Dispose();
-                    _log.Debug($"Destroyed culling texture [{name}]");
-                }
-                else if (PostProcessingController.DeclaredTextureDatas.Remove(name))
-                {
-                    _log.Debug($"Destroyed render texture [{name}]");
-                }
-                else
-                {
-                    _log.Error($"Could not find [{name}]");
-                }
+                _log.Debug($"Destroyed render texture [{name}]");
+            }
+            else
+            {
+                _log.Error($"Could not find [{name}]");
             }
         }
     }

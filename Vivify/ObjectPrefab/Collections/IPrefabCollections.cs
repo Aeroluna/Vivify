@@ -1,6 +1,3 @@
-﻿namespace Vivify.ObjectPrefab.Collections
-{
-    internal interface IPrefabCollection
-    {
-    }
-}
+﻿namespace Vivify.ObjectPrefab.Collections;
+
+internal interface IPrefabCollection;

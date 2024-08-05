@@ -4,107 +4,106 @@ using Vivify.Managers;
 using Vivify.PostProcessing;
 using Vivify.TrackGameObject;
 
-namespace Vivify.Controllers
+namespace Vivify.Controllers;
+
+// this is attached to the secondary camera because trying to set the targettexture of a camera disable stereo on a camera for some reason
+// https://forum.unity.com/threads/how-to-create-stereo-rendertextures-and-cameras.925175/#post-6968408
+// also for some reason trying to manually force a camera to render with Camera.Render() causes it to not write to the right eye
+// so we have a camera for each culling mask
+internal class CullingTextureController : CullingCameraController
 {
-    // this is attached to the secondary camera because trying to set the targettexture of a camera disable stereo on a camera for some reason
-    // https://forum.unity.com/threads/how-to-create-stereo-rendertextures-and-cameras.925175/#post-6968408
-    // also for some reason trying to manually force a camera to render with Camera.Render() causes it to not write to the right eye
-    // so we have a camera for each culling mask
-    internal class CullingTextureController : CullingCameraController
+    private static readonly int _arraySliceIndex = Shader.PropertyToID("_ArraySliceIndex");
+
+    private string? _key;
+
+    private MainEffectRenderer _mainEffectRenderer = null!;
+
+    private PostProcessingController _postProcessingController = null!;
+
+    private RenderTexture? _renderTextureDepth;
+
+    internal override int DefaultCullingMask => _postProcessingController.DefaultCullingMask;
+
+    internal RenderTexture? RenderTexture { get; private set; }
+
+    internal void Construct(PostProcessingController postProcessingController)
     {
-        private static readonly int _arraySliceIndex = Shader.PropertyToID("_ArraySliceIndex");
+        _postProcessingController = postProcessingController;
+    }
 
-        private MainEffectRenderer _mainEffectRenderer = null!;
+    internal void Init(string key, CullingTextureTracker cullingTextureTracker)
+    {
+        _key = key;
+        Camera.CopyFrom(_postProcessingController.Camera);
+        Camera.depthTextureMode = cullingTextureTracker.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
+        Camera.depth -= 1;
+        CullingTextureData = cullingTextureTracker;
+    }
 
-        private RenderTexture? _renderTextureDepth;
+    protected override void Awake()
+    {
+        base.Awake();
+        _mainEffectRenderer = new MainEffectRenderer(gameObject.transform.parent.GetComponent<MainEffectController>());
+    }
 
-        private string? _key;
+    protected override void OnPreCull()
+    {
+        base.OnPreCull();
+        Transform transform1 = transform;
+        transform1.localPosition = Vector3.zero;
+        transform1.localRotation = Quaternion.identity;
+    }
 
-        private PostProcessingController _postProcessingController = null!;
-
-        internal override int DefaultCullingMask => _postProcessingController.DefaultCullingMask;
-
-        internal RenderTexture? RenderTexture { get; private set; }
-
-        internal void Construct(PostProcessingController postProcessingController)
+    private void OnDisable()
+    {
+        if (RenderTexture != null)
         {
-            _postProcessingController = postProcessingController;
+            RenderTexture.Release();
         }
 
-        internal void Init(string key, CullingTextureTracker cullingTextureTracker)
+        if (_renderTextureDepth != null)
         {
-            _key = key;
-            Camera.CopyFrom(_postProcessingController.Camera);
-            Camera.depthTextureMode = cullingTextureTracker.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
-            Camera.depth -= 1;
-            CullingTextureData = cullingTextureTracker;
+            _renderTextureDepth.Release();
+        }
+    }
+
+    private void OnRenderImage(RenderTexture src, RenderTexture dst)
+    {
+        if (CullingTextureData == null)
+        {
+            return;
         }
 
-        protected override void Awake()
+        if (RenderTexture == null)
         {
-            base.Awake();
-            _mainEffectRenderer = new MainEffectRenderer(gameObject.transform.parent.GetComponent<MainEffectController>());
+            RenderTexture = new RenderTexture(src.descriptor);
         }
 
-        protected override void OnPreCull()
+        Shader.SetGlobalTexture(_key, RenderTexture);
+        _mainEffectRenderer.Render(src, RenderTexture);
+
+        if (!CullingTextureData.DepthTexture)
         {
-            base.OnPreCull();
-            Transform transform1 = transform;
-            transform1.localPosition = Vector3.zero;
-            transform1.localRotation = Quaternion.identity;
+            return;
         }
 
-        private void OnRenderImage(RenderTexture src, RenderTexture dst)
+        if (_renderTextureDepth == null)
         {
-            if (CullingTextureData == null)
-            {
-                return;
-            }
-
-            if (RenderTexture == null)
-            {
-                RenderTexture = new RenderTexture(src.descriptor);
-            }
-
-            Shader.SetGlobalTexture(_key, RenderTexture);
-            _mainEffectRenderer.Render(src, RenderTexture);
-
-            if (!CullingTextureData.DepthTexture)
-            {
-                return;
-            }
-
-            if (_renderTextureDepth == null)
-            {
-                _renderTextureDepth = new RenderTexture(src.descriptor);
-            }
-
-            Shader.SetGlobalTexture(_key + "_Depth", _renderTextureDepth);
-            if (_renderTextureDepth.dimension == TextureDimension.Tex2DArray)
-            {
-                Material sliceMaterial = DepthShaderManager.DepthArrayMaterial;
-                sliceMaterial.SetFloat(_arraySliceIndex, 0);
-                Graphics.Blit(null, _renderTextureDepth, sliceMaterial, -1, 0);
-                sliceMaterial.SetFloat(_arraySliceIndex, 1);
-                Graphics.Blit(null, _renderTextureDepth, sliceMaterial, -1, 1);
-            }
-            else
-            {
-                Graphics.Blit(null, _renderTextureDepth, DepthShaderManager.DepthMaterial);
-            }
+            _renderTextureDepth = new RenderTexture(src.descriptor);
         }
 
-        private void OnDisable()
+        Shader.SetGlobalTexture(_key + "_Depth", _renderTextureDepth);
+        if (_renderTextureDepth.dimension == TextureDimension.Tex2DArray)
         {
-            if (RenderTexture != null)
-            {
-                RenderTexture.Release();
-            }
-
-            if (_renderTextureDepth != null)
-            {
-                _renderTextureDepth.Release();
-            }
+            Material sliceMaterial = DepthShaderManager.DepthArrayMaterial;
+            sliceMaterial.SetFloat(_arraySliceIndex, 0);
+            Graphics.Blit(null, _renderTextureDepth, sliceMaterial, -1, 0);
+            sliceMaterial.SetFloat(_arraySliceIndex, 1);
+            Graphics.Blit(null, _renderTextureDepth, sliceMaterial, -1, 1);
+        }
+        else
+        {
+            Graphics.Blit(null, _renderTextureDepth, DepthShaderManager.DepthMaterial);
         }
     }
 }
