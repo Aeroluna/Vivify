@@ -47,27 +47,25 @@ namespace Vivify.Events
 
             foreach ((string? key, AssignObjectPrefabData.IPrefabInfo value) in data.Assets)
             {
-                IPrefabCollection? prefabCollection = key switch
-                {
-                    NOTE_PREFAB => _notePrefabManager.ColorNotePrefabs,
-                    BOMB_PREFAB => _notePrefabManager.BombNotePrefabs,
-                    CHAIN_PREFAB => _notePrefabManager.BurstSliderPrefabs,
-                    CHAIN_ELEMENT_PREFAB => _notePrefabManager.BurstSliderElementPrefabs,
-                    SABER_A_PREFAB => _saberPrefabManager.SaberAPrefabs,
-                    SABER_B_PREFAB => _saberPrefabManager.SaberBPrefabs,
-                    _ => null
-                };
-
-                if (prefabCollection == null)
-                {
-                    _log.Error($"[{key}] not recognized");
-                    continue;
-                }
-
                 switch (value)
                 {
                     case AssignObjectPrefabData.ObjectPrefabInfo objectPrefabInfo:
                     {
+                        IPrefabCollection? prefabCollection = key switch
+                        {
+                            NOTE_PREFAB => _notePrefabManager.ColorNotePrefabs,
+                            BOMB_PREFAB => _notePrefabManager.BombNotePrefabs,
+                            CHAIN_PREFAB => _notePrefabManager.BurstSliderPrefabs,
+                            CHAIN_ELEMENT_PREFAB => _notePrefabManager.BurstSliderElementPrefabs,
+                            _ => null
+                        };
+
+                        if (prefabCollection == null)
+                        {
+                            _log.Error($"[{key}] not recognized");
+                            continue;
+                        }
+
                         if (objectPrefabInfo.Track == null)
                         {
                             _log.Error("No track defined");
@@ -112,6 +110,19 @@ namespace Vivify.Events
                                 data.LoadMode);
                         }
 
+                        string? anyDirectionAsset = objectPrefabInfo.AnyDirectionAsset;
+                        if (anyDirectionAsset != string.Empty &&
+                            key == NOTE_PREFAB)
+                        {
+                            _log.Debug(
+                                $"Assigned any direction track prefab [{debrisAsset ?? "null"}] for [{key}] with load mode [{data.LoadMode}]");
+                            _beatmapObjectPrefabManager.AssignTrackPrefab(
+                                _notePrefabManager.AnyDirectionNotePrefabs,
+                                objectPrefabInfo.Track,
+                                anyDirectionAsset,
+                                data.LoadMode);
+                        }
+
                         break;
                     }
 
@@ -120,44 +131,62 @@ namespace Vivify.Events
                         string? asset = saberPrefabInfo.Asset;
                         if (asset != string.Empty)
                         {
-                            _log.Debug(
-                                $"Assigned prefab [{asset ?? "null"}] for [{key}] with load mode [{data.LoadMode}]");
-                            _beatmapObjectPrefabManager.AssignGameObjectPrefab(
-                                (PrefabList)prefabCollection,
-                                asset,
-                                data.LoadMode,
-                                customEventData.time);
+                            if ((saberPrefabInfo.Type & AssignObjectPrefabData.SaberPrefabInfo.SaberType.Left) != 0)
+                            {
+                                _log.Debug(
+                                    $"Assigned prefab [{asset ?? "null"}] for left saber with load mode [{data.LoadMode}]");
+                                _beatmapObjectPrefabManager.AssignGameObjectPrefab(
+                                    _saberPrefabManager.SaberAPrefabs,
+                                    asset,
+                                    data.LoadMode,
+                                    customEventData.time);
+                            }
+
+                            if ((saberPrefabInfo.Type & AssignObjectPrefabData.SaberPrefabInfo.SaberType.Right) != 0)
+                            {
+                                _log.Debug(
+                                    $"Assigned prefab [{asset ?? "null"}] for right saber with load mode [{data.LoadMode}]");
+                                _beatmapObjectPrefabManager.AssignGameObjectPrefab(
+                                    _saberPrefabManager.SaberBPrefabs,
+                                    asset,
+                                    data.LoadMode,
+                                    customEventData.time);
+                            }
                         }
 
                         string? trail = saberPrefabInfo.TrailAsset;
                         if (trail != string.Empty)
                         {
-                            TrailList? trailMaterials = key switch
-                            {
-                                SABER_A_PREFAB => _saberPrefabManager.SaberATrailMaterials,
-                                SABER_B_PREFAB => _saberPrefabManager.SaberBTrailMaterials,
-                                _ => null
-                            };
+                            TrailProperties trailProperties = new(
+                                saberPrefabInfo.TopPos,
+                                saberPrefabInfo.BottomPos,
+                                saberPrefabInfo.Duration,
+                                saberPrefabInfo.SamplingFrequency,
+                                saberPrefabInfo.Granularity);
 
-                            if (trailMaterials == null)
+                            if ((saberPrefabInfo.Type & AssignObjectPrefabData.SaberPrefabInfo.SaberType.Left) != 0)
                             {
-                                _log.Error($"[{key}] trail not recognized");
-                                continue;
+                                _log.Debug(
+                                    $"Assigned trail material [{trail ?? "null"}] for left saber with load mode [{data.LoadMode}]");
+                                _beatmapObjectPrefabManager.AssignTrail(
+                                    _saberPrefabManager.SaberATrailMaterials,
+                                    trail,
+                                    trailProperties,
+                                    data.LoadMode,
+                                    customEventData.time);
                             }
 
-                            _log.Debug(
-                                $"Assigned trail material [{trail ?? "null"}] for [{key}] with load mode [{data.LoadMode}]");
-                            _beatmapObjectPrefabManager.AssignTrail(
-                                trailMaterials,
-                                trail,
-                                new TrailProperties(
-                                    saberPrefabInfo.TopPos,
-                                    saberPrefabInfo.BottomPos,
-                                    saberPrefabInfo.Duration,
-                                    saberPrefabInfo.SamplingFrequency,
-                                    saberPrefabInfo.Granularity),
-                                data.LoadMode,
-                                customEventData.time);
+                            if ((saberPrefabInfo.Type & AssignObjectPrefabData.SaberPrefabInfo.SaberType.Right) != 0)
+                            {
+                                _log.Debug(
+                                    $"Assigned trail material [{trail ?? "null"}] for right saber with load mode [{data.LoadMode}]");
+                                _beatmapObjectPrefabManager.AssignTrail(
+                                    _saberPrefabManager.SaberBTrailMaterials,
+                                    trail,
+                                    trailProperties,
+                                    data.LoadMode,
+                                    customEventData.time);
+                            }
                         }
 
                         break;

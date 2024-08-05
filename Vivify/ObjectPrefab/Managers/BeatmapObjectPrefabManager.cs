@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using Heck.Animation;
 using Heck.ReLoad;
@@ -227,7 +228,7 @@ namespace Vivify.ObjectPrefab.Managers
 
         private void OnRewind()
         {
-            foreach (Component activeComponent in ActivePools.Keys)
+            foreach (Component activeComponent in ActivePools.Keys.ToArray())
             {
                 Despawn(activeComponent);
             }

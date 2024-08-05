@@ -37,6 +37,7 @@ namespace Vivify.ObjectPrefab.Managers
 
             if (_basicBeatmapObjectManager != null)
             {
+                AnyDirectionNotePrefabs.Changed += OnAnyDirectionNotePrefabsChanges;
                 BombNotePrefabs.Changed += OnBombNotePrefabsChanged;
                 BurstSliderElementPrefabs.Changed += OnBurstSliderElementPrefabsChanged;
                 BurstSliderPrefabs.Changed += OnBurstSliderPrefabsChanged;
@@ -55,6 +56,8 @@ namespace Vivify.ObjectPrefab.Managers
 
         internal PrefabDictionary ColorNotePrefabs { get; } = new();
 
+        internal PrefabDictionary AnyDirectionNotePrefabs { get; } = new();
+
         public void Dispose()
         {
             if (_reLoader != null)
@@ -62,6 +65,7 @@ namespace Vivify.ObjectPrefab.Managers
                 _reLoader.Rewinded -= OnRewind;
             }
 
+            AnyDirectionNotePrefabs.Changed -= OnAnyDirectionNotePrefabsChanges;
             BombNotePrefabs.Changed -= OnBombNotePrefabsChanged;
             BurstSliderElementPrefabs.Changed -= OnBurstSliderElementPrefabsChanged;
             BurstSliderPrefabs.Changed -= OnBurstSliderPrefabsChanged;
@@ -87,9 +91,11 @@ namespace Vivify.ObjectPrefab.Managers
             }
 
             PrefabDictionary? prefabDictionary =
-                noteController.noteData.gameplayType switch
+                noteData.gameplayType switch
                 {
-                    NoteData.GameplayType.Normal => ColorNotePrefabs,
+                    NoteData.GameplayType.Normal => noteData.cutDirection == NoteCutDirection.Any
+                        ? AnyDirectionNotePrefabs
+                        : ColorNotePrefabs,
                     NoteData.GameplayType.Bomb => BombNotePrefabs,
                     NoteData.GameplayType.BurstSliderHead => BurstSliderPrefabs,
                     NoteData.GameplayType.BurstSliderElement => BurstSliderElementPrefabs,
@@ -106,6 +112,18 @@ namespace Vivify.ObjectPrefab.Managers
                 prefabDictionary,
                 noteController,
                 noteController._noteMovement._floorMovement.startTime);
+        }
+
+        private void OnAnyDirectionNotePrefabsChanges(Track track)
+        {
+            foreach (GameNoteController? noteController in _basicBeatmapObjectManager!._basicGameNotePoolContainer
+                         .activeItems)
+            {
+                if (noteController.noteData.cutDirection == NoteCutDirection.Any)
+                {
+                    RefreshObjects(track, noteController, AnyDirectionNotePrefabs);
+                }
+            }
         }
 
         private void OnBombNotePrefabsChanged(Track track)
@@ -140,7 +158,10 @@ namespace Vivify.ObjectPrefab.Managers
             foreach (GameNoteController? noteController in _basicBeatmapObjectManager!._basicGameNotePoolContainer
                          .activeItems)
             {
-                RefreshObjects(track, noteController, ColorNotePrefabs);
+                if (noteController.noteData.cutDirection != NoteCutDirection.Any)
+                {
+                    RefreshObjects(track, noteController, ColorNotePrefabs);
+                }
             }
         }
 

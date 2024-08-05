@@ -547,8 +547,7 @@ namespace Vivify
 
                 switch (key)
                 {
-                    case SABER_A_PREFAB:
-                    case SABER_B_PREFAB:
+                    case SABER_PREFAB:
                         string? trailString = string.Empty;
                         if (objectData.TryGetValue(SABER_TRAIL_ASSET, out object? trailAsset))
                         {
@@ -558,6 +557,7 @@ namespace Vivify
                         Assets.Add(
                             key,
                             new SaberPrefabInfo(
+                                objectData.GetStringToEnumRequired<SaberPrefabInfo.SaberType>(SABER_TYPE),
                                 baseString,
                                 trailString,
                                 objectData.GetVector3(SABER_TRAIL_TOP_POS),
@@ -574,9 +574,15 @@ namespace Vivify
                             debrisString = (string?)debrisAsset;
                         }
 
+                        string? anyDirectionString = string.Empty;
+                        if (objectData.TryGetValue(ANY_ASSET, out object? anyDirectionAsset))
+                        {
+                            anyDirectionString = (string?)anyDirectionAsset;
+                        }
+
                         List<Track> tracks = objectData.GetTrackArray(beatmapTracks, false).ToList();
 
-                        Assets.Add(key, new ObjectPrefabInfo(baseString, debrisString, tracks));
+                        Assets.Add(key, new ObjectPrefabInfo(baseString, debrisString, anyDirectionString, tracks));
                         break;
                 }
             }
@@ -592,10 +598,11 @@ namespace Vivify
 
         internal struct ObjectPrefabInfo : IPrefabInfo
         {
-            internal ObjectPrefabInfo(string? asset, string? debrisAsset, IReadOnlyList<Track> track)
+            internal ObjectPrefabInfo(string? asset, string? debrisAsset, string? anyDirectionAsset, IReadOnlyList<Track> track)
             {
                 Asset = asset;
                 DebrisAsset = debrisAsset;
+                AnyDirectionAsset = anyDirectionAsset;
                 Track = track;
             }
 
@@ -603,12 +610,15 @@ namespace Vivify
 
             internal string? DebrisAsset { get; }
 
+            internal string? AnyDirectionAsset { get; }
+
             internal IReadOnlyList<Track> Track { get; }
         }
 
         internal struct SaberPrefabInfo : IPrefabInfo
         {
             internal SaberPrefabInfo(
+                SaberType type,
                 string? asset,
                 string? trailAsset,
                 Vector3? topPos,
@@ -617,6 +627,7 @@ namespace Vivify
                 int? samplingFrequency,
                 int? granularity)
             {
+                Type = type;
                 Asset = asset;
                 TrailAsset = trailAsset;
                 TopPos = topPos;
@@ -625,6 +636,16 @@ namespace Vivify
                 SamplingFrequency = samplingFrequency;
                 Granularity = granularity;
             }
+
+            [Flags]
+            internal enum SaberType
+            {
+                Left = 1,
+                Right = 2,
+                Both = Left | Right
+            }
+
+            internal SaberType Type { get; }
 
             internal string? Asset { get; }
 

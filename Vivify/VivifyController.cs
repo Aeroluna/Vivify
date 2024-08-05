@@ -37,8 +37,9 @@ namespace Vivify
         internal const string CHAIN_PREFAB = "burstSliders";
         internal const string CHAIN_ELEMENT_PREFAB = "burstSliderElements";
         internal const string DEBRIS_ASSET = "debrisAsset";
-        internal const string SABER_A_PREFAB = "saberA";
-        internal const string SABER_B_PREFAB = "saberB";
+        internal const string ANY_ASSET = "anyDirectionAsset";
+        internal const string SABER_PREFAB = "saber";
+        internal const string SABER_TYPE = "type";
         internal const string SABER_TRAIL_ASSET = "trailAsset";
         internal const string SABER_TRAIL_TOP_POS = "trailTopPos";
         internal const string SABER_TRAIL_BOTTOM_POS = "trailBottomPos";
