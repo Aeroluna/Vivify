@@ -53,7 +53,7 @@ internal class PrefabManager : IDisposable
 
         prefab.Track?.RemoveGameObject(prefab.GameObject);
 
-        Object.Destroy(prefab.GameObject);
+        prefab.GameObject.SetActive(false);
         _prefabs.Remove(id);
     }
 
