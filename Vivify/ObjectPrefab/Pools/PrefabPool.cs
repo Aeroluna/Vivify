@@ -56,9 +56,6 @@ internal class PrefabPool : IPrefabPool<GameObject>
         _active.Add(component, spawned);
 
         _instantiator.SongSynchronize(spawned, startTime);
-
-        Transform transform = component.transform;
-        spawned.transform.SetParent(transform.GetChild(0), false);
         return spawned;
     }
 }

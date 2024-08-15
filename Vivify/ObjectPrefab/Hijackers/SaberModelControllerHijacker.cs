@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using Zenject;
 
@@ -7,22 +8,47 @@ namespace Vivify.ObjectPrefab.Hijackers;
 
 internal class SaberModelControllerHijacker : IHijacker<GameObject>
 {
+    ////private static readonly List<Component> _nonAllocComponentList = [];
+
     private readonly IInstantiator _instantiator;
     private readonly Renderer[] _originalRenderers;
     private readonly Saber _saber;
     private readonly SaberModelController _saberModelController;
     private SetSaberGlowColor[]? _cachedSetSaberGlowColors;
 
+    [UsedImplicitly]
     internal SaberModelControllerHijacker(SaberModelController saberModelController, IInstantiator instantiator)
     {
         _saberModelController = saberModelController;
         _instantiator = instantiator;
-        _originalRenderers = saberModelController.GetComponentsInChildren<Renderer>();
-        _saber = saberModelController.transform.parent.GetComponent<Saber>();
+        Transform parent = saberModelController.transform.parent;
+        _originalRenderers = parent.GetComponentsInChildren<Renderer>();
+        _saber = parent.GetComponent<Saber>();
+
+        /*Assembly? reeSabers = IPA.Loader.PluginManager.GetPlugin("ReeSabers")?.Assembly;
+        if (reeSabers != null)
+        {
+            _originalRenderers = _originalRenderers.Where(
+                n =>
+                {
+                    n.GetComponents(_nonAllocComponentList);
+                    return _nonAllocComponentList.All(
+                        m =>
+                        {
+                            string fullName = m.GetType().FullName ?? string.Empty;
+                            return fullName != "ReeSabers.Trails.SimpleTrail";
+                        });
+                }).ToArray();
+        }*/
     }
 
     public void Activate(List<GameObject> gameObjects, bool hideOriginal)
     {
+        foreach (GameObject gameObject in gameObjects)
+        {
+            gameObject.transform.SetParent(_saber.transform, false);
+        }
+
         _cachedSetSaberGlowColors = _saberModelController._setSaberGlowColors;
 
         SetSaberGlowColor[] newColors = new SetSaberGlowColor[gameObjects.Count];

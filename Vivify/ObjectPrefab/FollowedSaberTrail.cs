@@ -50,10 +50,10 @@ internal class FollowedSaberTrail : SaberTrail
             return;
         }
 
+        _color = _followed._color;
         _materialPropertyBlock ??= new MaterialPropertyBlock();
         _materialPropertyBlock.SetColor(_colorId, _color);
         _trailRenderer._meshRenderer.SetPropertyBlock(_materialPropertyBlock);
-        _color = _followed._color;
     }
 
     private class SimpleOffsetMovementData : IBladeMovementData

@@ -1,19 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Vivify.ObjectPrefab.Hijackers;
 
 internal class MpbControllerHijacker : IHijacker<GameObject>
 {
+    private readonly Transform _child;
     private readonly MaterialPropertyBlockController _materialPropertyBlockController;
     private readonly Renderer[] _originalRenderers;
     private List<int>? _cachedNumberOfMaterialsInRenderers;
     private Renderer[]? _cachedRenderers;
 
+    [UsedImplicitly]
     internal MpbControllerHijacker(Component component)
     {
         _originalRenderers = component.GetComponentsInChildren<Renderer>();
+        _child = component.transform.GetChild(0);
 
         // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
         if (component is GameNoteController or BurstSliderGameNoteController)
@@ -29,6 +33,11 @@ internal class MpbControllerHijacker : IHijacker<GameObject>
 
     public void Activate(List<GameObject> gameObjects, bool hideOriginal)
     {
+        foreach (GameObject gameObject in gameObjects)
+        {
+            gameObject.transform.SetParent(_child, false);
+        }
+
         if (_materialPropertyBlockController._isInitialized)
         {
             _cachedNumberOfMaterialsInRenderers =

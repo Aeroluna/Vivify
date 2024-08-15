@@ -254,11 +254,10 @@ internal class BeatmapObjectPrefabManager : IDisposable
         {
             Hijackers[component] = hijacker = component switch
             {
-                SaberTrail saberTrail => new SaberTrailHijacker(saberTrail),
-                SaberModelController saberModelController => new SaberModelControllerHijacker(
-                    saberModelController,
-                    _instantiator),
-                _ => new MpbControllerHijacker(component)
+                SaberTrail saberTrail => _instantiator.Instantiate<SaberTrailHijacker>([saberTrail]),
+                SaberModelController saberModelController => _instantiator.Instantiate<SaberModelControllerHijacker>(
+                    [saberModelController]),
+                _ => _instantiator.Instantiate<MpbControllerHijacker>([component])
             };
         }
 

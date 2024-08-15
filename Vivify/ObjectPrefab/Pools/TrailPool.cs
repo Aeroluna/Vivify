@@ -55,7 +55,6 @@ internal class TrailPool : IPrefabPool<FollowedSaberTrail>
 
         spawned.InitProperties(_trailProperties);
         _active.Add(component, spawned);
-        spawned.transform.SetParent(component.transform.parent, false);
         return spawned;
     }
 }
