@@ -77,14 +77,14 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
     public bool Init(StartStandardLevelParameters standardLevelParameters)
     {
 #if LATEST
-            if (standardLevelParameters.BeatmapLevel.previewMediaData is not FileSystemPreviewMediaData fileSystemPreviewMediaData)
-            {
-                return false;
-            }
+        if (standardLevelParameters.BeatmapLevel.previewMediaData is not FileSystemPreviewMediaData fileSystemPreviewMediaData)
+        {
+            return false;
+        }
 
-            CustomData beatmapCustomData =
- standardLevelParameters.BeatmapLevel.GetBeatmapCustomData(standardLevelParameters.BeatmapKey);
-            CustomData levelCustomData = standardLevelParameters.BeatmapLevel.GetLevelCustomData();
+        CustomData beatmapCustomData =
+            standardLevelParameters.BeatmapLevel.GetBeatmapCustomData(standardLevelParameters.BeatmapKey);
+        CustomData levelCustomData = standardLevelParameters.BeatmapLevel.GetLevelCustomData();
 #else
         if (standardLevelParameters.DifficultyBeatmap is not CustomDifficultyBeatmap customDifficultyBeatmap)
         {
@@ -105,8 +105,10 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
 
         // check if bundle already downloaded
 #if LATEST
-            string path =
- Path.Combine(Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!, BUNDLE + BUNDLE_SUFFIX);
+        string path =
+            Path.Combine(
+                Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!,
+                BUNDLE + BUNDLE_SUFFIX);
 #else
         string path = Path.Combine(
             ((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath,

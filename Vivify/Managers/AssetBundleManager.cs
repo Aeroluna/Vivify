@@ -23,19 +23,19 @@ internal class AssetBundleManager : IDisposable
         SiraLog log,
         IReadonlyBeatmapData beatmapData,
 #if LATEST
-            BeatmapLevel beatmapLevel,
+        BeatmapLevel beatmapLevel,
 #else
         IDifficultyBeatmap difficultyBeatmap,
 #endif
         Config config)
     {
 #if LATEST
-            if (beatmapLevel.previewMediaData is not FileSystemPreviewMediaData fileSystemPreviewMediaData)
-            {
-                throw new ArgumentException(
-                    $"Was not correct type. Expected: {nameof(FileSystemPreviewMediaData)}, was: {beatmapLevel.previewMediaData.GetType().Name}.",
-                    nameof(beatmapLevel));
-            }
+        if (beatmapLevel.previewMediaData is not FileSystemPreviewMediaData fileSystemPreviewMediaData)
+        {
+            throw new ArgumentException(
+                $"Was not correct type. Expected: {nameof(FileSystemPreviewMediaData)}, was: {beatmapLevel.previewMediaData.GetType().Name}.",
+                nameof(beatmapLevel));
+        }
 #else
         if (difficultyBeatmap is not CustomDifficultyBeatmap customDifficultyBeatmap)
         {
@@ -55,8 +55,9 @@ internal class AssetBundleManager : IDisposable
         _log = log;
 
 #if LATEST
-            string path =
- Path.Combine(Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!, BUNDLE + BUNDLE_SUFFIX);
+        string path = Path.Combine(
+            Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!,
+            BUNDLE + BUNDLE_SUFFIX);
 #else
         string path = Path.Combine(
             ((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath,
@@ -79,6 +80,10 @@ internal class AssetBundleManager : IDisposable
             if (assetBundleChecksum != null)
             {
                 _mainBundle = AssetBundle.LoadFromFile(path, assetBundleChecksum.Value);
+            }
+            else
+            {
+                _log.Error("Checksum not defined");
             }
         }
 

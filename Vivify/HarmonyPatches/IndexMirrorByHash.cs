@@ -26,7 +26,7 @@ internal static class IndexMirrorByHash
 
     [HarmonyTranspiler]
 #if !V1_29_1
-        [HarmonyPatch(nameof(MirrorRendererSO.RenderMirrorTexture))]
+    [HarmonyPatch(nameof(MirrorRendererSO.RenderMirrorTexture))]
 #else
     [HarmonyPatch(nameof(MirrorRendererSO.GetMirrorTexture))]
 #endif
