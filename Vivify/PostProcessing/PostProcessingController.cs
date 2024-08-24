@@ -396,7 +396,7 @@ internal class PostProcessingController : CullingCameraController
     }
 }
 
-internal class MaterialData : IComparable<MaterialData>
+internal readonly struct MaterialData : IComparable<MaterialData>
 {
     internal MaterialData(
         Material? material,
@@ -426,5 +426,9 @@ internal class MaterialData : IComparable<MaterialData>
 
     internal string[] Targets { get; }
 
-    public int CompareTo(MaterialData other) => Priority.CompareTo(other.Priority);
+    public int CompareTo(MaterialData other)
+    {
+        int result = Priority.CompareTo(other.Priority);
+        return result < 0 ? -1 : 1;
+    }
 }
