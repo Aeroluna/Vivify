@@ -446,7 +446,9 @@ Allows setting animator properties. This will search the prefab for all Animator
   "b": float, // Time in beats.
   "t": "SetCameraProperty",
   "d": {
-    "depthTextureMode": [] // Sets the depth texture mode on the camera. Can be [Depth, DepthNormals, MotionVectors].
+    "depthTextureMode": [], // Sets the depth texture mode on the camera. Can be [Depth, DepthNormals, MotionVectors].
+    "clearFlags": string, // Can be [Skybox, SolidColor, Depth, Nothing]. See https://docs.unity3d.com/ScriptReference/CameraClearFlags.html
+    "backgroundColor": [] // [R, G, B, (Optional) A] Color to clear screen with. Only used with SolidColor clear flag.
   }
 }
 ```
@@ -493,7 +495,7 @@ instancing shaders" at https://docs.unity3d.com/Manual/gpu-instancing-shader.htm
 - `saber`:
     - `type`: `string` Which saber to affect. `Left`, `Right` or `Both`.
     - `asset`: `string` (Optional) File path to the desired prefab. Sets property `_Color`.
-    - `trailAsset`: `string` (Optional) File path to the material to replace the saber. Sets property `_Color` and sets
+    - `trailAsset`: `string` (Optional) File path to the material to replace the trail. Sets property `_Color` and sets
       vertex colors for a gradient.
     - `trailTopPos`: `vector3` (Optional) Vector3 position of the top of the trail. Defaults to [0, 0, 1]
     - `trailBottomPos`: `vector3` (Optional) Vector3 position of the top of the trail. Defaults to [0, 0, 0]
@@ -554,7 +556,9 @@ Currently provided settings:
 - `"haloStrength"`: (float)
 - `"reflectionBounces"`: (int)
 - `"reflectionIntensity"`: (float)
+- `"skybox"`: (string) File path to a material
 - `"subtractiveShadowColor"`: (color)
+- `"sun"`: (string) Id from InstantiatePrefab event, will find the first directional light on the top level GameObject
 
 ```js
 // Example
