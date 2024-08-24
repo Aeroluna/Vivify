@@ -77,19 +77,18 @@ public class ColorCapturedSetting<TClass> : CapturedSetting<TClass, Color>
 
 public class CapturedSetting<TClass, TProperty> : ICapturedSetting
     where TClass : class
-    where TProperty : struct
 {
-    private readonly Func<object, TProperty> _convert;
+    private readonly Func<object, TProperty?> _convert;
     private readonly Func<TProperty> _get;
-    private readonly Action<TProperty> _set;
+    private readonly Action<TProperty?> _set;
 
-    private TProperty _captured;
+    private TProperty? _captured;
 
-    internal CapturedSetting(string property, Func<object, TProperty> convert)
+    internal CapturedSetting(string property, Func<object, TProperty?> convert)
     {
         PropertyInfo propertyInfo = AccessTools.Property(typeof(TClass), property);
         _get = (Func<TProperty>)Delegate.CreateDelegate(typeof(Func<TProperty>), propertyInfo.GetMethod);
-        _set = (Action<TProperty>)Delegate.CreateDelegate(typeof(Action<TProperty>), propertyInfo.SetMethod);
+        _set = (Action<TProperty?>)Delegate.CreateDelegate(typeof(Action<TProperty>), propertyInfo.SetMethod);
         _convert = convert;
     }
 

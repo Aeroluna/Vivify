@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.Animation;
 using Heck.Deserialize;
 using Heck.Event;
+using SiraUtil.Logging;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Vivify.Managers;
@@ -20,109 +22,130 @@ internal class SetRenderSetting : ICustomEvent, IInitializable, IDisposable
     private readonly IAudioTimeSource _audioTimeSource;
     private readonly IBpmController _bpmController;
     private readonly CoroutineDummy _coroutineDummy;
+    private readonly SiraLog _log;
     private readonly DeserializedData _deserializedData;
 
     private readonly Dictionary<string, ISettingHandler> _settings = new()
     {
         {
             "ambientEquatorColor",
-            new SettingHandler<Vector4, Color>(
+            new StructSettingHandler<Vector4, Color>(
                 new RenderColorCapturedSetting(nameof(RenderSettings.ambientEquatorColor)))
         },
         {
             "ambientGroundColor",
-            new SettingHandler<Vector4, Color>(
+            new StructSettingHandler<Vector4, Color>(
                 new RenderColorCapturedSetting(nameof(RenderSettings.ambientEquatorColor)))
         },
         {
             "ambientIntensity",
-            new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.ambientIntensity)))
+            new StructSettingHandler<float, float>(
+                new RenderFloatCapturedSetting(nameof(RenderSettings.ambientIntensity)))
         },
         {
             "ambientLight",
-            new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.ambientLight)))
+            new StructSettingHandler<Vector4, Color>(
+                new RenderColorCapturedSetting(nameof(RenderSettings.ambientLight)))
         },
         {
             "ambientMode",
-            new SettingHandler<float, AmbientMode>(
+            new StructSettingHandler<float, AmbientMode>(
                 new RenderEnumCapturedSetting<AmbientMode>(nameof(RenderSettings.ambientMode)))
         },
         {
             "ambientSkyColor",
-            new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.ambientSkyColor)))
+            new StructSettingHandler<Vector4, Color>(
+                new RenderColorCapturedSetting(nameof(RenderSettings.ambientSkyColor)))
         },
         {
             "defaultReflectionMode",
-            new SettingHandler<float, DefaultReflectionMode>(
+            new StructSettingHandler<float, DefaultReflectionMode>(
                 new RenderEnumCapturedSetting<DefaultReflectionMode>(nameof(RenderSettings.defaultReflectionMode)))
         },
         {
             "defaultReflectionResolution",
-            new SettingHandler<float, int>(
+            new StructSettingHandler<float, int>(
                 new RenderIntCapturedSetting(nameof(RenderSettings.defaultReflectionResolution)))
         },
         {
             "flareFadeSpeed",
-            new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.flareFadeSpeed)))
+            new StructSettingHandler<float, float>(
+                new RenderFloatCapturedSetting(nameof(RenderSettings.flareFadeSpeed)))
         },
         {
             "flareStrength",
-            new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.flareStrength)))
+            new StructSettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.flareStrength)))
         },
         {
             "fog",
-            new SettingHandler<float, bool>(
+            new StructSettingHandler<float, bool>(
                 new CapturedSetting<RenderSettings, bool>(nameof(RenderSettings.fog), n => Convert.ToBoolean((int)n)))
         },
         {
             "fogColor",
-            new SettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.fogColor)))
+            new StructSettingHandler<Vector4, Color>(new RenderColorCapturedSetting(nameof(RenderSettings.fogColor)))
         },
         {
             "fogDensity",
-            new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.fogDensity)))
+            new StructSettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.fogDensity)))
         },
         {
             "fogEndDistance",
-            new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.fogEndDistance)))
+            new StructSettingHandler<float, float>(
+                new RenderFloatCapturedSetting(nameof(RenderSettings.fogEndDistance)))
         },
         {
             "fogMode",
-            new SettingHandler<float, FogMode>(new RenderEnumCapturedSetting<FogMode>(nameof(RenderSettings.fogMode)))
+            new StructSettingHandler<float, FogMode>(
+                new RenderEnumCapturedSetting<FogMode>(nameof(RenderSettings.fogMode)))
         },
         {
             "fogStartDistance",
-            new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.fogStartDistance)))
+            new StructSettingHandler<float, float>(
+                new RenderFloatCapturedSetting(nameof(RenderSettings.fogStartDistance)))
         },
         {
             "haloStrength",
-            new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.haloStrength)))
+            new StructSettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.haloStrength)))
         },
         {
             "reflectionBounces",
-            new SettingHandler<float, int>(new RenderIntCapturedSetting(nameof(RenderSettings.reflectionBounces)))
+            new StructSettingHandler<float, int>(new RenderIntCapturedSetting(nameof(RenderSettings.reflectionBounces)))
         },
         {
             "reflectionIntensity",
-            new SettingHandler<float, float>(new RenderFloatCapturedSetting(nameof(RenderSettings.reflectionIntensity)))
+            new StructSettingHandler<float, float>(
+                new RenderFloatCapturedSetting(nameof(RenderSettings.reflectionIntensity)))
         },
         {
             "subtractiveShadowColor",
-            new SettingHandler<Vector4, Color>(
+            new StructSettingHandler<Vector4, Color>(
                 new RenderColorCapturedSetting(nameof(RenderSettings.subtractiveShadowColor)))
         }
     };
 
     private SetRenderSetting(
+        SiraLog log,
         [Inject(Id = ID)] DeserializedData deserializedData,
         IAudioTimeSource audioTimeSource,
         IBpmController bpmController,
-        CoroutineDummy coroutineDummy)
+        CoroutineDummy coroutineDummy,
+        AssetBundleManager assetBundleManager,
+        PrefabManager prefabManager)
     {
+        _log = log;
         _deserializedData = deserializedData;
         _audioTimeSource = audioTimeSource;
         _bpmController = bpmController;
         _coroutineDummy = coroutineDummy;
+        _settings.Add(
+            "skybox",
+            new ClassSettingHandler<string, Material>(
+                new RenderMaterialCapturedSetting(nameof(RenderSettings.skybox), assetBundleManager)));
+        _settings.Add(
+            "sun",
+            new ClassSettingHandler<string, Light>(
+                new RenderLightCapturedSetting(nameof(RenderSettings.sun), prefabManager)));
     }
 
     private interface ISettingHandler
@@ -178,6 +201,7 @@ internal class SetRenderSetting : ICustomEvent, IInitializable, IDisposable
         foreach (RenderSettingProperty property in properties)
         {
             string name = property.Name;
+            _log.Debug($"Setting [{name}]");
 
             bool noDuration = duration == 0 || startTime + duration < _audioTimeSource.songTime;
 
@@ -225,13 +249,12 @@ internal class SetRenderSetting : ICustomEvent, IInitializable, IDisposable
         _coroutineDummy.StartCoroutine(AnimatePropertyCoroutine(points, set, duration, startTime, easing));
     }
 
-    private class SettingHandler<THandled, TProperty> : ISettingHandler
+    private class StructSettingHandler<THandled, TProperty> : ISettingHandler
         where THandled : struct
-        where TProperty : struct
     {
         private readonly CapturedSetting<RenderSettings, TProperty> _capturedSetting;
 
-        internal SettingHandler(CapturedSetting<RenderSettings, TProperty> capturedSetting)
+        internal StructSettingHandler(CapturedSetting<RenderSettings, TProperty> capturedSetting)
         {
             _capturedSetting = capturedSetting;
         }
@@ -266,6 +289,48 @@ internal class SetRenderSetting : ICustomEvent, IInitializable, IDisposable
                     _capturedSetting.Set(value.Value);
                     DynamicGI.UpdateEnvironment();
                     break;
+
+                default:
+                    throw new InvalidOperationException($"Could not handle type [{property.GetType().FullName}].");
+            }
+        }
+
+        public void Reset()
+        {
+            _capturedSetting.Reset();
+        }
+    }
+
+    private class ClassSettingHandler<THandled, TProperty> : ISettingHandler
+        where THandled : class
+    {
+        private readonly CapturedSetting<RenderSettings, TProperty> _capturedSetting;
+
+        internal ClassSettingHandler(CapturedSetting<RenderSettings, TProperty> capturedSetting)
+        {
+            _capturedSetting = capturedSetting;
+        }
+
+        public void Capture()
+        {
+            _capturedSetting.Capture();
+        }
+
+        public void Handle(
+            SetRenderSetting instance,
+            RenderSettingProperty property,
+            bool noDuration,
+            float duration,
+            Functions easing,
+            float startTime)
+        {
+            switch (property)
+            {
+                case RenderSettingProperty<THandled> value:
+                    _capturedSetting.Set(value.Value);
+                    DynamicGI.UpdateEnvironment();
+                    break;
+
                 default:
                     throw new InvalidOperationException($"Could not handle type [{property.GetType().FullName}].");
             }
@@ -311,6 +376,28 @@ internal class SetRenderSetting : ICustomEvent, IInitializable, IDisposable
     {
         internal RenderIntCapturedSetting(string property)
             : base(property)
+        {
+        }
+    }
+
+    private class RenderMaterialCapturedSetting : CapturedSetting<RenderSettings, Material>
+    {
+        internal RenderMaterialCapturedSetting(string property, AssetBundleManager assetBundleManager)
+            : base(
+                property,
+                obj => assetBundleManager.TryGetAsset((string)obj, out Material? material) ? material : null)
+        {
+        }
+    }
+
+    private class RenderLightCapturedSetting : CapturedSetting<RenderSettings, Light>
+    {
+        internal RenderLightCapturedSetting(string property, PrefabManager prefabManager)
+            : base(
+                property,
+                obj => prefabManager.TryGetPrefab((string)obj, out InstantiatedPrefab? prefab)
+                    ? prefab.GameObject.GetComponents<Light>().FirstOrDefault(n => n.type == LightType.Directional)
+                    : null)
         {
         }
     }
