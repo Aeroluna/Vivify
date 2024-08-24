@@ -30,6 +30,8 @@ public static class VivifyController
     internal const string FILTER = "filterMode";
 
     internal const string CAMERA_DEPTH_TEXTURE_MODE = "depthTextureMode";
+    internal const string CAMERA_CLEAR_FLAGS = "clearFlags";
+    internal const string CAMERA_BACKGROUND_COLOR = "backgroundColor";
 
     internal const string ASSIGN_PREFAB_LOAD_MODE = "loadMode";
     internal const string NOTE_PREFAB = "colorNotes";

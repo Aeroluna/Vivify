@@ -31,6 +31,8 @@ internal class VivifyPlayerInstaller : Installer
         Container.BindInterfacesAndSelfTo<SaberPrefabManager>().AsSingle();
         Container.BindInterfacesAndSelfTo<BeatmapObjectPrefabManager>().AsSingle();
 
+        Container.BindInterfacesAndSelfTo<CameraPropertyManager>().AsSingle();
+
         Container.BindInterfacesTo<QualitySettingsManager>().AsSingle();
 
         // Custom Events

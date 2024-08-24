@@ -1,5 +1,5 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
+using Vivify.Managers;
 #if !LATEST
 using HarmonyLib;
 #endif
@@ -10,6 +10,9 @@ namespace Vivify.Controllers;
 internal class CameraPropertyController : MonoBehaviour
 {
     private Camera _camera = null!;
+    private DepthTextureMode _cachedDepthTextureMode;
+    private CameraClearFlags _cachedClearFlags;
+    private Color _cachedBackgroundColor;
 
 #if LATEST
     private DepthTextureController? _depthTextureController;
@@ -17,11 +20,54 @@ internal class CameraPropertyController : MonoBehaviour
     private VisualEffectsController? _visualEffectsController;
 #endif
 
-    private static event Action<DepthTextureMode>? OnDepthTextureModeChanged;
-
-    internal static DepthTextureMode DepthTextureMode
+    internal DepthTextureMode? DepthTextureMode
     {
-        set => OnDepthTextureModeChanged?.Invoke(value);
+        set
+        {
+            if (value == null)
+            {
+#if LATEST
+                if (_depthTextureController != null)
+                {
+                    _depthTextureController.Start();
+                }
+#else
+                if (_visualEffectsController != null)
+                {
+                    typeof(VisualEffectsController)
+                        .GetMethod("HandleDepthTextureEnabledDidChange", AccessTools.all)?
+                        .Invoke(_visualEffectsController, []);
+                }
+#endif
+            }
+            else
+            {
+                _camera.depthTextureMode = value.Value | _cachedDepthTextureMode;
+            }
+#if LATEST
+            if (_depthTextureController != null)
+            {
+                _depthTextureController._cachedPreset = null;
+            }
+#endif
+        }
+    }
+
+    internal CameraClearFlags? ClearFlags
+    {
+        set => _camera.clearFlags = value ?? _cachedClearFlags;
+    }
+
+    internal Color? BackgroundColor
+    {
+        set => _camera.backgroundColor = value ?? _cachedBackgroundColor;
+    }
+
+    internal void Reset()
+    {
+        DepthTextureMode = null;
+        ClearFlags = null;
+        BackgroundColor = null;
     }
 
     private void Awake()
@@ -32,41 +78,19 @@ internal class CameraPropertyController : MonoBehaviour
 #else
         _visualEffectsController = GetComponent<VisualEffectsController>();
 #endif
-        OnDepthTextureModeChanged += UpdateDepthTextureMode;
+        CameraPropertyManager.AddController(this);
+    }
+
+    private void OnEnable()
+    {
+        _cachedDepthTextureMode = _camera.depthTextureMode;
+        _cachedClearFlags = _camera.clearFlags;
+        _cachedBackgroundColor = _camera.backgroundColor;
     }
 
     private void OnDestroy()
     {
-        OnDepthTextureModeChanged -= UpdateDepthTextureMode;
-        ResetThis();
-    }
-
-    private void UpdateDepthTextureMode(DepthTextureMode value)
-    {
-        _camera.depthTextureMode = value;
-#if LATEST
-        if (_depthTextureController != null)
-        {
-            _depthTextureController._cachedPreset = null;
-        }
-#endif
-    }
-
-    private void ResetThis()
-    {
-#if LATEST
-        if (_depthTextureController != null)
-        {
-            _depthTextureController.Start();
-        }
-#else
-        if (_visualEffectsController != null)
-        {
-            typeof(VisualEffectsController)
-                .GetMethod("HandleDepthTextureEnabledDidChange", AccessTools.all)
-                ?
-                .Invoke(_visualEffectsController, []);
-        }
-#endif
+        Reset();
+        CameraPropertyManager.RemoveController(this);
     }
 }

@@ -324,9 +324,16 @@ internal class SetCameraPropertyData : ICustomEventCustomData
                     current |
                     (DepthTextureMode)Enum.Parse(typeof(DepthTextureMode), (string)depthTextureModeString));
         }
+
+        ClearFlags = customData.GetStringToEnum<CameraClearFlags?>(CAMERA_CLEAR_FLAGS);
+        BackgroundColor = customData.GetColor(CAMERA_BACKGROUND_COLOR);
     }
 
     internal DepthTextureMode? DepthTextureMode { get; }
+
+    internal CameraClearFlags? ClearFlags { get; }
+
+    internal Color? BackgroundColor { get; }
 }
 
 internal class SetAnimatorPropertyData : ICustomEventCustomData
@@ -406,6 +413,12 @@ internal class SetRenderSettingData : ICustomEventCustomData
                             value,
                             customData,
                             pointDefinitions));
+                    break;
+
+                case "skybox":
+                case "sun":
+                    Properties.Add(
+                        new RenderSettingProperty<string>(key, customData.GetRequired<string>(key)));
                     break;
             }
         }
