@@ -268,10 +268,10 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
   "b": float, // Time in beats.
   "t": "DeclareCullingTexture",
   "d": {
-    "id": string // Name of the culling mask, this is what you must name your sampler in your shader.
-    "track": string/string[] // Name(s) of your track(s). Everything on the track(s) will be added to this mask.
-    "whitelist": bool // (Optional) When true, will cull everything but the selected tracks. Default = false.
-    "depthTexture": bool // (Optional) When true, write depth texture to "'name'_Depth". Default = false.
+    "id": string, // Name of the culling mask, this is what you must name your sampler in your shader.
+    "track": string/string[], // Name(s) of your track(s). Everything on the track(s) will be added to this mask.
+    "whitelist": bool, // (Optional) When true, will cull everything but the selected tracks. Default = false.
+    "depthTexture": bool // (Optional) When true, write depth texture to "[id]_Depth". Default = false.
   }
 }
 ```
@@ -294,16 +294,17 @@ is `_Main` then the culling will apply to the main camera.
 
 ```csharp
 //Example where notes are not rendered on the right side of the screen
-sampler2D _NotesCulled;
+UNITY_DECLARE_SCREENSPACE_TEXTURE(_NotesCulled);
 
 fixed4 frag(v2f i) : SV_Target
 {
+  UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
   if (i.uv.x > 0.5)
   {
-    return tex2D(_NotesCulled, i.uv);
+    return UNITY_SAMPLE_SCREENSPACE_TEXTURE(_NotesCulled, UnityStereoTransformScreenSpaceTex(i.uv));
   }
   else {
-    return tex2D(_MainTex, i.uv);
+    return UNITY_SAMPLE_SCREENSPACE_TEXTURE(_MainTex, UnityStereoTransformScreenSpaceTex(i.uv));
   }
 }
 ```
