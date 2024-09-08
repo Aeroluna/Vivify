@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using HarmonyLib;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using Vivify.Managers;
 using Vivify.PostProcessing;
 using Vivify.TrackGameObject;
+using Zenject;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
@@ -22,23 +24,22 @@ internal class CullingTextureController : CullingCameraController
     private MainEffectRenderer _mainEffectRenderer = null!;
 
     private PostProcessingController _postProcessingController = null!;
+    private DepthShaderManager _depthShaderManager = null!;
 
     internal override int DefaultCullingMask => _postProcessingController.DefaultCullingMask;
 
-    internal int? Key { get; private set; }
+    internal int Key { get; private set; }
+
+    internal int DepthKey { get; private set; }
 
     internal Dictionary<Camera.MonoOrStereoscopicEye, RenderTexture> RenderTextures { get; } = new();
 
     internal Dictionary<Camera.MonoOrStereoscopicEye, RenderTexture> RenderTexturesDepth { get; } = new();
 
-    internal void Construct(PostProcessingController postProcessingController)
-    {
-        _postProcessingController = postProcessingController;
-    }
-
     internal void Init(string key, CullingTextureTracker cullingTextureTracker)
     {
         Key = Shader.PropertyToID(key);
+        DepthKey = Shader.PropertyToID(key + "_Depth");
         CullingTextureData = cullingTextureTracker;
         RefreshCamera();
     }
@@ -73,6 +74,14 @@ internal class CullingTextureController : CullingCameraController
                Mathf.Approximately(lhs.fieldOfView, rhs.fieldOfView);
     }
 
+    [UsedImplicitly]
+    [Inject]
+    private void Construct(PostProcessingController postProcessingController, DepthShaderManager depthShaderManager)
+    {
+        _postProcessingController = postProcessingController;
+        _depthShaderManager = depthShaderManager;
+    }
+
     private void RefreshCamera()
     {
         if (CullingTextureData == null)
@@ -100,8 +109,6 @@ internal class CullingTextureController : CullingCameraController
 
     private void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
-        Graphics.Blit(src, dst);
-
         if (CullingTextureData == null)
         {
             return;
@@ -134,7 +141,12 @@ internal class CullingTextureController : CullingCameraController
 
         if (depthTexture.dimension == TextureDimension.Tex2DArray)
         {
-            Material sliceMaterial = DepthShaderManager.DepthArrayMaterial;
+            Material? sliceMaterial = _depthShaderManager.DepthArrayMaterial;
+            if (sliceMaterial == null)
+            {
+                return;
+            }
+
             sliceMaterial.SetFloat(_arraySliceIndex, 0);
             Graphics.Blit(null, depthTexture, sliceMaterial, -1, 0);
             sliceMaterial.SetFloat(_arraySliceIndex, 1);
@@ -142,7 +154,13 @@ internal class CullingTextureController : CullingCameraController
         }
         else
         {
-            Graphics.Blit(null, depthTexture, DepthShaderManager.DepthMaterial);
+            Material? depthMaterial = _depthShaderManager.DepthMaterial;
+            if (depthMaterial == null)
+            {
+                return;
+            }
+
+            Graphics.Blit(null, depthTexture, depthMaterial);
         }
     }
 }

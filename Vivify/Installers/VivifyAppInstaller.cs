@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Vivify.HarmonyPatches;
+using Vivify.Managers;
 using Zenject;
 
 namespace Vivify.Installers;
@@ -17,6 +18,7 @@ internal class VivifyAppInstaller : Installer
     public override void InstallBindings()
     {
         Container.BindInstance(_config);
+        Container.BindInterfacesAndSelfTo<DepthShaderManager>().AsSingle();
         Container.BindInterfacesTo<AddComponentsToCamera>().AsSingle();
         Container.BindInterfacesAndSelfTo<FeaturesModule>().AsSingle();
     }

@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 using SiraUtil.Zenject;
 using UnityEngine.SceneManagement;
 using Vivify.Installers;
-using Vivify.Managers;
 using static Vivify.VivifyController;
 
 namespace Vivify;
@@ -20,7 +19,6 @@ internal class Plugin
     {
         Log = pluginLogger;
 
-        DepthShaderManager.LoadFromMemory();
         zenjector.Install<VivifyAppInstaller>(Location.App, conf.Generated<Config>());
         zenjector.Install<VivifyPlayerInstaller>(Location.Player);
         zenjector.Install<VivifyMenuInstaller>(Location.Menu);

@@ -28,6 +28,7 @@ internal class PostProcessingController : CullingCameraController
     private int? _defaultCullingMask;
 
     private SiraLog _log = null!;
+    private IInstantiator _instantiator = null!;
 
     internal static Dictionary<string, CullingTextureTracker> CullingTextureDatas { get; } = new();
 
@@ -117,13 +118,34 @@ internal class PostProcessingController : CullingCameraController
                 GameObject newObject = new("CullingCamera");
                 newObject.transform.SetParent(transform, false);
                 newObject.AddComponent<Camera>();
-                finalController = newObject.AddComponent<CullingTextureController>();
-                finalController.Construct(this);
+                finalController = _instantiator.InstantiateComponent<CullingTextureController>(newObject, [this]);
                 CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), newObject);
             }
 
             finalController.Init(textureName, CullingTextureDatas[textureName]);
             _cullingCameraControllers[textureName] = finalController;
+        }
+
+        foreach (CullingCameraController controller in _cullingCameraControllers.Values)
+        {
+            if (controller is not CullingTextureController cullingTextureController)
+            {
+                continue;
+            }
+
+            if (cullingTextureController.RenderTextures.TryGetValue(
+                    Camera.stereoActiveEye,
+                    out RenderTexture colorTexture))
+            {
+                Shader.SetGlobalTexture(cullingTextureController.Key, colorTexture);
+            }
+
+            if (cullingTextureController.RenderTexturesDepth.TryGetValue(
+                    Camera.stereoActiveEye,
+                    out RenderTexture depthTexture))
+            {
+                Shader.SetGlobalTexture(cullingTextureController.DepthKey, depthTexture);
+            }
         }
 
         base.OnPreCull();
@@ -197,9 +219,10 @@ internal class PostProcessingController : CullingCameraController
 
     [UsedImplicitly]
     [Inject]
-    private void Construct(SiraLog log)
+    private void Construct(SiraLog log, IInstantiator instantiator)
     {
         _log = log;
+        _instantiator = instantiator;
     }
 
     private void OnDestroy()
@@ -257,31 +280,6 @@ internal class PostProcessingController : CullingCameraController
             value.Texture = texture;
             _log.Debug(
                 $"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}");
-        }
-
-        foreach (CullingCameraController controller in _cullingCameraControllers.Values)
-        {
-            if (controller is not CullingTextureController cullingTextureController ||
-                cullingTextureController.Key == null)
-            {
-                continue;
-            }
-
-            int key = cullingTextureController.Key.Value;
-
-            if (cullingTextureController.RenderTextures.TryGetValue(
-                    Camera.stereoActiveEye,
-                    out RenderTexture colorTexture))
-            {
-                Shader.SetGlobalTexture(key, colorTexture);
-            }
-
-            if (cullingTextureController.RenderTexturesDepth.TryGetValue(
-                    Camera.stereoActiveEye,
-                    out RenderTexture depthTexture))
-            {
-                Shader.SetGlobalTexture(key, depthTexture);
-            }
         }
 
         if (PostProcessingMaterial.Count == 0)
