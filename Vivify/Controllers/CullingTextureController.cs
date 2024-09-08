@@ -1,8 +1,13 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using HarmonyLib;
+using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using Vivify.Managers;
 using Vivify.PostProcessing;
 using Vivify.TrackGameObject;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Vivify.Controllers;
 
@@ -14,17 +19,17 @@ internal class CullingTextureController : CullingCameraController
 {
     private static readonly int _arraySliceIndex = Shader.PropertyToID("_ArraySliceIndex");
 
-    private string? _key;
-
     private MainEffectRenderer _mainEffectRenderer = null!;
 
     private PostProcessingController _postProcessingController = null!;
 
-    private RenderTexture? _renderTextureDepth;
-
     internal override int DefaultCullingMask => _postProcessingController.DefaultCullingMask;
 
-    internal RenderTexture? RenderTexture { get; private set; }
+    internal int? Key { get; private set; }
+
+    internal Dictionary<Camera.MonoOrStereoscopicEye, RenderTexture> RenderTextures { get; } = new();
+
+    internal Dictionary<Camera.MonoOrStereoscopicEye, RenderTexture> RenderTexturesDepth { get; } = new();
 
     internal void Construct(PostProcessingController postProcessingController)
     {
@@ -33,11 +38,9 @@ internal class CullingTextureController : CullingCameraController
 
     internal void Init(string key, CullingTextureTracker cullingTextureTracker)
     {
-        _key = key;
-        Camera.CopyFrom(_postProcessingController.Camera);
-        Camera.depthTextureMode = cullingTextureTracker.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
-        Camera.depth -= 1;
+        Key = Shader.PropertyToID(key);
         CullingTextureData = cullingTextureTracker;
+        RefreshCamera();
     }
 
     protected override void Awake()
@@ -49,6 +52,39 @@ internal class CullingTextureController : CullingCameraController
     protected override void OnPreCull()
     {
         base.OnPreCull();
+
+        if (!CamEquals(Camera, _postProcessingController.Camera))
+        {
+            RefreshCamera();
+        }
+    }
+
+    // very simple comparison
+    private static bool RTEquals(RenderTexture lhs, RenderTexture rhs)
+    {
+        return lhs.vrUsage == rhs.vrUsage &&
+               lhs.width == rhs.width &&
+               lhs.height == rhs.height;
+    }
+
+    private static bool CamEquals(Camera lhs, Camera rhs)
+    {
+        return lhs.stereoEnabled == rhs.stereoEnabled &&
+               Mathf.Approximately(lhs.fieldOfView, rhs.fieldOfView);
+    }
+
+    private void RefreshCamera()
+    {
+        if (CullingTextureData == null)
+        {
+            return;
+        }
+
+        Camera.CopyFrom(_postProcessingController.Camera);
+        Camera.ResetCullingMatrix();
+        Camera.depthTextureMode = CullingTextureData.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
+        Camera.depth -= 1;
+        RefreshCullingMask();
         Transform transform1 = transform;
         transform1.localPosition = Vector3.zero;
         transform1.localRotation = Quaternion.identity;
@@ -56,54 +92,57 @@ internal class CullingTextureController : CullingCameraController
 
     private void OnDisable()
     {
-        if (RenderTexture != null)
-        {
-            RenderTexture.Release();
-        }
-
-        if (_renderTextureDepth != null)
-        {
-            _renderTextureDepth.Release();
-        }
+        RenderTextures.Values.Do(n => n.Release());
+        RenderTextures.Clear();
+        RenderTexturesDepth.Values.Do(n => n.Release());
+        RenderTexturesDepth.Clear();
     }
 
     private void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
+        Graphics.Blit(src, dst);
+
         if (CullingTextureData == null)
         {
             return;
         }
 
-        if (RenderTexture == null)
+        if (!RenderTextures.TryGetValue(Camera.stereoActiveEye, out RenderTexture colorTexture) ||
+            !RTEquals(colorTexture, src))
         {
-            RenderTexture = new RenderTexture(src.descriptor);
+            colorTexture?.Release();
+            colorTexture = new RenderTexture(src.descriptor);
+            RenderTextures[Camera.stereoActiveEye] = colorTexture;
         }
 
-        Shader.SetGlobalTexture(_key, RenderTexture);
-        _mainEffectRenderer.Render(src, RenderTexture);
+        _mainEffectRenderer.Render(src, colorTexture);
 
         if (!CullingTextureData.DepthTexture)
         {
             return;
         }
 
-        if (_renderTextureDepth == null)
+        if (!RenderTexturesDepth.TryGetValue(Camera.stereoActiveEye, out RenderTexture depthTexture) ||
+            !RTEquals(depthTexture, src))
         {
-            _renderTextureDepth = new RenderTexture(src.descriptor);
+            depthTexture?.Release();
+            RenderTextureDescriptor descriptor = src.descriptor;
+            descriptor.graphicsFormat = GraphicsFormat.None;
+            depthTexture = new RenderTexture(src.descriptor);
+            RenderTexturesDepth[Camera.stereoActiveEye] = depthTexture;
         }
 
-        Shader.SetGlobalTexture(_key + "_Depth", _renderTextureDepth);
-        if (_renderTextureDepth.dimension == TextureDimension.Tex2DArray)
+        if (depthTexture.dimension == TextureDimension.Tex2DArray)
         {
             Material sliceMaterial = DepthShaderManager.DepthArrayMaterial;
             sliceMaterial.SetFloat(_arraySliceIndex, 0);
-            Graphics.Blit(null, _renderTextureDepth, sliceMaterial, -1, 0);
+            Graphics.Blit(null, depthTexture, sliceMaterial, -1, 0);
             sliceMaterial.SetFloat(_arraySliceIndex, 1);
-            Graphics.Blit(null, _renderTextureDepth, sliceMaterial, -1, 1);
+            Graphics.Blit(null, depthTexture, sliceMaterial, -1, 1);
         }
         else
         {
-            Graphics.Blit(null, _renderTextureDepth, DepthShaderManager.DepthMaterial);
+            Graphics.Blit(null, depthTexture, DepthShaderManager.DepthMaterial);
         }
     }
 }

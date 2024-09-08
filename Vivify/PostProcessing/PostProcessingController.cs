@@ -259,6 +259,37 @@ internal class PostProcessingController : CullingCameraController
                 $"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}");
         }
 
+        foreach (CullingCameraController controller in _cullingCameraControllers.Values)
+        {
+            if (controller is not CullingTextureController cullingTextureController ||
+                cullingTextureController.Key == null)
+            {
+                continue;
+            }
+
+            int key = cullingTextureController.Key.Value;
+
+            if (cullingTextureController.RenderTextures.TryGetValue(
+                    Camera.stereoActiveEye,
+                    out RenderTexture colorTexture))
+            {
+                Shader.SetGlobalTexture(key, colorTexture);
+            }
+
+            if (cullingTextureController.RenderTexturesDepth.TryGetValue(
+                    Camera.stereoActiveEye,
+                    out RenderTexture depthTexture))
+            {
+                Shader.SetGlobalTexture(key, depthTexture);
+            }
+        }
+
+        if (PostProcessingMaterial.Count == 0)
+        {
+            Graphics.Blit(src, dst);
+            return;
+        }
+
         // blit all passes
         RenderTexture main = RenderTexture.GetTemporary(src.descriptor);
         Graphics.Blit(src, main);
@@ -348,7 +379,9 @@ internal class PostProcessingController : CullingCameraController
             {
                 foreach (string materialDataTarget in materialData.Targets)
                 {
-                    RenderTexture? source = cullingTextureController.RenderTexture;
+                    cullingTextureController.RenderTextures.TryGetValue(
+                        Camera.stereoActiveEye,
+                        out RenderTexture? source);
                     if (materialDataTarget == CAMERA_TARGET)
                     {
                         Blit(source, main, material, materialData.Pass);

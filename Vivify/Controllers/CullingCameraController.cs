@@ -22,10 +22,14 @@ internal abstract class CullingCameraController : MonoBehaviour
         set
         {
             _cullingTextureData = value;
-
-            // flip culling mask when whitelist mode enabled
-            Camera.cullingMask = value?.Whitelist ?? false ? 1 << CULLING_LAYER : DefaultCullingMask;
+            RefreshCullingMask();
         }
+    }
+
+    protected void RefreshCullingMask()
+    {
+        // flip culling mask when whitelist mode enabled
+        Camera.cullingMask = _cullingTextureData?.Whitelist ?? false ? 1 << CULLING_LAYER : DefaultCullingMask;
     }
 
     protected virtual void Awake()

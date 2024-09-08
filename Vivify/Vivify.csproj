@@ -61,8 +61,20 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\AssetBundleDownloading.bsml"/>
-    <EmbeddedResource Include="Resources\DepthBlitShaders"/>
   </ItemGroup>
+
+  <Choose>
+    <When Condition="$(Configuration.EndsWith('1.29.1'))">
+      <ItemGroup>
+        <EmbeddedResource Include="Resources\DepthBlit2019" LogicalName="Vivify.Resources.DepthBlit" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <EmbeddedResource Include="Resources\DepthBlit2021" LogicalName="Vivify.Resources.DepthBlit" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 
   <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks.Luna" Version="2.1.0"/>
