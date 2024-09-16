@@ -66,8 +66,8 @@ internal class PostProcessingController : CullingCameraController
                 continue;
             }
 
-            CullingCameraController cameraController = _cullingCameraControllers[textureName];
-            if (cameraController is CullingTextureController cullingTextureController2)
+            if (_cullingCameraControllers.TryGetValue(textureName, out CullingCameraController cameraController) &&
+                cameraController is CullingTextureController cullingTextureController2)
             {
                 cullingTextureController2.gameObject.SetActive(false);
                 _disabledCullingCameraControllers.Push(cullingTextureController2);

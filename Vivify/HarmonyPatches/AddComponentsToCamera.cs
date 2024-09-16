@@ -33,9 +33,12 @@ internal class AddComponentsToCamera : IAffinity
     private void SafeAddComponent<T>(GameObject gameObject)
         where T : Component
     {
-        if (gameObject.GetComponent<T>() == null)
+        foreach (T component in gameObject.GetComponents<T>())
         {
-            _instantiator.InstantiateComponent<T>(gameObject);
+            // likely the component was duplicated without being injected by zenject
+            Object.Destroy(component);
         }
+
+        _instantiator.InstantiateComponent<T>(gameObject);
     }
 }

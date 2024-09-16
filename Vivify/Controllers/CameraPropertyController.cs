@@ -78,7 +78,6 @@ internal class CameraPropertyController : MonoBehaviour
 #else
         _visualEffectsController = GetComponent<VisualEffectsController>();
 #endif
-        CameraPropertyManager.AddController(this);
     }
 
     private void OnEnable()
@@ -86,11 +85,11 @@ internal class CameraPropertyController : MonoBehaviour
         _cachedDepthTextureMode = _camera.depthTextureMode;
         _cachedClearFlags = _camera.clearFlags;
         _cachedBackgroundColor = _camera.backgroundColor;
+        CameraPropertyManager.AddController(this);
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
-        Reset();
         CameraPropertyManager.RemoveController(this);
     }
 }
