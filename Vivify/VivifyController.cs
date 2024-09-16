@@ -49,6 +49,10 @@ public static class VivifyController
     internal const string SABER_TRAIL_SAMPLE_FREQ = "trailSamplingFrequency";
     internal const string SABER_TRAIL_GRANULARITY = "trailGranularity";
 
+    internal const string RENDER_SETTINGS = "renderSettings";
+    internal const string QUALITY_SETTINGS = "qualitySettings";
+    internal const string XR_SETTINGS = "xrSettings";
+
     internal const string APPLY_POST_PROCESSING = "Blit";
     internal const string ASSIGN_OBJECT_PREFAB = "AssignObjectPrefab";
     internal const string DECLARE_CULLING_TEXTURE = "DeclareCullingTexture";
@@ -58,7 +62,7 @@ public static class VivifyController
     internal const string INSTANTIATE_PREFAB = "InstantiatePrefab";
     internal const string SET_MATERIAL_PROPERTY = "SetMaterialProperty";
     internal const string SET_ANIMATOR_PROPERTY = "SetAnimatorProperty";
-    internal const string SET_RENDER_SETTING = "SetRenderSetting";
+    internal const string SET_RENDERING_SETTINGS = "SetRenderingSettings";
     internal const string SET_GLOBAL_PROPERTY = "SetGlobalProperty";
     internal const string SET_CAMERA_PROPERTY = "SetCameraProperty";
 

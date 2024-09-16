@@ -8,6 +8,7 @@ using Heck.Animation.Transform;
 using Heck.Deserialize;
 using IPA.Utilities;
 using UnityEngine;
+using UnityEngine.XR;
 using Vivify.ObjectPrefab.Managers;
 using static Heck.HeckController;
 using static Vivify.VivifyController;
@@ -58,172 +59,6 @@ internal class VivifyObjectData : IObjectCustomData, ICopyable<IObjectCustomData
     }
 }
 
-internal class AnimatedMaterialProperty<T> : MaterialProperty
-    where T : struct
-{
-    internal AnimatedMaterialProperty(
-        CustomData rawData,
-        MaterialPropertyType materialPropertyType,
-        object value,
-        Dictionary<string, List<object>> pointDefinitions)
-        : base(rawData, materialPropertyType, value)
-    {
-        PointDefinition = rawData.GetPointData<T>(VALUE, pointDefinitions) ??
-                          throw new JsonNotDefinedException(VALUE);
-    }
-
-    internal PointDefinition<T> PointDefinition { get; }
-}
-
-internal class MaterialProperty
-{
-    internal MaterialProperty(CustomData rawData, MaterialPropertyType materialPropertyType, object value)
-    {
-        Name = Shader.PropertyToID(rawData.GetRequired<string>(ID_FIELD));
-        Type = materialPropertyType;
-        Value = value;
-    }
-
-    internal int Name { get; }
-
-    internal MaterialPropertyType Type { get; }
-
-    internal object Value { get; }
-
-    internal static MaterialProperty CreateMaterialProperty(
-        CustomData rawData,
-        Dictionary<string, List<object>> pointDefinitions)
-    {
-        MaterialPropertyType type = rawData.GetStringToEnumRequired<MaterialPropertyType>(TYPE);
-        object value = rawData.GetRequired<object>(VALUE);
-        if (value is List<object>)
-        {
-            return type switch
-            {
-                MaterialPropertyType.Color => new AnimatedMaterialProperty<Vector4>(
-                    rawData,
-                    type,
-                    value,
-                    pointDefinitions),
-                MaterialPropertyType.Float => new AnimatedMaterialProperty<float>(
-                    rawData,
-                    type,
-                    value,
-                    pointDefinitions),
-                MaterialPropertyType.Vector => new AnimatedMaterialProperty<Vector4>(
-                    rawData,
-                    type,
-                    value,
-                    pointDefinitions),
-                _ => throw new InvalidOperationException($"[{type}] not currently supported.")
-            };
-        }
-
-        return new MaterialProperty(rawData, type, value);
-    }
-}
-
-internal class AnimatedAnimatorProperty : AnimatorProperty
-{
-    internal AnimatedAnimatorProperty(
-        CustomData rawData,
-        AnimatorPropertyType animatorPropertyType,
-        object value,
-        Dictionary<string, List<object>> pointDefinitions)
-        : base(rawData, animatorPropertyType, value)
-    {
-        PointDefinition = rawData.GetPointData<float>(VALUE, pointDefinitions) ??
-                          throw new JsonNotDefinedException(VALUE);
-    }
-
-    internal PointDefinition<float> PointDefinition { get; }
-}
-
-internal class AnimatorProperty
-{
-    internal AnimatorProperty(CustomData rawData, AnimatorPropertyType animatorPropertyType, object value)
-    {
-        Name = rawData.GetRequired<string>(ID_FIELD);
-        Type = animatorPropertyType;
-        Value = value;
-    }
-
-    internal string Name { get; }
-
-    internal AnimatorPropertyType Type { get; }
-
-    internal object Value { get; }
-
-    internal static AnimatorProperty CreateAnimatorProperty(
-        CustomData rawData,
-        Dictionary<string, List<object>> pointDefinitions)
-    {
-        AnimatorPropertyType type = rawData.GetStringToEnumRequired<AnimatorPropertyType>(TYPE);
-        object value;
-        if (type == AnimatorPropertyType.Trigger)
-        {
-            value = rawData.Get<object>(VALUE) ?? true;
-        }
-        else
-        {
-            value = rawData.GetRequired<object>(VALUE);
-        }
-
-        return value is List<object>
-            ? new AnimatedAnimatorProperty(rawData, type, value, pointDefinitions)
-            : new AnimatorProperty(rawData, type, value);
-    }
-}
-
-internal abstract class RenderSettingProperty
-{
-    internal RenderSettingProperty(string name)
-    {
-        Name = name;
-    }
-
-    internal string Name { get; }
-
-    internal static RenderSettingProperty CreateRenderSettingProperty<T>(
-        string name,
-        object value,
-        CustomData rawData,
-        Dictionary<string, List<object>> pointDefinitions)
-        where T : struct
-    {
-        return value is List<object>
-            ? new AnimatedRenderSettingProperty<T>(name, rawData, pointDefinitions)
-            : new RenderSettingProperty<T>(name, rawData.GetRequired<T>(name));
-    }
-}
-
-internal class AnimatedRenderSettingProperty<T> : RenderSettingProperty
-    where T : struct
-{
-    internal AnimatedRenderSettingProperty(
-        string name,
-        CustomData rawData,
-        Dictionary<string, List<object>> pointDefinitions)
-        : base(name)
-    {
-        PointDefinition = rawData.GetPointData<T>(name, pointDefinitions) ??
-                          throw new JsonNotDefinedException(name);
-    }
-
-    internal PointDefinition<T> PointDefinition { get; }
-}
-
-internal class RenderSettingProperty<T> : RenderSettingProperty
-{
-    internal RenderSettingProperty(string name, T value)
-        : base(name)
-    {
-        Value = value;
-    }
-
-    internal T Value { get; }
-}
-
 internal class ApplyPostProcessingData : ICustomEventCustomData
 {
     internal ApplyPostProcessingData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)
@@ -270,97 +105,9 @@ internal class ApplyPostProcessingData : ICustomEventCustomData
     internal string[]? Target { get; }
 }
 
-internal class SetMaterialPropertyData : ICustomEventCustomData
+internal class SetRenderingSettingsData : ICustomEventCustomData
 {
-    internal SetMaterialPropertyData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)
-    {
-        Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
-        Duration = customData.Get<float?>(DURATION) ?? 0f;
-        Asset = customData.GetRequired<string>(ASSET);
-        Properties = customData
-            .GetRequired<List<object>>(PROPERTIES)
-            .Select(n => MaterialProperty.CreateMaterialProperty((CustomData)n, pointDefinitions))
-            .ToList();
-    }
-
-    internal string Asset { get; }
-
-    internal float Duration { get; }
-
-    internal Functions Easing { get; }
-
-    internal List<MaterialProperty> Properties { get; }
-}
-
-internal class SetGlobalPropertyData : ICustomEventCustomData
-{
-    internal SetGlobalPropertyData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)
-    {
-        Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
-        Duration = customData.Get<float?>(DURATION) ?? 0f;
-        Properties = customData
-            .GetRequired<List<object>>(PROPERTIES)
-            .Select(n => MaterialProperty.CreateMaterialProperty((CustomData)n, pointDefinitions))
-            .ToList();
-    }
-
-    internal float Duration { get; }
-
-    internal Functions Easing { get; }
-
-    internal List<MaterialProperty> Properties { get; }
-}
-
-internal class SetCameraPropertyData : ICustomEventCustomData
-{
-    internal SetCameraPropertyData(CustomData customData)
-    {
-        List<object>? depthTextureModeStrings = customData.Get<List<object>?>(CAMERA_DEPTH_TEXTURE_MODE);
-        if (depthTextureModeStrings != null)
-        {
-            DepthTextureMode = depthTextureModeStrings.Aggregate(
-                UnityEngine.DepthTextureMode.None,
-                (current, depthTextureModeString) =>
-                    current |
-                    (DepthTextureMode)Enum.Parse(typeof(DepthTextureMode), (string)depthTextureModeString));
-        }
-
-        ClearFlags = customData.GetStringToEnum<CameraClearFlags?>(CAMERA_CLEAR_FLAGS);
-        BackgroundColor = customData.GetColor(CAMERA_BACKGROUND_COLOR);
-    }
-
-    internal DepthTextureMode? DepthTextureMode { get; }
-
-    internal CameraClearFlags? ClearFlags { get; }
-
-    internal Color? BackgroundColor { get; }
-}
-
-internal class SetAnimatorPropertyData : ICustomEventCustomData
-{
-    internal SetAnimatorPropertyData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)
-    {
-        Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
-        Duration = customData.Get<float?>(DURATION) ?? 0f;
-        Id = customData.GetRequired<string>(ID_FIELD);
-        Properties = customData
-            .GetRequired<List<object>>(PROPERTIES)
-            .Select(n => AnimatorProperty.CreateAnimatorProperty((CustomData)n, pointDefinitions))
-            .ToList();
-    }
-
-    internal float Duration { get; }
-
-    internal Functions Easing { get; }
-
-    internal string Id { get; }
-
-    internal List<AnimatorProperty> Properties { get; }
-}
-
-internal class SetRenderSettingData : ICustomEventCustomData
-{
-    internal SetRenderSettingData(
+    internal SetRenderingSettingsData(
         CustomData customData,
         Dictionary<string, List<object>> pointDefinitions)
     {
@@ -368,58 +115,121 @@ internal class SetRenderSettingData : ICustomEventCustomData
         Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
 
         string[] excludedStrings = [DURATION, EASING];
-        List<KeyValuePair<string, object?>> propertyKeys =
+        List<KeyValuePair<string, object?>> categories =
             customData.Where(n => excludedStrings.All(m => m != n.Key)).ToList();
-        foreach ((string? key, object? value) in propertyKeys)
+        foreach ((string category, object? propertiesRaw) in categories)
         {
-            if (value == null)
+            CustomData properties = (CustomData?)propertiesRaw ?? throw new InvalidOperationException();
+            foreach ((string key, object? value) in properties)
             {
-                continue;
-            }
+                if (value == null)
+                {
+                    continue;
+                }
 
-            switch (key)
-            {
-                case "ambientIntensity":
-                case "ambientMode":
-                case "defaultReflectionMode":
-                case "defaultReflectionResolution":
-                case "flareFadeSpeed":
-                case "flareStrength":
-                case "fog":
-                case "fogDensity":
-                case "fogEndDistance":
-                case "fogMode":
-                case "fogStartDistance":
-                case "haloStrength":
-                case "reflectionBounces":
-                case "reflectionIntensity":
-                    Properties.Add(
-                        RenderSettingProperty.CreateRenderSettingProperty<float>(
-                            key,
-                            value,
-                            customData,
-                            pointDefinitions));
-                    break;
+                RenderingSettingsProperty property;
+                switch (category)
+                {
+                    case RENDER_SETTINGS:
+                        switch (key)
+                        {
+                            case nameof(RenderSettings.ambientIntensity):
+                            case nameof(RenderSettings.ambientMode):
+                            case nameof(RenderSettings.defaultReflectionMode):
+                            case nameof(RenderSettings.defaultReflectionResolution):
+                            case nameof(RenderSettings.flareFadeSpeed):
+                            case nameof(RenderSettings.flareStrength):
+                            case nameof(RenderSettings.fog):
+                            case nameof(RenderSettings.fogDensity):
+                            case nameof(RenderSettings.fogEndDistance):
+                            case nameof(RenderSettings.fogMode):
+                            case nameof(RenderSettings.fogStartDistance):
+                            case nameof(RenderSettings.haloStrength):
+                            case nameof(RenderSettings.reflectionBounces):
+                            case nameof(RenderSettings.reflectionIntensity):
+                                property = RenderingSettingsProperty.CreateRenderSettingProperty<float>(
+                                    key,
+                                    value,
+                                    properties,
+                                    pointDefinitions);
+                                break;
 
-                case "ambientEquatorColor":
-                case "ambientGroundColor":
-                case "ambientLight":
-                case "ambientSkyColor":
-                case "fogColor":
-                case "subtractiveShadowColor":
-                    Properties.Add(
-                        RenderSettingProperty.CreateRenderSettingProperty<Vector4>(
-                            key,
-                            value,
-                            customData,
-                            pointDefinitions));
-                    break;
+                            case nameof(RenderSettings.ambientEquatorColor):
+                            case nameof(RenderSettings.ambientGroundColor):
+                            case nameof(RenderSettings.ambientLight):
+                            case nameof(RenderSettings.ambientSkyColor):
+                            case nameof(RenderSettings.fogColor):
+                            case nameof(RenderSettings.subtractiveShadowColor):
+                                property = RenderingSettingsProperty.CreateRenderSettingProperty<Vector4>(
+                                    key,
+                                    value,
+                                    properties,
+                                    pointDefinitions);
+                                break;
 
-                case "skybox":
-                case "sun":
-                    Properties.Add(
-                        new RenderSettingProperty<string>(key, customData.GetRequired<string>(key)));
-                    break;
+                            case nameof(RenderSettings.skybox):
+                            case nameof(RenderSettings.sun):
+                                property = new RenderingSettingsProperty<string>(
+                                    key,
+                                    properties.GetRequired<string>(key));
+                                break;
+
+                            default:
+                                continue;
+                        }
+
+                        break;
+
+                    case QUALITY_SETTINGS:
+                        switch (key)
+                        {
+                            case nameof(QualitySettings.anisotropicFiltering):
+                            case nameof(QualitySettings.antiAliasing):
+                            case nameof(QualitySettings.pixelLightCount):
+                            case nameof(QualitySettings.realtimeReflectionProbes):
+                            case nameof(QualitySettings.shadowCascades):
+                            case nameof(QualitySettings.shadowDistance):
+                            case nameof(QualitySettings.shadowmaskMode):
+                            case nameof(QualitySettings.shadowNearPlaneOffset):
+                            case nameof(QualitySettings.shadowProjection):
+                            case nameof(QualitySettings.shadowResolution):
+                            case nameof(QualitySettings.shadows):
+                            case nameof(QualitySettings.softParticles):
+                                property = RenderingSettingsProperty.CreateRenderSettingProperty<float>(
+                                    key,
+                                    value,
+                                    properties,
+                                    pointDefinitions);
+                                break;
+
+                            default:
+                                continue;
+                        }
+
+                        break;
+
+                    case XR_SETTINGS:
+                        switch (key)
+                        {
+                            case nameof(XRSettings.useOcclusionMesh):
+                                property = RenderingSettingsProperty.CreateRenderSettingProperty<float>(
+                                    key,
+                                    value,
+                                    properties,
+                                    pointDefinitions);
+                                break;
+
+                            default:
+                                continue;
+                        }
+
+                        break;
+
+                    default:
+                        continue;
+                }
+
+                Properties.Add(property);
             }
         }
     }
@@ -428,7 +238,7 @@ internal class SetRenderSettingData : ICustomEventCustomData
 
     internal Functions Easing { get; }
 
-    internal List<RenderSettingProperty> Properties { get; } = [];
+    internal List<RenderingSettingsProperty> Properties { get; } = [];
 }
 
 internal class DeclareCullingMaskData : ICustomEventCustomData

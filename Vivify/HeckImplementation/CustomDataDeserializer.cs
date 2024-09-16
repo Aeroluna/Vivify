@@ -83,8 +83,8 @@ internal class CustomDataDeserializer : IEarlyDeserializer, IObjectsDeserializer
                         dictionary.Add(customEventData, new SetAnimatorPropertyData(data, _pointDefinitions));
                         break;
 
-                    case SET_RENDER_SETTING:
-                        dictionary.Add(customEventData, new SetRenderSettingData(data, _pointDefinitions));
+                    case SET_RENDERING_SETTINGS:
+                        dictionary.Add(customEventData, new SetRenderingSettingsData(data, _pointDefinitions));
                         break;
 
                     default:

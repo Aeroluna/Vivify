@@ -108,26 +108,6 @@ map by using the `"_assetBundle"` field in the info.dat.
   ...
 ```
 
-## Quality Settings
-
-Want realtime reflection probes? Here you go. See https://docs.unity3d.com/ScriptReference/QualitySettings.html for
-better descriptions of each setting.
-
-```js
-  ...
-  "_difficulty": "ExpertPlus",
-  "_difficultyRank": 9,
-  "_beatmapFilename": "ExpertPlusStandard.dat",
-  "_noteJumpMovementSpeed": 19,
-  "_customData": {
-    "_qualitySettings": {
-      "_realtimeReflectionProbes": true,
-      "_shadows": 2
-    }
-  }
-  ...
-```
-
 Currently provided settings:
 
 - `"_anisotropicFiltering"`: (0 - 2) Disable, Enable, ForceEnable.
@@ -520,23 +500,27 @@ instancing shaders" at https://docs.unity3d.com/Manual/gpu-instancing-shader.htm
 }
 ```
 
-## SetRenderSetting
+## SetRenderingSettings
 
 ```js
 {
   "b": float, // Time in beats.
-  "t": "SetRenderSetting",
+  "t": "SetRenderingSettings",
   "d": {
     "duration": float, // (Optional) The length of the event in beats. Defaults to 0.
     "easing": string, // (Optional) An easing for the animation to follow. Defaults to "easeLinear".
-    "property": point definition // The setting to set
+    "category": {
+        "property": value or point definition // The setting to set
+    }
   }
 }
 ```
 
-Property does not have to be a point definition. See https://docs.unity3d.com/ScriptReference/RenderSettings.html.
+Property does not have to be a point definition. When enabling a render setting with a performance cost, remember to disable it after you no longer need it to gain performance back.
 
 Currently provided settings:
+
+`"renderSettings"`: https://docs.unity3d.com/ScriptReference/RenderSettings.html
 
 - `"ambientEquatorColor"`: (color)
 - `"ambientGroundColor"`: (color)
@@ -561,13 +545,34 @@ Currently provided settings:
 - `"subtractiveShadowColor"`: (color)
 - `"sun"`: (string) Id from InstantiatePrefab event, will find the first directional light on the top level GameObject
 
+`"qualitySettings"`: https://docs.unity3d.com/ScriptReference/QualitySettings.html
+
+- `"anisotropicFiltering"`: (0 - 2) Disable, Enable, ForceEnable.
+- `"antiAliasing"`: (0, 2, 4, 8)
+- `"pixelLightCount"`: (int)
+- `"realtimeReflectionProbes"`: (0, 1) Bool
+- `"shadowCascades"`: (0, 2, 4)
+- `"shadowDistance"`: (float)
+- `"shadowmaskMode"`: (0, 1) Shadowmask, DistanceShadowmask
+- `"shadowNearPlaneOffset"`: (float)
+- `"shadowProjection"`: (0, 1) CloseFit, StableFit
+- `"shadowResolution"`: (0, 1, 2, 3) Low, Medium, High, VeryHigh.
+- `"shadows"`: (0, 1, 2) Disable, HardOnly, All. WARNING: May cause random crashes, needs more investigation.
+- `"softParticles"`: (0, 1) Bool
+
+`"xrSettings"`: https://docs.unity3d.com/ScriptReference/XR.XRSettings.html
+
+- `"useOcclusionMesh"`: (0, 1) Bool
+
 ```js
 // Example
 {
   "b": 70.0,
-  "t": "SetRenderSetting",
+  "t": "SetRenderingSettings",
   "d": {
-    "ambientLight": [0, 0, 0, 0]
+    "qualitySettings": {
+      "ambientLight": [0, 0, 0, 0]
+    }
   }
 }
 ```

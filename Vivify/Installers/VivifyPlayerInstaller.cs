@@ -33,8 +33,6 @@ internal class VivifyPlayerInstaller : Installer
 
         Container.BindInterfacesAndSelfTo<CameraPropertyManager>().AsSingle();
 
-        Container.BindInterfacesTo<QualitySettingsManager>().AsSingle();
-
         // Custom Events
         Container.BindInterfacesTo<ApplyPostProcessing>().AsSingle();
         Container.BindInterfacesTo<AssignObjectPrefab>().AsSingle();
@@ -46,6 +44,6 @@ internal class VivifyPlayerInstaller : Installer
         Container.BindInterfacesTo<SetCameraProperty>().AsSingle();
         Container.BindInterfacesTo<SetGlobalProperty>().AsSingle();
         Container.BindInterfacesAndSelfTo<SetMaterialProperty>().AsSingle();
-        Container.BindInterfacesTo<SetRenderSetting>().AsSingle();
+        Container.BindInterfacesTo<SetRenderingSettings>().AsSingle();
     }
 }
