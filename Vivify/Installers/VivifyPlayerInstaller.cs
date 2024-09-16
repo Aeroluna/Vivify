@@ -36,8 +36,9 @@ internal class VivifyPlayerInstaller : Installer
         // Custom Events
         Container.BindInterfacesTo<ApplyPostProcessing>().AsSingle();
         Container.BindInterfacesTo<AssignObjectPrefab>().AsSingle();
-        Container.BindInterfacesTo<DeclareCullingMask>().AsSingle();
+        Container.BindInterfacesTo<DeclareCullingTexture>().AsSingle();
         Container.BindInterfacesTo<DeclareRenderTexture>().AsSingle();
+        Container.BindInterfacesTo<DestroyTexture>().AsSingle();
         Container.BindInterfacesTo<DestroyPrefab>().AsSingle();
         Container.BindInterfacesTo<Events.InstantiatePrefab>().AsSingle();
         Container.BindInterfacesTo<SetAnimatorProperty>().AsSingle();

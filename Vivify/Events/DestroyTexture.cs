@@ -10,7 +10,7 @@ using static Vivify.VivifyController;
 
 namespace Vivify.Events;
 
-[CustomEvent(DECLARE_TEXTURE)]
+[CustomEvent(DESTROY_TEXTURE)]
 internal class DestroyTexture : ICustomEvent
 {
     private readonly DeserializedData _deserializedData;

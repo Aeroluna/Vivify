@@ -48,7 +48,7 @@ internal class CustomDataDeserializer : IEarlyDeserializer, IObjectsDeserializer
                         break;
 
                     case DECLARE_CULLING_TEXTURE:
-                        dictionary.Add(customEventData, new DeclareCullingMaskData(data, _tracks));
+                        dictionary.Add(customEventData, new DeclareCullingTextureData(data, _tracks));
                         break;
 
                     case DECLARE_TEXTURE:

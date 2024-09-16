@@ -241,9 +241,9 @@ internal class SetRenderingSettingsData : ICustomEventCustomData
     internal List<RenderingSettingsProperty> Properties { get; } = [];
 }
 
-internal class DeclareCullingMaskData : ICustomEventCustomData
+internal class DeclareCullingTextureData : ICustomEventCustomData
 {
-    internal DeclareCullingMaskData(CustomData customData, Dictionary<string, Track> tracks)
+    internal DeclareCullingTextureData(CustomData customData, Dictionary<string, Track> tracks)
     {
         Name = customData.GetRequired<string>(ID_FIELD);
         Tracks = customData.GetTrackArray(tracks, false);
