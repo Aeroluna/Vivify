@@ -58,6 +58,10 @@ internal class CullingTextureController : CullingCameraController
         {
             RefreshCamera();
         }
+
+        Transform transform1 = transform;
+        transform1.localPosition = Vector3.zero;
+        transform1.localRotation = Quaternion.identity;
     }
 
     // very simple comparison
@@ -94,9 +98,6 @@ internal class CullingTextureController : CullingCameraController
         Camera.depthTextureMode = CullingTextureData.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
         Camera.depth -= 1;
         RefreshCullingMask();
-        Transform transform1 = transform;
-        transform1.localPosition = Vector3.zero;
-        transform1.localRotation = Quaternion.identity;
     }
 
     private void OnDisable()
