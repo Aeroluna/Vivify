@@ -22,14 +22,14 @@ internal class AssetBundleManager : IDisposable
     private AssetBundleManager(
         SiraLog log,
         IReadonlyBeatmapData beatmapData,
-#if LATEST
+#if !PRE_V1_37_1
         BeatmapLevel beatmapLevel,
 #else
         IDifficultyBeatmap difficultyBeatmap,
 #endif
         Config config)
     {
-#if LATEST
+#if !PRE_V1_37_1
         if (beatmapLevel.previewMediaData is not FileSystemPreviewMediaData fileSystemPreviewMediaData)
         {
             throw new ArgumentException(
@@ -54,7 +54,7 @@ internal class AssetBundleManager : IDisposable
 
         _log = log;
 
-#if LATEST
+#if !PRE_V1_37_1
         string path = Path.Combine(
             Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!,
             BUNDLE + BUNDLE_SUFFIX);

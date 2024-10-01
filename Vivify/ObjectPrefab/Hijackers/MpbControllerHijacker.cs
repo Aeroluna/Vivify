@@ -10,7 +10,9 @@ internal class MpbControllerHijacker : IHijacker<GameObject>
     private readonly Transform _child;
     private readonly MaterialPropertyBlockController _materialPropertyBlockController;
     private readonly Renderer[] _originalRenderers;
+#if !LATEST
     private List<int>? _cachedNumberOfMaterialsInRenderers;
+#endif
     private Renderer[]? _cachedRenderers;
 
     [UsedImplicitly]
@@ -38,12 +40,14 @@ internal class MpbControllerHijacker : IHijacker<GameObject>
             gameObject.transform.SetParent(_child, false);
         }
 
+#if !LATEST
         if (_materialPropertyBlockController._isInitialized)
         {
             _cachedNumberOfMaterialsInRenderers =
                 _materialPropertyBlockController._numberOfMaterialsInRenderers;
             _materialPropertyBlockController._isInitialized = false;
         }
+#endif
 
         _cachedRenderers = _materialPropertyBlockController._renderers;
         IEnumerable<Renderer> newRenderers =
@@ -68,12 +72,14 @@ internal class MpbControllerHijacker : IHijacker<GameObject>
 
     public void Deactivate()
     {
+#if !LATEST
         if (_cachedNumberOfMaterialsInRenderers != null)
         {
             _materialPropertyBlockController._numberOfMaterialsInRenderers =
                 _cachedNumberOfMaterialsInRenderers;
             _cachedNumberOfMaterialsInRenderers = null;
         }
+#endif
 
         if (_cachedRenderers != null)
         {

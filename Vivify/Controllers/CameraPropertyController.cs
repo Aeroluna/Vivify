@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using Vivify.Managers;
-#if !LATEST
+#if PRE_V1_37_1
 using HarmonyLib;
 #endif
 
@@ -14,7 +14,7 @@ internal class CameraPropertyController : MonoBehaviour
     private CameraClearFlags _cachedClearFlags;
     private Color _cachedBackgroundColor;
 
-#if LATEST
+#if !PRE_V1_37_1
     private DepthTextureController? _depthTextureController;
 #else
     private VisualEffectsController? _visualEffectsController;
@@ -26,7 +26,7 @@ internal class CameraPropertyController : MonoBehaviour
         {
             if (value == null)
             {
-#if LATEST
+#if !PRE_V1_37_1
                 if (_depthTextureController != null)
                 {
                     _depthTextureController.Start();
@@ -44,7 +44,7 @@ internal class CameraPropertyController : MonoBehaviour
             {
                 _camera.depthTextureMode = value.Value | _cachedDepthTextureMode;
             }
-#if LATEST
+#if V1_37_1
             if (_depthTextureController != null)
             {
                 _depthTextureController._cachedPreset = null;
@@ -73,7 +73,7 @@ internal class CameraPropertyController : MonoBehaviour
     private void Awake()
     {
         _camera = GetComponent<Camera>();
-#if LATEST
+#if !PRE_V1_37_1
         _depthTextureController = GetComponent<DepthTextureController>();
 #else
         _visualEffectsController = GetComponent<VisualEffectsController>();

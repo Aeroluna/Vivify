@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 using Zenject;
 using static Vivify.VivifyController;
-#if LATEST
+#if !PRE_V1_37_1
 using CustomJSONData;
 #endif
 
@@ -76,7 +76,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
 
     public bool Init(StartStandardLevelParameters standardLevelParameters)
     {
-#if LATEST
+#if !PRE_V1_37_1
         if (standardLevelParameters.BeatmapLevel.previewMediaData is not FileSystemPreviewMediaData fileSystemPreviewMediaData)
         {
             return false;
@@ -104,7 +104,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         }
 
         // check if bundle already downloaded
-#if LATEST
+#if !PRE_V1_37_1
         string path =
             Path.Combine(
                 Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!,
