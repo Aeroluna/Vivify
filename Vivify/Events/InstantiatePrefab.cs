@@ -23,14 +23,16 @@ internal class InstantiatePrefab : ICustomEvent, IInitializable, IDisposable
     private readonly AssetBundleManager _assetBundleManager;
     private readonly DeserializedData _deserializedData;
     private readonly IInstantiator _instantiator;
-    private readonly bool _leftHanded;
     private readonly ReLoader? _reLoader;
     private readonly SiraLog _log;
     private readonly PrefabManager _prefabManager;
     private readonly IReadonlyBeatmapData _readonlyBeatmapData;
     private readonly TransformControllerFactory _transformControllerFactory;
+    private readonly bool _leftHanded;
 
     private readonly Dictionary<InstantiatePrefabData, GameObject> _loadedPrefabs = new();
+
+    private Transform? _mirroredParent;
 
     private InstantiatePrefab(
         SiraLog log,
@@ -93,6 +95,13 @@ internal class InstantiatePrefab : ICustomEvent, IInitializable, IDisposable
             gameObject.SetActive(false);
             _loadedPrefabs.Add(data, gameObject);
         }
+
+        // ReSharper disable once InvertIf
+        if (_leftHanded)
+        {
+            _mirroredParent = new GameObject("LeftHandPrefabParent").transform;
+            _mirroredParent.localScale = _mirroredParent.localScale.Mirror();
+        }
     }
 
     public void Callback(CustomEventData customEventData)
@@ -110,11 +119,9 @@ internal class InstantiatePrefab : ICustomEvent, IInitializable, IDisposable
         gameObject.SetActive(true);
         Transform transform = gameObject.transform;
         data.TransformData.Apply(transform, false);
-        if (_leftHanded)
+        if (_mirroredParent != null)
         {
-            transform.localPosition = transform.localPosition.Mirror();
-            transform.localRotation = transform.localRotation.Mirror();
-            transform.localScale = transform.localScale.Mirror();
+            transform.SetParent(_mirroredParent);
         }
 
         if (data.Track != null)

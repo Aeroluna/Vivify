@@ -7,13 +7,15 @@ namespace Vivify.Controllers;
 
 internal abstract class CullingCameraController : MonoBehaviour
 {
-    private readonly List<(GameObject, int)> _cachedLayers = [];
+    private readonly HashSet<(GameObject, int)> _cachedLayers = [];
+
+    private Camera? _camera;
 
     private CullingTextureTracker? _cullingTextureData;
 
     internal abstract int DefaultCullingMask { get; }
 
-    internal Camera Camera { get; private set; } = null!;
+    internal Camera Camera => _camera ??= GetComponent<Camera>();
 
     internal CullingTextureTracker? CullingTextureData
     {
@@ -30,11 +32,6 @@ internal abstract class CullingCameraController : MonoBehaviour
     {
         // flip culling mask when whitelist mode enabled
         Camera.cullingMask = _cullingTextureData?.Whitelist ?? false ? 1 << CULLING_LAYER : DefaultCullingMask;
-    }
-
-    protected virtual void Awake()
-    {
-        Camera = GetComponent<Camera>();
     }
 
     protected virtual void OnPreCull()
@@ -63,7 +60,11 @@ internal abstract class CullingCameraController : MonoBehaviour
         }
 
         // reset renderer layers
-        _cachedLayers.ForEach(n => n.Item1.layer = n.Item2);
+        foreach ((GameObject? cachedObject, int layer) in _cachedLayers)
+        {
+            cachedObject.layer = layer;
+        }
+
         _cachedLayers.Clear();
     }
 }

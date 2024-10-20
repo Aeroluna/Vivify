@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using Vivify.Managers;
-#if PRE_V1_37_1
+#if LATEST
+using JetBrains.Annotations;
+using Zenject;
+#elif PRE_V1_37_1
 using HarmonyLib;
 #endif
 
@@ -14,6 +17,9 @@ internal class CameraPropertyController : MonoBehaviour
     private CameraClearFlags _cachedClearFlags;
     private Color _cachedBackgroundColor;
 
+#if LATEST
+    private SettingsManager? _settingsManager = null!;
+#endif
 #if !PRE_V1_37_1
     private DepthTextureController? _depthTextureController;
 #else
@@ -29,7 +35,11 @@ internal class CameraPropertyController : MonoBehaviour
 #if !PRE_V1_37_1
                 if (_depthTextureController != null)
                 {
+#if LATEST
+                    _depthTextureController.Init(_settingsManager);
+#else
                     _depthTextureController.Start();
+#endif
                 }
 #else
                 if (_visualEffectsController != null)
@@ -69,6 +79,15 @@ internal class CameraPropertyController : MonoBehaviour
         ClearFlags = null;
         BackgroundColor = null;
     }
+
+#if LATEST
+    [UsedImplicitly]
+    [Inject]
+    private void Construct(SettingsManager settingsManager)
+    {
+        _settingsManager = settingsManager;
+    }
+#endif
 
     private void Awake()
     {

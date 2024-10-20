@@ -20,6 +20,7 @@ internal class FollowedSaberTrail : SaberTrail
         if (_trailRenderer == null)
         {
             _trailRenderer = Instantiate(followed._trailRendererPrefab, Vector3.zero, Quaternion.identity);
+            _trailRenderer.transform.SetParent(followed._trailRenderer.transform.parent);
             _trailRenderer._meshRenderer.material = Material;
         }
 

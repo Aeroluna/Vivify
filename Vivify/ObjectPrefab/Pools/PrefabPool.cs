@@ -53,6 +53,13 @@ internal class PrefabPool : IPrefabPool<GameObject>
             spawned.SetActive(true);
         }
 
+        Animator[] animators = spawned.GetComponents<Animator>();
+        foreach (Animator animator in animators)
+        {
+            animator.Rebind();
+            animator.Update(0.01f);
+        }
+
         _active.Add(component, spawned);
 
         _instantiator.SongSynchronize(spawned, startTime);

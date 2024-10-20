@@ -183,7 +183,7 @@ public class CapturedSettings<TClass, TProperty>
 
     public void Capture()
     {
-        _get();
+        _captured = _get();
     }
 
     public void Reset()

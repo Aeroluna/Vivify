@@ -21,7 +21,7 @@ internal class CullingTextureController : CullingCameraController
 {
     private static readonly int _arraySliceIndex = Shader.PropertyToID("_ArraySliceIndex");
 
-    private MainEffectRenderer _mainEffectRenderer = null!;
+    private MainEffectRenderer? _mainEffectRenderer;
 
     private PostProcessingController _postProcessingController = null!;
     private DepthShaderManager _depthShaderManager = null!;
@@ -41,20 +41,17 @@ internal class CullingTextureController : CullingCameraController
         Key = Shader.PropertyToID(key);
         DepthKey = Shader.PropertyToID(key + "_Depth");
         CullingTextureData = cullingTextureTracker;
+        Camera.CopyFrom(_postProcessingController.Camera); // TODO: skip this, lags too damn hard
         RefreshCamera();
-    }
-
-    protected override void Awake()
-    {
-        base.Awake();
-        _mainEffectRenderer = new MainEffectRenderer(gameObject.transform.parent.GetComponent<MainEffectController>());
     }
 
     protected override void OnPreCull()
     {
         base.OnPreCull();
 
-        if (!CamEquals(Camera, _postProcessingController.Camera))
+        Camera camera = Camera;
+        Camera other = _postProcessingController.Camera;
+        if (!CamEquals(camera, other))
         {
             RefreshCamera();
         }
@@ -62,6 +59,7 @@ internal class CullingTextureController : CullingCameraController
         Transform transform1 = transform;
         transform1.localPosition = Vector3.zero;
         transform1.localRotation = Quaternion.identity;
+        camera.cullingMatrix = other.projectionMatrix * other.worldToCameraMatrix;
     }
 
     // very simple comparison
@@ -93,8 +91,11 @@ internal class CullingTextureController : CullingCameraController
             return;
         }
 
-        Camera.CopyFrom(_postProcessingController.Camera);
-        Camera.ResetCullingMatrix();
+        // copyfrom lags for some reason
+        ////Camera.CopyFrom(_postProcessingController.Camera);
+        Camera other = _postProcessingController.Camera;
+        Camera.fieldOfView = other.fieldOfView;
+        Camera.aspect = other.aspect;
         Camera.depthTextureMode = CullingTextureData.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
         Camera.depth -= 1;
         RefreshCullingMask();
@@ -123,7 +124,10 @@ internal class CullingTextureController : CullingCameraController
             RenderTextures[Camera.stereoActiveEye] = colorTexture;
         }
 
-        _mainEffectRenderer.Render(src, colorTexture);
+        (_mainEffectRenderer ??=
+            new MainEffectRenderer(gameObject.transform.parent.GetComponent<MainEffectController>())).Render(
+            src,
+            colorTexture);
 
         if (!CullingTextureData.DepthTexture)
         {

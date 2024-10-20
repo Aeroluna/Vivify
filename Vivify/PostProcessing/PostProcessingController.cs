@@ -51,12 +51,6 @@ internal class PostProcessingController : CullingCameraController
         PostProcessingMaterial.Clear();
     }
 
-    protected override void Awake()
-    {
-        base.Awake();
-        Camera.depth *= 10;
-    }
-
     protected override void OnPreCull()
     {
         foreach ((CullingTextureTracker textureData, string textureName) in _activeCullingTextureDatas)
@@ -131,6 +125,12 @@ internal class PostProcessingController : CullingCameraController
             if (controller is not CullingTextureController cullingTextureController)
             {
                 continue;
+            }
+
+            Camera camera = cullingTextureController.Camera;
+            if (camera.enabled == false)
+            {
+                camera.Render();
             }
 
             if (cullingTextureController.RenderTextures.TryGetValue(
@@ -251,6 +251,8 @@ internal class PostProcessingController : CullingCameraController
 
     private void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
+        RenderTextureDescriptor descriptor = src.descriptor;
+
         // set up declared textures
         foreach ((string textureName, RenderTextureHolder value) in _declaredTextures)
         {
@@ -261,17 +263,17 @@ internal class PostProcessingController : CullingCameraController
                 continue;
             }
 
-            RenderTextureDescriptor descripter = src.descriptor;
-            descripter.width = (int)((data.Width ?? descripter.width) / data.XRatio);
-            descripter.height = (int)((data.Height ?? descripter.height) / data.YRatio);
+            RenderTextureDescriptor newDescriptor = descriptor;
+            newDescriptor.width = (int)((data.Width ?? descriptor.width) / data.XRatio);
+            newDescriptor.height = (int)((data.Height ?? descriptor.height) / data.YRatio);
 
             if (data.Format.HasValue)
             {
                 RenderTextureFormat format = data.Format.Value;
-                descripter.colorFormat = format;
+                newDescriptor.colorFormat = format;
             }
 
-            texture = new RenderTexture(descripter);
+            texture = new RenderTexture(newDescriptor);
             if (data.FilterMode.HasValue)
             {
                 texture.filterMode = data.FilterMode.Value;
@@ -289,7 +291,7 @@ internal class PostProcessingController : CullingCameraController
         }
 
         // blit all passes
-        RenderTexture main = RenderTexture.GetTemporary(src.descriptor);
+        RenderTexture main = RenderTexture.GetTemporary(descriptor);
         Graphics.Blit(src, main);
         for (int i = PostProcessingMaterial.Count - 1; i >= 0; i--)
         {
@@ -313,7 +315,7 @@ internal class PostProcessingController : CullingCameraController
                             continue;
                         }
 
-                        RenderTexture temp = RenderTexture.GetTemporary(main.descriptor);
+                        RenderTexture temp = RenderTexture.GetTemporary(descriptor);
                         Graphics.Blit(main, temp, material, materialData.Pass);
                         RenderTexture.ReleaseTemporary(main);
                         main = temp;
@@ -352,8 +354,8 @@ internal class PostProcessingController : CullingCameraController
                                     return;
                                 }
 
-                                RenderTexture temp = RenderTexture.GetTemporary(source!.descriptor);
-                                temp.filterMode = source.filterMode;
+                                RenderTexture temp = RenderTexture.GetTemporary(descriptor);
+                                temp.filterMode = source!.filterMode;
                                 Graphics.Blit(source, temp, material, materialData.Pass);
                                 Graphics.Blit(temp, targetHolder.Texture);
                                 RenderTexture.ReleaseTemporary(temp);
@@ -404,20 +406,20 @@ internal class PostProcessingController : CullingCameraController
 
             continue;
 
-            static void Blit(RenderTexture? blitsrc, RenderTexture? blitdst, Material? blitmat, int blitpass)
+            static void Blit(RenderTexture? blitSrc, RenderTexture? blitDst, Material? blitMat, int blitPass)
             {
-                if (blitdst == null || blitsrc == null)
+                if (blitDst == null || blitSrc == null)
                 {
                     return;
                 }
 
-                if (blitmat != null)
+                if (blitMat != null)
                 {
-                    Graphics.Blit(blitsrc, blitdst, blitmat, blitpass);
+                    Graphics.Blit(blitSrc, blitDst, blitMat, blitPass);
                 }
                 else
                 {
-                    Graphics.Blit(blitsrc, blitdst);
+                    Graphics.Blit(blitSrc, blitDst);
                 }
             }
         }

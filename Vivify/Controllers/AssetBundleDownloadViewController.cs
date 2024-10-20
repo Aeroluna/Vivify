@@ -174,29 +174,18 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         }
 
 #pragma warning disable CS0618
-        if (www.isHttpError)
-        {
-            _lastError = $"The server returned an error response.\n({www.responseCode})";
-        }
-
-        if (www.isNetworkError)
-        {
-            _lastError = $"Network error.\n{www.error}";
-        }
-
         if (www.isNetworkError || www.isHttpError)
         {
             if (www.isNetworkError)
             {
                 _lastError = $"Network error while downloading bundle.\n{www.error}";
-                _log.Error(_lastError);
             }
             else if (www.isHttpError)
             {
                 _lastError = $"Server sent error response code while downloading bundle.\n({www.responseCode})";
-                _log.Error(_lastError);
             }
 
+            _log.Error(_lastError);
             _newView = View.Error;
             yield break;
         }
