@@ -337,14 +337,14 @@ internal class InstantiatePrefabData : ICustomEventCustomData
         Asset = customData.GetRequired<string>(ASSET);
         Id = customData.Get<string>(ID_FIELD);
         TransformData = new TransformData(customData);
-        Track = customData.GetNullableTrack(beatmapTracks, false);
+        Track = customData.GetNullableTrackArray(beatmapTracks, false)?.ToList();
     }
 
     internal string Asset { get; }
 
     internal string? Id { get; }
 
-    internal Track? Track { get; }
+    internal List<Track>? Track { get; }
 
     internal TransformData TransformData { get; }
 }

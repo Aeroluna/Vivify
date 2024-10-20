@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CustomJSONData.CustomBeatmap;
 using HarmonyLib;
 using Heck;
+using Heck.Animation;
 using Heck.Animation.Transform;
 using Heck.Deserialize;
 using Heck.Event;
@@ -126,7 +127,11 @@ internal class InstantiatePrefab : ICustomEvent, IInitializable, IDisposable
 
         if (data.Track != null)
         {
-            data.Track.AddGameObject(gameObject);
+            foreach (Track track in data.Track)
+            {
+                track.AddGameObject(gameObject);
+            }
+
             _transformControllerFactory.Create(gameObject, data.Track);
         }
 

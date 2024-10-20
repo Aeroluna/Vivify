@@ -37,7 +37,7 @@ internal class PrefabManager : IDisposable
         }
     }
 
-    internal void Add(string id, GameObject prefab, Track? track)
+    internal void Add(string id, GameObject prefab, List<Track>? track)
     {
         _prefabs.Add(id, new InstantiatedPrefab(prefab, track));
     }
@@ -51,9 +51,17 @@ internal class PrefabManager : IDisposable
 
         _log.Debug($"Destroying [{id}]");
 
-        prefab.Track?.RemoveGameObject(prefab.GameObject);
+        List<Track>? tracks = prefab.Track;
+        if (tracks != null)
+        {
+            foreach (Track track in tracks)
+            {
+                track.RemoveGameObject(prefab.GameObject);
+            }
+        }
 
-        prefab.GameObject.SetActive(false);
+        ////prefab.GameObject.SetActive(false);
+        Object.Destroy(prefab.GameObject);
         _prefabs.Remove(id);
     }
 
@@ -72,7 +80,15 @@ internal class PrefabManager : IDisposable
     {
         foreach ((string _, InstantiatedPrefab prefab) in _prefabs)
         {
-            prefab.Track?.RemoveGameObject(prefab.GameObject);
+            List<Track>? tracks = prefab.Track;
+            if (tracks != null)
+            {
+                foreach (Track track in tracks)
+                {
+                    track.RemoveGameObject(prefab.GameObject);
+                }
+            }
+
             Object.Destroy(prefab.GameObject);
         }
 
@@ -82,7 +98,7 @@ internal class PrefabManager : IDisposable
 
 internal class InstantiatedPrefab
 {
-    internal InstantiatedPrefab(GameObject gameObject, Track? track)
+    internal InstantiatedPrefab(GameObject gameObject, List<Track>? track)
     {
         GameObject = gameObject;
         Track = track;
@@ -93,5 +109,5 @@ internal class InstantiatedPrefab
 
     internal GameObject GameObject { get; }
 
-    internal Track? Track { get; }
+    internal List<Track>? Track { get; }
 }
