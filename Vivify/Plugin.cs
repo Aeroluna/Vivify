@@ -35,7 +35,6 @@ internal class Plugin
     public void OnEnable()
     {
         Capability.Register();
-        SceneManager.activeSceneChanged += OnActiveSceneChanged;
     }
 
     [UsedImplicitly]
@@ -43,7 +42,6 @@ internal class Plugin
     public void OnDisable()
     {
         Capability.Deregister();
-        SceneManager.activeSceneChanged -= OnActiveSceneChanged;
     }
 #pragma warning restore CA1822
 }

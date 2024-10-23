@@ -30,25 +30,188 @@ internal class PostProcessingController : CullingCameraController
     private SiraLog _log = null!;
     private IInstantiator _instantiator = null!;
 
-    internal static Dictionary<string, CullingTextureTracker> CullingTextureDatas { get; } = new();
+    internal Dictionary<string, CullingTextureTracker> CullingTextureDatas { get; set; } = new();
 
-    internal static Dictionary<string, DeclareRenderTextureData> DeclaredTextureDatas { get; } = new();
-
-    internal static List<MaterialData> PostProcessingMaterial { get; } = [];
+    internal Dictionary<string, DeclareRenderTextureData> DeclaredTextureDatas { get; set; } = new();
 
     internal override int DefaultCullingMask => _defaultCullingMask ?? Camera.cullingMask;
 
-    internal static void ResetMaterial()
+    internal void CreateDeclaredTextures(RenderTextureDescriptor descriptor)
     {
-        foreach (CullingTextureTracker cullingTextureTracker in CullingTextureDatas.Values)
+        // set up declared textures
+        foreach ((string textureName, RenderTextureHolder value) in _declaredTextures)
         {
-            cullingTextureTracker.Dispose();
+            DeclareRenderTextureData data = value.Data;
+            RenderTexture? texture = value.Texture;
+            if (texture != null)
+            {
+                continue;
+            }
+
+            RenderTextureDescriptor newDescriptor = descriptor;
+            newDescriptor.width = (int)((data.Width ?? descriptor.width) / data.XRatio);
+            newDescriptor.height = (int)((data.Height ?? descriptor.height) / data.YRatio);
+
+            if (data.Format.HasValue)
+            {
+                RenderTextureFormat format = data.Format.Value;
+                newDescriptor.colorFormat = format;
+            }
+
+            texture = new RenderTexture(newDescriptor);
+            if (data.FilterMode.HasValue)
+            {
+                texture.filterMode = data.FilterMode.Value;
+            }
+
+            value.Texture = texture;
+            _log.Debug(
+                $"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}");
+        }
+    }
+
+    internal RenderTexture RenderImage(RenderTexture src, List<MaterialData> materials)
+    {
+        RenderTextureDescriptor descriptor = src.descriptor;
+
+        // blit all passes
+        RenderTexture main = src;
+        for (int i = materials.Count - 1; i >= 0; i--)
+        {
+            MaterialData materialData = materials[i];
+            if (materialData.Frame != null && materialData.Frame != Time.frameCount)
+            {
+                materials.RemoveAt(i);
+                continue;
+            }
+
+            Material? material = materialData.Material;
+
+            if (materialData.Source == CAMERA_TARGET)
+            {
+                foreach (string materialDataTarget in materialData.Targets)
+                {
+                    if (materialDataTarget == CAMERA_TARGET)
+                    {
+                        if (material == null)
+                        {
+                            continue;
+                        }
+
+                        RenderTexture temp = RenderTexture.GetTemporary(descriptor);
+                        Graphics.Blit(main, temp, material, materialData.Pass);
+                        if (main != src)
+                        {
+                            RenderTexture.ReleaseTemporary(main);
+                        }
+
+                        main = temp;
+                    }
+                    else
+                    {
+                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder value))
+                        {
+                            Blit(main, value.Texture, material, materialData.Pass);
+                        }
+                        else
+                        {
+                            _log.Warn($"Unable to find destination [{materialDataTarget}]");
+                        }
+                    }
+                }
+            }
+            else if (_declaredTextures.TryGetValue(materialData.Source, out RenderTextureHolder sourceHolder))
+            {
+                foreach (string materialDataTarget in materialData.Targets)
+                {
+                    RenderTexture? source = sourceHolder.Texture;
+                    if (materialDataTarget == CAMERA_TARGET)
+                    {
+                        Blit(source, main, material, materialData.Pass);
+                    }
+                    else
+                    {
+                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder))
+                        {
+                            // extra stuff becuase we cannot blit directly into itself
+                            if (sourceHolder == targetHolder)
+                            {
+                                if (material == null)
+                                {
+                                    continue;
+                                }
+
+                                RenderTexture temp = RenderTexture.GetTemporary(descriptor);
+                                temp.filterMode = source!.filterMode;
+                                Graphics.Blit(source, temp, material, materialData.Pass);
+                                Graphics.Blit(temp, targetHolder.Texture);
+                                RenderTexture.ReleaseTemporary(temp);
+                            }
+                            else
+                            {
+                                Blit(source, targetHolder.Texture, material, materialData.Pass);
+                            }
+                        }
+                        else
+                        {
+                            _log.Warn($"Unable to find destination [{materialDataTarget}]");
+                        }
+                    }
+                }
+            }
+            else if (_cullingCameraControllers.TryGetValue(
+                         materialData.Source,
+                         out CullingCameraController cullingCameraController) &&
+                     cullingCameraController is CullingTextureController cullingTextureController)
+            {
+                foreach (string materialDataTarget in materialData.Targets)
+                {
+                    cullingTextureController.RenderTextures.TryGetValue(
+                        Camera.stereoActiveEye,
+                        out RenderTexture? source);
+                    if (materialDataTarget == CAMERA_TARGET)
+                    {
+                        Blit(source, main, material, materialData.Pass);
+                    }
+                    else
+                    {
+                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder))
+                        {
+                            Blit(source, targetHolder.Texture, material, materialData.Pass);
+                        }
+                        else
+                        {
+                            _log.Warn($"Unable to find destination [{materialDataTarget}]");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                _log.Warn($"Unable to find source [{materialData.Source}]");
+            }
+
+            continue;
+
+            static void Blit(RenderTexture? blitSrc, RenderTexture? blitDst, Material? blitMat, int blitPass)
+            {
+                if (blitDst == null || blitSrc == null)
+                {
+                    return;
+                }
+
+                if (blitMat != null)
+                {
+                    Graphics.Blit(blitSrc, blitDst, blitMat, blitPass);
+                }
+                else
+                {
+                    Graphics.Blit(blitSrc, blitDst);
+                }
+            }
         }
 
-        CullingTextureDatas.Clear();
-        DeclaredTextureDatas.Clear();
-
-        PostProcessingMaterial.Clear();
+        return main;
     }
 
     protected override void OnPreCull()
@@ -96,7 +259,7 @@ internal class PostProcessingController : CullingCameraController
             {
                 _defaultCullingMask ??= Camera.cullingMask;
 
-                CullingTextureData = CullingTextureDatas[textureName];
+                CullingTextureData = textureData;
                 _cullingCameraControllers[textureName] = this;
                 continue;
             }
@@ -116,7 +279,7 @@ internal class PostProcessingController : CullingCameraController
                 CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), newObject);
             }
 
-            finalController.Init(textureName, CullingTextureDatas[textureName]);
+            finalController.Init(textureName, textureData);
             _cullingCameraControllers[textureName] = finalController;
         }
 
@@ -247,185 +410,6 @@ internal class PostProcessingController : CullingCameraController
 
         _cullingCameraControllers.Clear();
         _disabledCullingCameraControllers.Clear();
-    }
-
-    private void OnRenderImage(RenderTexture src, RenderTexture dst)
-    {
-        RenderTextureDescriptor descriptor = src.descriptor;
-
-        // set up declared textures
-        foreach ((string textureName, RenderTextureHolder value) in _declaredTextures)
-        {
-            DeclareRenderTextureData data = value.Data;
-            RenderTexture? texture = value.Texture;
-            if (texture != null)
-            {
-                continue;
-            }
-
-            RenderTextureDescriptor newDescriptor = descriptor;
-            newDescriptor.width = (int)((data.Width ?? descriptor.width) / data.XRatio);
-            newDescriptor.height = (int)((data.Height ?? descriptor.height) / data.YRatio);
-
-            if (data.Format.HasValue)
-            {
-                RenderTextureFormat format = data.Format.Value;
-                newDescriptor.colorFormat = format;
-            }
-
-            texture = new RenderTexture(newDescriptor);
-            if (data.FilterMode.HasValue)
-            {
-                texture.filterMode = data.FilterMode.Value;
-            }
-
-            value.Texture = texture;
-            _log.Debug(
-                $"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}");
-        }
-
-        if (PostProcessingMaterial.Count == 0)
-        {
-            Graphics.Blit(src, dst);
-            return;
-        }
-
-        // blit all passes
-        RenderTexture main = RenderTexture.GetTemporary(descriptor);
-        Graphics.Blit(src, main);
-        for (int i = PostProcessingMaterial.Count - 1; i >= 0; i--)
-        {
-            MaterialData materialData = PostProcessingMaterial[i];
-            if (materialData.Frame != null && materialData.Frame != Time.frameCount)
-            {
-                PostProcessingMaterial.RemoveAt(i);
-                continue;
-            }
-
-            Material? material = materialData.Material;
-
-            if (materialData.Source == CAMERA_TARGET)
-            {
-                foreach (string materialDataTarget in materialData.Targets)
-                {
-                    if (materialDataTarget == CAMERA_TARGET)
-                    {
-                        if (material == null)
-                        {
-                            continue;
-                        }
-
-                        RenderTexture temp = RenderTexture.GetTemporary(descriptor);
-                        Graphics.Blit(main, temp, material, materialData.Pass);
-                        RenderTexture.ReleaseTemporary(main);
-                        main = temp;
-                    }
-                    else
-                    {
-                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder value))
-                        {
-                            Blit(main, value.Texture, material, materialData.Pass);
-                        }
-                        else
-                        {
-                            _log.Warn($"Unable to find destination [{materialDataTarget}]");
-                        }
-                    }
-                }
-            }
-            else if (_declaredTextures.TryGetValue(materialData.Source, out RenderTextureHolder sourceHolder))
-            {
-                foreach (string materialDataTarget in materialData.Targets)
-                {
-                    RenderTexture? source = sourceHolder.Texture;
-                    if (materialDataTarget == CAMERA_TARGET)
-                    {
-                        Blit(source, main, material, materialData.Pass);
-                    }
-                    else
-                    {
-                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder))
-                        {
-                            // extra stuff becuase we cannot blit directly into itself
-                            if (sourceHolder == targetHolder)
-                            {
-                                if (material == null)
-                                {
-                                    return;
-                                }
-
-                                RenderTexture temp = RenderTexture.GetTemporary(descriptor);
-                                temp.filterMode = source!.filterMode;
-                                Graphics.Blit(source, temp, material, materialData.Pass);
-                                Graphics.Blit(temp, targetHolder.Texture);
-                                RenderTexture.ReleaseTemporary(temp);
-                            }
-                            else
-                            {
-                                Blit(source, targetHolder.Texture, material, materialData.Pass);
-                            }
-                        }
-                        else
-                        {
-                            _log.Warn($"Unable to find destination [{materialDataTarget}]");
-                        }
-                    }
-                }
-            }
-            else if (_cullingCameraControllers.TryGetValue(
-                         materialData.Source,
-                         out CullingCameraController cullingCameraController) &&
-                     cullingCameraController is CullingTextureController cullingTextureController)
-            {
-                foreach (string materialDataTarget in materialData.Targets)
-                {
-                    cullingTextureController.RenderTextures.TryGetValue(
-                        Camera.stereoActiveEye,
-                        out RenderTexture? source);
-                    if (materialDataTarget == CAMERA_TARGET)
-                    {
-                        Blit(source, main, material, materialData.Pass);
-                    }
-                    else
-                    {
-                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder))
-                        {
-                            Blit(source, targetHolder.Texture, material, materialData.Pass);
-                        }
-                        else
-                        {
-                            _log.Warn($"Unable to find destination [{materialDataTarget}]");
-                        }
-                    }
-                }
-            }
-            else
-            {
-                _log.Warn($"Unable to find source [{materialData.Source}]");
-            }
-
-            continue;
-
-            static void Blit(RenderTexture? blitSrc, RenderTexture? blitDst, Material? blitMat, int blitPass)
-            {
-                if (blitDst == null || blitSrc == null)
-                {
-                    return;
-                }
-
-                if (blitMat != null)
-                {
-                    Graphics.Blit(blitSrc, blitDst, blitMat, blitPass);
-                }
-                else
-                {
-                    Graphics.Blit(blitSrc, blitDst);
-                }
-            }
-        }
-
-        Graphics.Blit(main, dst);
-        RenderTexture.ReleaseTemporary(main);
     }
 }
 

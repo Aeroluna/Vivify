@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Vivify.Events;
+using Vivify.HarmonyPatches;
 using Vivify.Managers;
 using Vivify.ObjectPrefab.Managers;
 using Zenject;
@@ -32,6 +33,8 @@ internal class VivifyPlayerInstaller : Installer
         Container.BindInterfacesAndSelfTo<BeatmapObjectPrefabManager>().AsSingle();
 
         Container.BindInterfacesAndSelfTo<CameraPropertyManager>().AsSingle();
+
+        Container.BindInterfacesAndSelfTo<PostProcessingEffectApplier>().AsSingle();
 
         // Custom Events
         Container.BindInterfacesTo<ApplyPostProcessing>().AsSingle();

@@ -5,10 +5,10 @@ using CustomJSONData.CustomBeatmap;
 using Heck;
 using Heck.Deserialize;
 using Heck.Event;
-using Heck.ReLoad;
 using SiraUtil.Logging;
 using UnityEngine;
 using Vivify.Extras;
+using Vivify.HarmonyPatches;
 using Vivify.Managers;
 using Vivify.PostProcessing;
 using Zenject;
@@ -17,16 +17,16 @@ using static Vivify.VivifyController;
 namespace Vivify.Events;
 
 [CustomEvent(APPLY_POST_PROCESSING)]
-internal class ApplyPostProcessing : ICustomEvent, IDisposable
+internal class ApplyPostProcessing : ICustomEvent
 {
+    private readonly SiraLog _log;
     private readonly AssetBundleManager _assetBundleManager;
+    private readonly DeserializedData _deserializedData;
     private readonly IAudioTimeSource _audioTimeSource;
     private readonly IBpmController _bpmController;
-    private readonly CoroutineDummy _coroutineDummy;
-    private readonly DeserializedData _deserializedData;
-    private readonly SiraLog _log;
-    private readonly ReLoader? _reLoader;
     private readonly SetMaterialProperty _setMaterialProperty;
+    private readonly PostProcessingEffectApplier _postProcessingEffectApplier;
+    private readonly CoroutineDummy _coroutineDummy;
 
     private ApplyPostProcessing(
         SiraLog log,
@@ -35,10 +35,8 @@ internal class ApplyPostProcessing : ICustomEvent, IDisposable
         IAudioTimeSource audioTimeSource,
         IBpmController bpmController,
         SetMaterialProperty setMaterialProperty,
-        CoroutineDummy coroutineDummy,
-        [Inject(Id = HeckController.LEFT_HANDED_ID)]
-        bool leftHanded,
-        [InjectOptional] ReLoader? reLoader)
+        PostProcessingEffectApplier postProcessingEffectApplier,
+        CoroutineDummy coroutineDummy)
     {
         _log = log;
         _assetBundleManager = assetBundleManager;
@@ -46,12 +44,8 @@ internal class ApplyPostProcessing : ICustomEvent, IDisposable
         _audioTimeSource = audioTimeSource;
         _bpmController = bpmController;
         _setMaterialProperty = setMaterialProperty;
+        _postProcessingEffectApplier = postProcessingEffectApplier;
         _coroutineDummy = coroutineDummy;
-        _reLoader = reLoader;
-        if (reLoader != null)
-        {
-            reLoader.Rewinded += PostProcessingController.ResetMaterial;
-        }
     }
 
     public void Callback(CustomEventData customEventData)
@@ -83,9 +77,16 @@ internal class ApplyPostProcessing : ICustomEvent, IDisposable
             }
         }
 
+        List<MaterialData> effects = data.Order switch
+        {
+            PostProcessingOrder.BeforeMainEffect => _postProcessingEffectApplier.PreEffects,
+            PostProcessingOrder.AfterMainEffect => _postProcessingEffectApplier.PostEffects,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
         if (duration == 0)
         {
-            PostProcessingController.PostProcessingMaterial.InsertIntoSortedList(
+            effects.InsertIntoSortedList(
                 new MaterialData(material, data.Priority, data.Source, data.Target, data.Pass, Time.frameCount));
             _log.Debug($"Applied material [{assetName}] for single frame");
             return;
@@ -97,20 +98,17 @@ internal class ApplyPostProcessing : ICustomEvent, IDisposable
         }
 
         MaterialData materialData = new(material, data.Priority, data.Source, data.Target, data.Pass);
-        PostProcessingController.PostProcessingMaterial.InsertIntoSortedList(materialData);
+        effects.InsertIntoSortedList(materialData);
         _log.Debug($"Applied material [{assetName}] for [{duration}] seconds");
-        _coroutineDummy.StartCoroutine(KillPostProcessingCoroutine(materialData, duration, customEventData.time));
+        _coroutineDummy.StartCoroutine(
+            KillPostProcessingCoroutine(effects, materialData, duration, customEventData.time));
     }
 
-    public void Dispose()
-    {
-        if (_reLoader != null)
-        {
-            _reLoader.Rewinded -= PostProcessingController.ResetMaterial;
-        }
-    }
-
-    internal IEnumerator KillPostProcessingCoroutine(MaterialData data, float duration, float startTime)
+    internal IEnumerator KillPostProcessingCoroutine(
+        List<MaterialData> effects,
+        MaterialData data,
+        float duration,
+        float startTime)
     {
         while (true)
         {
@@ -126,7 +124,7 @@ internal class ApplyPostProcessing : ICustomEvent, IDisposable
             }
             else
             {
-                PostProcessingController.PostProcessingMaterial.Remove(data);
+                effects.Remove(data);
                 break;
             }
         }

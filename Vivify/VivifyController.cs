@@ -21,6 +21,7 @@ public static class VivifyController
     internal const string WHITELIST = "whitelist";
     internal const string DEPTH_TEXTURE = "depthTexture";
     internal const string ID_FIELD = "id";
+    internal const string ORDER = "order";
 
     internal const string X_RATIO = "xRatio";
     internal const string Y_RATIO = "yRatio";
@@ -84,14 +85,4 @@ public static class VivifyController
     internal const int CULLING_LAYER = 22;
 
     internal static Capability Capability { get; } = new(CAPABILITY);
-
-    internal static void OnActiveSceneChanged(Scene current, Scene _)
-    {
-        if (current.name != "GameCore")
-        {
-            return;
-        }
-
-        PostProcessingController.ResetMaterial();
-    }
 }

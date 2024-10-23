@@ -208,6 +208,7 @@ their default value.
     "asset": string, // (Optional) File path to the desired material. If missing, will just copy from source to destination without anything special.
     "priority": int, // (Optional) Which order to run current active post processing effects. Higher priority will run first. Default = 0
     "pass": int, // (Optional) Which pass in the shader to use. Will use all passes if not defined.
+    "order": string, // (Optional) BeforeMainEffect, AfterMainEffect. Whether to activate before the main bloom effect or after. Defaults fo AfterMainEffect
     "source": string, // (Optional) Which texture to pass to the shader as "_MainTex". "_Main" is reserved for the camera. Default = "_Main"
     "destination": string, // (Optional) Which render texture to save to. Can be an array. "_Main" is reserved for the camera. Default = "_Main"
     "duration": float, // (Optional) How long will this material be applied. Default = 0

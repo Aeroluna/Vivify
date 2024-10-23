@@ -3,7 +3,7 @@ using Heck;
 using Heck.Deserialize;
 using Heck.Event;
 using SiraUtil.Logging;
-using Vivify.PostProcessing;
+using Vivify.HarmonyPatches;
 using Zenject;
 using static Vivify.VivifyController;
 
@@ -12,15 +12,18 @@ namespace Vivify.Events;
 [CustomEvent(DECLARE_TEXTURE)]
 internal class DeclareRenderTexture : ICustomEvent
 {
-    private readonly DeserializedData _deserializedData;
     private readonly SiraLog _log;
+    private readonly DeserializedData _deserializedData;
+    private readonly PostProcessingEffectApplier _postProcessingEffectApplier;
 
     private DeclareRenderTexture(
         SiraLog log,
-        [Inject(Id = ID)] DeserializedData deserializedData)
+        [Inject(Id = ID)] DeserializedData deserializedData,
+        PostProcessingEffectApplier postProcessingEffectApplier)
     {
         _log = log;
         _deserializedData = deserializedData;
+        _postProcessingEffectApplier = postProcessingEffectApplier;
     }
 
     public void Callback(CustomEventData customEventData)
@@ -30,7 +33,7 @@ internal class DeclareRenderTexture : ICustomEvent
             return;
         }
 
-        PostProcessingController.DeclaredTextureDatas.Add(data.Name, data);
+        _postProcessingEffectApplier.DeclaredTextureDatas.Add(data.Name, data);
         _log.Debug($"Created texture [{data.Name}]");
     }
 }

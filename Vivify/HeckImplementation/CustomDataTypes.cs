@@ -14,6 +14,12 @@ using static Vivify.VivifyController;
 
 namespace Vivify;
 
+internal enum PostProcessingOrder
+{
+    BeforeMainEffect,
+    AfterMainEffect
+}
+
 // TODO: implement unused enums
 // ReSharper disable UnusedMember.Global
 internal enum MaterialPropertyType
@@ -68,6 +74,7 @@ internal class ApplyPostProcessingData : ICustomEventCustomData
         Source = customData.Get<string?>(SOURCE);
         Asset = customData.Get<string?>(ASSET);
         Pass = customData.Get<int?>(PASS);
+        Order = customData.GetStringToEnum<PostProcessingOrder?>(ORDER) ?? PostProcessingOrder.AfterMainEffect;
         List<object>? properties = customData.Get<List<object>>(PROPERTIES);
         if (properties != null)
         {
@@ -94,6 +101,8 @@ internal class ApplyPostProcessingData : ICustomEventCustomData
     internal Functions Easing { get; }
 
     internal int? Pass { get; }
+
+    internal PostProcessingOrder Order { get; }
 
     internal int Priority { get; }
 

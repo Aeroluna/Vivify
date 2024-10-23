@@ -17,10 +17,11 @@ internal class MainEffectRenderer
 
     internal void Render(RenderTexture src, RenderTexture dest)
     {
-        if (_mainEffectContainer.mainEffect.hasPostProcessEffect)
+        MainEffectSO mainEffect = _mainEffectContainer.mainEffect;
+        if (mainEffect.hasPostProcessEffect)
         {
             _mainEffectController.OnPreRender();
-            _mainEffectController.ImageEffectControllerCallback(src, dest);
+            mainEffect.Render(src, dest, _mainEffectController._fadeValue);
             _mainEffectController.OnPostRender();
         }
         else

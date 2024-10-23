@@ -3,7 +3,7 @@ using Heck;
 using Heck.Deserialize;
 using Heck.Event;
 using SiraUtil.Logging;
-using Vivify.PostProcessing;
+using Vivify.HarmonyPatches;
 using Vivify.TrackGameObject;
 using Zenject;
 using static Vivify.VivifyController;
@@ -13,15 +13,18 @@ namespace Vivify.Events;
 [CustomEvent(DESTROY_TEXTURE)]
 internal class DestroyTexture : ICustomEvent
 {
-    private readonly DeserializedData _deserializedData;
     private readonly SiraLog _log;
+    private readonly DeserializedData _deserializedData;
+    private readonly PostProcessingEffectApplier _postProcessingEffectApplier;
 
     private DestroyTexture(
         SiraLog log,
-        [Inject(Id = ID)] DeserializedData deserializedData)
+        [Inject(Id = ID)] DeserializedData deserializedData,
+        PostProcessingEffectApplier postProcessingEffectApplier)
     {
         _log = log;
         _deserializedData = deserializedData;
+        _postProcessingEffectApplier = postProcessingEffectApplier;
     }
 
     public void Callback(CustomEventData customEventData)
@@ -34,13 +37,13 @@ internal class DestroyTexture : ICustomEvent
         string[] names = data.Name;
         foreach (string name in names)
         {
-            if (PostProcessingController.CullingTextureDatas.TryGetValue(name, out CullingTextureTracker? active))
+            if (_postProcessingEffectApplier.CullingTextureDatas.TryGetValue(name, out CullingTextureTracker? active))
             {
-                PostProcessingController.CullingTextureDatas.Remove(name);
+                _postProcessingEffectApplier.CullingTextureDatas.Remove(name);
                 active.Dispose();
                 _log.Debug($"Destroyed culling texture [{name}]");
             }
-            else if (PostProcessingController.DeclaredTextureDatas.Remove(name))
+            else if (_postProcessingEffectApplier.DeclaredTextureDatas.Remove(name))
             {
                 _log.Debug($"Destroyed render texture [{name}]");
             }
