@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using Vivify.Managers;
+using Vivify.PostProcessing;
+using Vivify.TrackGameObject;
 #if LATEST
 using JetBrains.Annotations;
 using Zenject;
@@ -17,8 +19,9 @@ internal class CameraPropertyController : MonoBehaviour
     private CameraClearFlags _cachedClearFlags;
     private Color _cachedBackgroundColor;
 
+    private CullingCameraController _cullingCameraController = null!;
 #if LATEST
-    private SettingsManager? _settingsManager = null!;
+    private SettingsManager _settingsManager = null!;
 #endif
 #if !PRE_V1_37_1
     private DepthTextureController? _depthTextureController;
@@ -49,6 +52,10 @@ internal class CameraPropertyController : MonoBehaviour
                         .Invoke(_visualEffectsController, []);
                 }
 #endif
+                else
+                {
+                    _camera.depthTextureMode = _cachedDepthTextureMode;
+                }
             }
             else
             {
@@ -73,17 +80,26 @@ internal class CameraPropertyController : MonoBehaviour
         set => _camera.backgroundColor = value ?? _cachedBackgroundColor;
     }
 
+    internal CullingTextureTracker? CullingTextureData
+    {
+        set => _cullingCameraController.CullingTextureData = value;
+    }
+
+    internal string? Id { get; set; }
+
     internal void Reset()
     {
         DepthTextureMode = null;
         ClearFlags = null;
         BackgroundColor = null;
+        CullingTextureData = null;
     }
 
 #if LATEST
     [UsedImplicitly]
     [Inject]
-    private void Construct(SettingsManager settingsManager)
+    private void Construct(
+        SettingsManager settingsManager)
     {
         _settingsManager = settingsManager;
     }
@@ -97,6 +113,7 @@ internal class CameraPropertyController : MonoBehaviour
 #else
         _visualEffectsController = GetComponent<VisualEffectsController>();
 #endif
+        _cullingCameraController = _camera.GetComponent<CullingCameraController>();
     }
 
     private void OnEnable()
@@ -104,11 +121,11 @@ internal class CameraPropertyController : MonoBehaviour
         _cachedDepthTextureMode = _camera.depthTextureMode;
         _cachedClearFlags = _camera.clearFlags;
         _cachedBackgroundColor = _camera.backgroundColor;
-        CameraPropertyManager.AddController(this);
+        CameraPropertyManager.AddControllerStatic(this);
     }
 
     private void OnDisable()
     {
-        CameraPropertyManager.RemoveController(this);
+        CameraPropertyManager.RemoveControllerStatic(this);
     }
 }

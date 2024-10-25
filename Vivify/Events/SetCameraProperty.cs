@@ -3,6 +3,7 @@ using Heck;
 using Heck.Deserialize;
 using Heck.Event;
 using Vivify.Managers;
+using Vivify.TrackGameObject;
 using Zenject;
 using static Vivify.VivifyController;
 
@@ -24,24 +25,45 @@ internal class SetCameraProperty : ICustomEvent
 
     public void Callback(CustomEventData customEventData)
     {
-        if (!_deserializedData.Resolve(customEventData, out SetCameraPropertyData? data))
+        if (!_deserializedData.Resolve(customEventData, out SetCameraPropertyData? eventData))
         {
             return;
         }
 
-        if (data.DepthTextureMode.HasValue)
+        SetCameraProperties(eventData.Id, eventData.Property);
+    }
+
+    public void SetCameraProperties(string id, CameraProperty property)
+    {
+        if (!_cameraPropertyManager.Properties.TryGetValue(
+                id,
+                out CameraPropertyManager.CameraProperties properties))
         {
-            _cameraPropertyManager.DepthTextureMode = data.DepthTextureMode.Value;
+            _cameraPropertyManager.Properties[id] = properties = new CameraPropertyManager.CameraProperties();
         }
 
-        if (data.ClearFlags.HasValue)
+        if (property.HasDepthTextureMode)
         {
-            _cameraPropertyManager.ClearFlags = data.ClearFlags.Value;
+            properties.DepthTextureMode = property.DepthTextureMode;
         }
 
-        if (data.BackgroundColor.HasValue)
+        if (property.HasClearFlags)
         {
-            _cameraPropertyManager.BackgroundColor = data.BackgroundColor.Value;
+            properties.ClearFlags = property.ClearFlags;
+        }
+
+        if (property.HasBackgroundColor)
+        {
+            properties.BackgroundColor = property.BackgroundColor;
+        }
+
+        // ReSharper disable once InvertIf
+        if (property.HasCulling)
+        {
+            CameraProperty.CullingData? cullingData = property.Culling;
+            properties.CullingTextureData = cullingData != null
+                ? new CullingTextureTracker(cullingData.Tracks, cullingData.Whitelist)
+                : null;
         }
     }
 }

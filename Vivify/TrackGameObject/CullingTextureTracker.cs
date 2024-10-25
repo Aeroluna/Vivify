@@ -14,15 +14,12 @@ internal sealed class CullingTextureTracker : TrackGameObjectTracker
 
     private bool _gameObjectsDirty;
 
-    internal CullingTextureTracker(IEnumerable<Track> tracks, bool whitelist, bool depthTexture)
+    internal CullingTextureTracker(IEnumerable<Track> tracks, bool whitelist)
         : base(tracks)
     {
         Whitelist = whitelist;
-        DepthTexture = depthTexture;
         UpdateGameObjects();
     }
-
-    internal bool DepthTexture { get; }
 
     internal GameObject[] GameObjects
     {

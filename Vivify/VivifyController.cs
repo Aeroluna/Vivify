@@ -1,6 +1,4 @@
 ﻿using Heck;
-using UnityEngine.SceneManagement;
-using Vivify.PostProcessing;
 
 namespace Vivify;
 
@@ -18,10 +16,13 @@ public static class VivifyController
     internal const string DESTINATION = "destination";
     internal const string ASSET = "asset";
     internal const string PROPERTIES = "properties";
-    internal const string WHITELIST = "whitelist";
+    internal const string TEXTURE = "texture";
     internal const string DEPTH_TEXTURE = "depthTexture";
     internal const string ID_FIELD = "id";
     internal const string ORDER = "order";
+
+    internal const string CULLING = "culling";
+    internal const string WHITELIST = "whitelist";
 
     internal const string X_RATIO = "xRatio";
     internal const string Y_RATIO = "yRatio";
@@ -56,10 +57,9 @@ public static class VivifyController
 
     internal const string APPLY_POST_PROCESSING = "Blit";
     internal const string ASSIGN_OBJECT_PREFAB = "AssignObjectPrefab";
-    internal const string DECLARE_CULLING_TEXTURE = "DeclareCullingTexture";
-    internal const string DECLARE_TEXTURE = "DeclareRenderTexture";
-    internal const string DESTROY_TEXTURE = "DestroyTexture";
-    internal const string DESTROY_PREFAB = "DestroyPrefab";
+    internal const string DECLARE_CULLING_TEXTURE = "CreateCamera";
+    internal const string DECLARE_TEXTURE = "CreateScreenTexture";
+    internal const string DESTROY_PREFAB = "DestroyObject";
     internal const string INSTANTIATE_PREFAB = "InstantiatePrefab";
     internal const string SET_MATERIAL_PROPERTY = "SetMaterialProperty";
     internal const string SET_ANIMATOR_PROPERTY = "SetAnimatorProperty";

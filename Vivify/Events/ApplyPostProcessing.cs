@@ -25,7 +25,7 @@ internal class ApplyPostProcessing : ICustomEvent
     private readonly IAudioTimeSource _audioTimeSource;
     private readonly IBpmController _bpmController;
     private readonly SetMaterialProperty _setMaterialProperty;
-    private readonly PostProcessingEffectApplier _postProcessingEffectApplier;
+    private readonly CameraEffectApplier _cameraEffectApplier;
     private readonly CoroutineDummy _coroutineDummy;
 
     private ApplyPostProcessing(
@@ -35,7 +35,7 @@ internal class ApplyPostProcessing : ICustomEvent
         IAudioTimeSource audioTimeSource,
         IBpmController bpmController,
         SetMaterialProperty setMaterialProperty,
-        PostProcessingEffectApplier postProcessingEffectApplier,
+        CameraEffectApplier cameraEffectApplier,
         CoroutineDummy coroutineDummy)
     {
         _log = log;
@@ -44,7 +44,7 @@ internal class ApplyPostProcessing : ICustomEvent
         _audioTimeSource = audioTimeSource;
         _bpmController = bpmController;
         _setMaterialProperty = setMaterialProperty;
-        _postProcessingEffectApplier = postProcessingEffectApplier;
+        _cameraEffectApplier = cameraEffectApplier;
         _coroutineDummy = coroutineDummy;
     }
 
@@ -79,8 +79,8 @@ internal class ApplyPostProcessing : ICustomEvent
 
         List<MaterialData> effects = data.Order switch
         {
-            PostProcessingOrder.BeforeMainEffect => _postProcessingEffectApplier.PreEffects,
-            PostProcessingOrder.AfterMainEffect => _postProcessingEffectApplier.PostEffects,
+            PostProcessingOrder.BeforeMainEffect => _cameraEffectApplier.PreEffects,
+            PostProcessingOrder.AfterMainEffect => _cameraEffectApplier.PostEffects,
             _ => throw new ArgumentOutOfRangeException()
         };
 

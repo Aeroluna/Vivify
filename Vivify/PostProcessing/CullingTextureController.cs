@@ -4,14 +4,13 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
+using Vivify.Controllers;
 using Vivify.Managers;
-using Vivify.PostProcessing;
-using Vivify.TrackGameObject;
 using Zenject;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
-namespace Vivify.Controllers;
+namespace Vivify.PostProcessing;
 
 // this is attached to the secondary camera because trying to set the targettexture of a camera disable stereo on a camera for some reason
 // https://forum.unity.com/threads/how-to-create-stereo-rendertextures-and-cameras.925175/#post-6968408
@@ -25,23 +24,27 @@ internal class CullingTextureController : CullingCameraController
 
     private PostProcessingController _postProcessingController = null!;
     private DepthShaderManager _depthShaderManager = null!;
+    private CameraPropertyController _cameraPropertyController = null!;
 
     internal override int DefaultCullingMask => _postProcessingController.DefaultCullingMask;
 
     internal int Key { get; private set; }
 
-    internal int DepthKey { get; private set; }
+    internal int? DepthKey { get; private set; }
 
     internal Dictionary<Camera.MonoOrStereoscopicEye, RenderTexture> RenderTextures { get; } = new();
 
     internal Dictionary<Camera.MonoOrStereoscopicEye, RenderTexture> RenderTexturesDepth { get; } = new();
 
-    internal void Init(string key, CullingTextureTracker cullingTextureTracker)
+    internal void Init(CreateCameraData cameraData)
     {
-        Key = Shader.PropertyToID(key);
-        DepthKey = Shader.PropertyToID(key + "_Depth");
-        CullingTextureData = cullingTextureTracker;
-        Camera.CopyFrom(_postProcessingController.Camera); // TODO: skip this, lags too damn hard
+        _cameraPropertyController.Id = cameraData.Name;
+        Key = Shader.PropertyToID(cameraData.Texture);
+        if (cameraData.DepthTexture != null)
+        {
+            DepthKey = Shader.PropertyToID(cameraData.DepthTexture);
+        }
+
         RefreshCamera();
     }
 
@@ -78,26 +81,25 @@ internal class CullingTextureController : CullingCameraController
 
     [UsedImplicitly]
     [Inject]
-    private void Construct(PostProcessingController postProcessingController, DepthShaderManager depthShaderManager)
+    private void Construct(
+        IInstantiator instantiator,
+        PostProcessingController postProcessingController,
+        DepthShaderManager depthShaderManager)
     {
         _postProcessingController = postProcessingController;
         _depthShaderManager = depthShaderManager;
+        _cameraPropertyController = instantiator.InstantiateComponent<CameraPropertyController>(gameObject);
+        Camera.CopyFrom(_postProcessingController.Camera);
     }
 
     private void RefreshCamera()
     {
-        if (CullingTextureData == null)
-        {
-            return;
-        }
-
         // copyfrom lags for some reason
         ////Camera.CopyFrom(_postProcessingController.Camera);
         Camera other = _postProcessingController.Camera;
         Camera.fieldOfView = other.fieldOfView;
         Camera.aspect = other.aspect;
-        Camera.depthTextureMode = CullingTextureData.DepthTexture ? DepthTextureMode.Depth : DepthTextureMode.None;
-        Camera.depth -= 1;
+        Camera.depth = other.depth - 1;
         RefreshCullingMask();
     }
 
@@ -129,7 +131,7 @@ internal class CullingTextureController : CullingCameraController
             src,
             colorTexture);
 
-        if (!CullingTextureData.DepthTexture)
+        if (DepthKey == null)
         {
             return;
         }

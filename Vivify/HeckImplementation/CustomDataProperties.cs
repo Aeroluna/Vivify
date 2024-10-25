@@ -76,6 +76,100 @@ internal class MaterialProperty
     }
 }
 
+internal class CameraProperty
+{
+    internal CameraProperty(
+        bool hasDepthTextureMode,
+        bool hasClearFlags,
+        bool hasBackgroundColor,
+        bool hasCulling,
+        DepthTextureMode? depthTextureMode,
+        CameraClearFlags? clearFlags,
+        Color? backgroundColor,
+        CullingData? culling)
+    {
+        HasDepthTextureMode = hasDepthTextureMode;
+        HasClearFlags = hasClearFlags;
+        HasBackgroundColor = hasBackgroundColor;
+        HasCulling = hasCulling;
+        DepthTextureMode = depthTextureMode;
+        ClearFlags = clearFlags;
+        BackgroundColor = backgroundColor;
+        Culling = culling;
+    }
+
+    internal bool HasDepthTextureMode { get; }
+
+    internal bool HasClearFlags { get; }
+
+    internal bool HasBackgroundColor { get; }
+
+    internal bool HasCulling { get; }
+
+    internal DepthTextureMode? DepthTextureMode { get; }
+
+    internal CameraClearFlags? ClearFlags { get; }
+
+    internal Color? BackgroundColor { get; }
+
+    internal CullingData? Culling { get; }
+
+    internal static CameraProperty CreateCameraProperty(CustomData customData, Dictionary<string, Track> tracks)
+    {
+        bool hasDepthTextureMode = customData.TryGetValue(CAMERA_DEPTH_TEXTURE_MODE, out object? depthTextureModeStrings);
+        DepthTextureMode? depthTextureMode = null;
+        if (hasDepthTextureMode &&
+            depthTextureModeStrings != null)
+        {
+            depthTextureMode = ((List<object>)depthTextureModeStrings).Aggregate(
+                UnityEngine.DepthTextureMode.None,
+                (current, depthTextureModeString) =>
+                    current |
+                    (DepthTextureMode)Enum.Parse(typeof(DepthTextureMode), (string)depthTextureModeString));
+        }
+
+        bool hasClearFlags = customData.TryGetValue(CAMERA_CLEAR_FLAGS, out object? clearFlagsString);
+        CameraClearFlags? clearFlags = hasClearFlags && clearFlagsString != null
+            ? (CameraClearFlags)Enum.Parse(typeof(CameraClearFlags), (string)clearFlagsString)
+            : null;
+
+        bool hasBackgroundColor = customData.TryGetValue(CAMERA_BACKGROUND_COLOR, out object? backgroundColorString);
+        Color? backgroundColor = null;
+        if (hasBackgroundColor &&
+            backgroundColorString != null)
+        {
+            List<float> color = ((List<object>)backgroundColorString).Select(Convert.ToSingle).ToList();
+            backgroundColor = new Color(color[0], color[1], color[2], color.Count > 3 ? color[3] : 1);
+        }
+
+        bool hasCulling = customData.TryGetValue(CULLING, out object? cullingData);
+        CullingData? culling = hasCulling && cullingData != null ? new CullingData((CustomData)cullingData, tracks) : null;
+
+        return new CameraProperty(
+            hasDepthTextureMode,
+            hasClearFlags,
+            hasBackgroundColor,
+            hasCulling,
+            depthTextureMode,
+            clearFlags,
+            backgroundColor,
+            culling);
+    }
+
+    internal class CullingData
+    {
+        internal CullingData(CustomData customData, Dictionary<string, Track> tracks)
+        {
+            Tracks = customData.GetTrackArray(tracks, false);
+            Whitelist = customData.Get<bool?>(WHITELIST) ?? false;
+        }
+
+        internal IEnumerable<Track> Tracks { get; }
+
+        internal bool Whitelist { get; }
+    }
+}
+
 internal class AnimatedAnimatorProperty : AnimatorProperty
 {
     internal AnimatedAnimatorProperty(
@@ -220,27 +314,15 @@ internal class SetGlobalPropertyData : ICustomEventCustomData
 
 internal class SetCameraPropertyData : ICustomEventCustomData
 {
-    internal SetCameraPropertyData(CustomData customData)
+    internal SetCameraPropertyData(CustomData customData, Dictionary<string, Track> tracks)
     {
-        List<object>? depthTextureModeStrings = customData.Get<List<object>?>(CAMERA_DEPTH_TEXTURE_MODE);
-        if (depthTextureModeStrings != null)
-        {
-            DepthTextureMode = depthTextureModeStrings.Aggregate(
-                UnityEngine.DepthTextureMode.None,
-                (current, depthTextureModeString) =>
-                    current |
-                    (DepthTextureMode)Enum.Parse(typeof(DepthTextureMode), (string)depthTextureModeString));
-        }
-
-        ClearFlags = customData.GetStringToEnum<CameraClearFlags?>(CAMERA_CLEAR_FLAGS);
-        BackgroundColor = customData.GetColor(CAMERA_BACKGROUND_COLOR);
+        Id = customData.Get<string?>(ID_FIELD) ?? CAMERA_TARGET;
+        Property = CameraProperty.CreateCameraProperty(customData, tracks);
     }
 
-    internal DepthTextureMode? DepthTextureMode { get; }
+    internal string Id { get; }
 
-    internal CameraClearFlags? ClearFlags { get; }
-
-    internal Color? BackgroundColor { get; }
+    internal CameraProperty Property { get; }
 }
 
 internal class SetAnimatorPropertyData : ICustomEventCustomData

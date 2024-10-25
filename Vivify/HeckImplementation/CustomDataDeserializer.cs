@@ -48,19 +48,15 @@ internal class CustomDataDeserializer : IEarlyDeserializer, IObjectsDeserializer
                         break;
 
                     case DECLARE_CULLING_TEXTURE:
-                        dictionary.Add(customEventData, new DeclareCullingTextureData(data, _tracks));
+                        dictionary.Add(customEventData, new CreateCameraData(data, _tracks));
                         break;
 
                     case DECLARE_TEXTURE:
-                        dictionary.Add(customEventData, new DeclareRenderTextureData(data));
-                        break;
-
-                    case DESTROY_TEXTURE:
-                        dictionary.Add(customEventData, new DestroyTextureData(data));
+                        dictionary.Add(customEventData, new CreateScreenTextureData(data));
                         break;
 
                     case DESTROY_PREFAB:
-                        dictionary.Add(customEventData, new DestroyPrefabData(data));
+                        dictionary.Add(customEventData, new DestroyObjectData(data));
                         break;
 
                     case INSTANTIATE_PREFAB:
@@ -76,7 +72,7 @@ internal class CustomDataDeserializer : IEarlyDeserializer, IObjectsDeserializer
                         break;
 
                     case SET_CAMERA_PROPERTY:
-                        dictionary.Add(customEventData, new SetCameraPropertyData(data));
+                        dictionary.Add(customEventData, new SetCameraPropertyData(data, _tracks));
                         break;
 
                     case SET_ANIMATOR_PROPERTY:

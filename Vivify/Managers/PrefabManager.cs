@@ -42,14 +42,12 @@ internal class PrefabManager : IDisposable
         _prefabs.Add(id, new InstantiatedPrefab(prefab, track));
     }
 
-    internal void Destroy(string id)
+    internal bool Destroy(string id)
     {
-        if (!TryGetPrefab(id, out InstantiatedPrefab? prefab))
+        if (!_prefabs.TryGetValue(id, out InstantiatedPrefab prefab))
         {
-            return;
+            return false;
         }
-
-        _log.Debug($"Destroying [{id}]");
 
         List<Track>? tracks = prefab.Track;
         if (tracks != null)
@@ -63,6 +61,8 @@ internal class PrefabManager : IDisposable
         ////prefab.GameObject.SetActive(false);
         Object.Destroy(prefab.GameObject);
         _prefabs.Remove(id);
+
+        return true;
     }
 
     internal bool TryGetPrefab(string id, [NotNullWhen(true)] out InstantiatedPrefab? prefab)

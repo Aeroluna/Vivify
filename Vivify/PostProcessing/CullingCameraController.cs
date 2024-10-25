@@ -3,7 +3,7 @@ using UnityEngine;
 using Vivify.TrackGameObject;
 using static Vivify.VivifyController;
 
-namespace Vivify.Controllers;
+namespace Vivify.PostProcessing;
 
 internal abstract class CullingCameraController : MonoBehaviour
 {

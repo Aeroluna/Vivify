@@ -4,7 +4,6 @@ using Heck.Deserialize;
 using Heck.Event;
 using SiraUtil.Logging;
 using Vivify.HarmonyPatches;
-using Vivify.TrackGameObject;
 using Zenject;
 using static Vivify.VivifyController;
 
@@ -14,30 +13,38 @@ namespace Vivify.Events;
 internal class DeclareCullingTexture : ICustomEvent
 {
     private readonly SiraLog _log;
+    private readonly SetCameraProperty _setCameraProperty;
+    private readonly CameraEffectApplier _cameraEffectApplier;
     private readonly DeserializedData _deserializedData;
-    private readonly PostProcessingEffectApplier _postProcessingEffectApplier;
 
     private DeclareCullingTexture(
         SiraLog log,
-        [Inject(Id = ID)] DeserializedData deserializedData,
-        PostProcessingEffectApplier postProcessingEffectApplier)
+        SetCameraProperty setCameraProperty,
+        CameraEffectApplier cameraEffectApplier,
+        [Inject(Id = ID)] DeserializedData deserializedData)
     {
         _log = log;
+        _setCameraProperty = setCameraProperty;
+        _cameraEffectApplier = cameraEffectApplier;
         _deserializedData = deserializedData;
-        _postProcessingEffectApplier = postProcessingEffectApplier;
     }
 
     public void Callback(CustomEventData customEventData)
     {
-        if (!_deserializedData.Resolve(customEventData, out DeclareCullingTextureData? data))
+        if (!_deserializedData.Resolve(customEventData, out CreateCameraData? data))
         {
             return;
         }
 
         string name = data.Name;
-        CullingTextureTracker textureTracker = new(data.Tracks, data.Whitelist, data.DepthTexture);
-        _postProcessingEffectApplier.CullingTextureDatas.Add(name, textureTracker);
-        _log.Debug($"Created culling texture [{name}]");
+        _cameraEffectApplier.CameraDatas.Add(name, data);
+        _log.Debug($"Created camera [{name}]");
+
+        if (data.Property != null)
+        {
+            _setCameraProperty.SetCameraProperties(name, data.Property);
+        }
+
         /*
             GameObject[] gameObjects = Resources.FindObjectsOfTypeAll<GameObject>();
             List<int> layers = new List<int>();

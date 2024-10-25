@@ -8,9 +8,11 @@ namespace Vivify.Extras;
 [UsedImplicitly(ImplicitUseTargetFlags.Members)]
 public class XRSettingsSetter
 {
+#pragma warning disable SA1300
     public static bool useOcclusionMesh
     {
         get => XRSettings.useOcclusionMesh;
         set => XRSettings.useOcclusionMesh = value;
     }
+#pragma warning restore SA1300
 }

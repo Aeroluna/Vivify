@@ -1,15 +1,16 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Vivify.PostProcessing;
 
 internal class RenderTextureHolder
 {
-    internal RenderTextureHolder(DeclareRenderTextureData data)
+    internal RenderTextureHolder(CreateScreenTextureData data)
     {
         Data = data;
     }
 
-    internal DeclareRenderTextureData Data { get; }
+    internal CreateScreenTextureData Data { get; }
 
-    internal RenderTexture? Texture { get; set; }
+    internal Dictionary<Camera.MonoOrStereoscopicEye, RenderTexture> Textures { get; } = new();
 }

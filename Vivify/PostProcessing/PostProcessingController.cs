@@ -6,8 +6,6 @@ using IPA.Utilities;
 using JetBrains.Annotations;
 using SiraUtil.Logging;
 using UnityEngine;
-using Vivify.Controllers;
-using Vivify.TrackGameObject;
 using Zenject;
 using static Vivify.VivifyController;
 
@@ -16,37 +14,49 @@ namespace Vivify.PostProcessing;
 [RequireComponent(typeof(Camera))]
 internal class PostProcessingController : CullingCameraController
 {
-    private readonly Dictionary<CullingTextureTracker, string> _activeCullingTextureDatas = new();
-    private readonly Dictionary<DeclareRenderTextureData, string> _activeDeclaredTextures = new();
+    private readonly Dictionary<CreateCameraData, string> _activeCreateCameraDatas = new();
+    private readonly Dictionary<CreateScreenTextureData, string> _activeDeclaredTextures = new();
     private readonly Dictionary<string, CullingCameraController> _cullingCameraControllers = new();
     private readonly Dictionary<string, RenderTextureHolder> _declaredTextures = new();
     private readonly Stack<CullingTextureController> _disabledCullingCameraControllers = new();
 
-    private readonly List<CullingTextureTracker> _reusableCullingKeys = [];
-    private readonly List<DeclareRenderTextureData> _reusableDeclaredKeys = [];
+    private readonly List<CreateCameraData> _reusableCameraKeys = [];
+    private readonly List<CreateScreenTextureData> _reusableDeclaredKeys = [];
 
     private int? _defaultCullingMask;
 
     private SiraLog _log = null!;
     private IInstantiator _instantiator = null!;
 
-    internal Dictionary<string, CullingTextureTracker> CullingTextureDatas { get; set; } = new();
+    internal Dictionary<string, CreateCameraData> CameraDatas { get; set; } = new();
 
-    internal Dictionary<string, DeclareRenderTextureData> DeclaredTextureDatas { get; set; } = new();
+    internal Dictionary<string, CreateScreenTextureData> DeclaredTextureDatas { get; set; } = new();
 
     internal override int DefaultCullingMask => _defaultCullingMask ?? Camera.cullingMask;
 
+    // TODO: make this create the render textures as well
+    internal void PrewarmCameras(int count)
+    {
+        count -= _disabledCullingCameraControllers.Count + _cullingCameraControllers.Count;
+        for (int i = 0; i < count; i++)
+        {
+            _disabledCullingCameraControllers.Push(CreateCamera());
+        }
+    }
+
     internal void CreateDeclaredTextures(RenderTextureDescriptor descriptor)
     {
+        Camera.MonoOrStereoscopicEye stereoActiveEye = Camera.stereoActiveEye;
+
         // set up declared textures
         foreach ((string textureName, RenderTextureHolder value) in _declaredTextures)
         {
-            DeclareRenderTextureData data = value.Data;
-            RenderTexture? texture = value.Texture;
-            if (texture != null)
+            if (value.Textures.ContainsKey(stereoActiveEye))
             {
                 continue;
             }
+
+            CreateScreenTextureData data = value.Data;
 
             RenderTextureDescriptor newDescriptor = descriptor;
             newDescriptor.width = (int)((data.Width ?? descriptor.width) / data.XRatio);
@@ -58,21 +68,22 @@ internal class PostProcessingController : CullingCameraController
                 newDescriptor.colorFormat = format;
             }
 
-            texture = new RenderTexture(newDescriptor);
+            RenderTexture texture = new(newDescriptor);
             if (data.FilterMode.HasValue)
             {
                 texture.filterMode = data.FilterMode.Value;
             }
 
-            value.Texture = texture;
+            value.Textures[stereoActiveEye] = texture;
             _log.Debug(
-                $"Created: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}");
+                $"Created texture for [{gameObject.name}] [{stereoActiveEye}]: {textureName}, {texture.width} : {texture.height} : {texture.filterMode} : {texture.format}");
         }
     }
 
     internal RenderTexture RenderImage(RenderTexture src, List<MaterialData> materials)
     {
         RenderTextureDescriptor descriptor = src.descriptor;
+        Camera.MonoOrStereoscopicEye stereoActiveEye = Camera.stereoActiveEye;
 
         // blit all passes
         RenderTexture main = src;
@@ -109,9 +120,10 @@ internal class PostProcessingController : CullingCameraController
                     }
                     else
                     {
-                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder value))
+                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder) &&
+                            targetHolder.Textures.TryGetValue(stereoActiveEye, out RenderTexture? target))
                         {
-                            Blit(main, value.Texture, material, materialData.Pass);
+                            Blit(main, target, material, materialData.Pass);
                         }
                         else
                         {
@@ -124,7 +136,7 @@ internal class PostProcessingController : CullingCameraController
             {
                 foreach (string materialDataTarget in materialData.Targets)
                 {
-                    RenderTexture? source = sourceHolder.Texture;
+                    sourceHolder.Textures.TryGetValue(stereoActiveEye, out RenderTexture? source);
                     if (materialDataTarget == CAMERA_TARGET)
                     {
                         Blit(source, main, material, materialData.Pass);
@@ -141,21 +153,23 @@ internal class PostProcessingController : CullingCameraController
                                     continue;
                                 }
 
-                                RenderTexture temp = RenderTexture.GetTemporary(descriptor);
-                                temp.filterMode = source!.filterMode;
+                                RenderTexture temp = RenderTexture.GetTemporary(source.descriptor);
+                                temp.filterMode = source.filterMode;
                                 Graphics.Blit(source, temp, material, materialData.Pass);
-                                Graphics.Blit(temp, targetHolder.Texture);
+                                Graphics.Blit(temp, source);
                                 RenderTexture.ReleaseTemporary(temp);
+
+                                continue;
                             }
-                            else
+
+                            if (targetHolder.Textures.TryGetValue(stereoActiveEye, out RenderTexture? target))
                             {
-                                Blit(source, targetHolder.Texture, material, materialData.Pass);
+                                Blit(source, target, material, materialData.Pass);
+                                continue;
                             }
                         }
-                        else
-                        {
-                            _log.Warn($"Unable to find destination [{materialDataTarget}]");
-                        }
+
+                        _log.Warn($"Unable to find destination [{materialDataTarget}]");
                     }
                 }
             }
@@ -166,18 +180,17 @@ internal class PostProcessingController : CullingCameraController
             {
                 foreach (string materialDataTarget in materialData.Targets)
                 {
-                    cullingTextureController.RenderTextures.TryGetValue(
-                        Camera.stereoActiveEye,
-                        out RenderTexture? source);
+                    cullingTextureController.RenderTextures.TryGetValue(stereoActiveEye, out RenderTexture? source);
                     if (materialDataTarget == CAMERA_TARGET)
                     {
                         Blit(source, main, material, materialData.Pass);
                     }
                     else
                     {
-                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder))
+                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder) &&
+                            targetHolder.Textures.TryGetValue(stereoActiveEye, out RenderTexture? target))
                         {
-                            Blit(source, targetHolder.Texture, material, materialData.Pass);
+                            Blit(source, target, material, materialData.Pass);
                         }
                         else
                         {
@@ -216,122 +229,72 @@ internal class PostProcessingController : CullingCameraController
 
     protected override void OnPreCull()
     {
-        foreach ((CullingTextureTracker textureData, string textureName) in _activeCullingTextureDatas)
+        base.OnPreCull();
+
+        foreach ((CreateCameraData textureData, string id) in _activeCreateCameraDatas)
         {
-            if (CullingTextureDatas.ContainsValue(textureData))
+            if (CameraDatas.ContainsValue(textureData))
             {
                 continue;
             }
 
-            if (_cullingCameraControllers.TryGetValue(textureName, out CullingCameraController cameraController) &&
+            if (_cullingCameraControllers.TryGetValue(id, out CullingCameraController cameraController) &&
                 cameraController is CullingTextureController cullingTextureController2)
             {
                 cullingTextureController2.gameObject.SetActive(false);
                 _disabledCullingCameraControllers.Push(cullingTextureController2);
             }
-            else
-            {
-                CullingTextureData = null;
-                _defaultCullingMask = null;
-            }
 
-            _cullingCameraControllers.Remove(textureName);
-            _reusableCullingKeys.Add(textureData);
+            _cullingCameraControllers.Remove(id);
+            _reusableCameraKeys.Add(textureData);
         }
 
-        foreach (CullingTextureTracker cullingTextureTracker in _reusableCullingKeys)
+        foreach (CreateCameraData createCameraData in _reusableCameraKeys)
         {
-            _activeCullingTextureDatas.Remove(cullingTextureTracker);
+            _activeCreateCameraDatas.Remove(createCameraData);
         }
 
-        _reusableCullingKeys.Clear();
+        _reusableCameraKeys.Clear();
 
-        foreach ((string textureName, CullingTextureTracker textureData) in CullingTextureDatas)
+        foreach ((string textureName, CreateCameraData cameraData) in CameraDatas)
         {
-            if (_activeCullingTextureDatas.ContainsKey(textureData))
+            if (_activeCreateCameraDatas.ContainsKey(cameraData))
             {
                 continue;
             }
 
-            _activeCullingTextureDatas[textureData] = textureName;
+            _activeCreateCameraDatas[cameraData] = textureName;
 
-            if (textureName == CAMERA_TARGET)
-            {
-                _defaultCullingMask ??= Camera.cullingMask;
+            CullingTextureController finalController = _disabledCullingCameraControllers.Count > 0
+                ? _disabledCullingCameraControllers.Pop()
+                : CreateCamera();
 
-                CullingTextureData = textureData;
-                _cullingCameraControllers[textureName] = this;
-                continue;
-            }
-
-            CullingTextureController finalController;
-            if (_disabledCullingCameraControllers.Count > 0)
-            {
-                finalController = _disabledCullingCameraControllers.Pop();
-                finalController.gameObject.SetActive(true);
-            }
-            else
-            {
-                GameObject newObject = new("CullingCamera");
-                newObject.transform.SetParent(transform, false);
-                newObject.AddComponent<Camera>();
-                finalController = _instantiator.InstantiateComponent<CullingTextureController>(newObject, [this]);
-                CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), newObject);
-            }
-
-            finalController.Init(textureName, textureData);
+            finalController.Init(cameraData);
+            finalController.gameObject.SetActive(true);
             _cullingCameraControllers[textureName] = finalController;
         }
 
-        foreach (CullingCameraController controller in _cullingCameraControllers.Values)
-        {
-            if (controller is not CullingTextureController cullingTextureController)
-            {
-                continue;
-            }
-
-            Camera camera = cullingTextureController.Camera;
-            if (camera.enabled == false)
-            {
-                camera.Render();
-            }
-
-            if (cullingTextureController.RenderTextures.TryGetValue(
-                    Camera.stereoActiveEye,
-                    out RenderTexture colorTexture))
-            {
-                Shader.SetGlobalTexture(cullingTextureController.Key, colorTexture);
-            }
-
-            if (cullingTextureController.RenderTexturesDepth.TryGetValue(
-                    Camera.stereoActiveEye,
-                    out RenderTexture depthTexture))
-            {
-                Shader.SetGlobalTexture(cullingTextureController.DepthKey, depthTexture);
-            }
-        }
-
-        base.OnPreCull();
-
         // delete old declared textures
-        foreach ((DeclareRenderTextureData value, string textureName) in _activeDeclaredTextures)
+        foreach ((CreateScreenTextureData value, string textureName) in _activeDeclaredTextures)
         {
             if (DeclaredTextureDatas.ContainsValue(value))
             {
                 continue;
             }
 
-            RenderTexture? renderTexture = _declaredTextures[textureName].Texture;
-            if (renderTexture != null)
+            foreach (RenderTexture? renderTexture in _declaredTextures[textureName].Textures.Values)
             {
-                renderTexture.Release();
+                if (renderTexture != null)
+                {
+                    renderTexture.Release();
+                }
             }
 
             _declaredTextures.Remove(textureName);
             _reusableDeclaredKeys.Add(value);
         }
 
-        foreach (DeclareRenderTextureData declareRenderTextureData in _reusableDeclaredKeys)
+        foreach (CreateScreenTextureData declareRenderTextureData in _reusableDeclaredKeys)
         {
             _activeDeclaredTextures.Remove(declareRenderTextureData);
         }
@@ -339,7 +302,7 @@ internal class PostProcessingController : CullingCameraController
         _reusableDeclaredKeys.Clear();
 
         // instantiate RenderTextureHolders
-        foreach ((string textureName, DeclareRenderTextureData declareRenderTextureData) in DeclaredTextureDatas)
+        foreach ((string textureName, CreateScreenTextureData declareRenderTextureData) in DeclaredTextureDatas)
         {
             if (_activeDeclaredTextures.ContainsKey(declareRenderTextureData))
             {
@@ -348,17 +311,6 @@ internal class PostProcessingController : CullingCameraController
 
             _declaredTextures.Add(textureName, new RenderTextureHolder(declareRenderTextureData));
             _activeDeclaredTextures.Add(declareRenderTextureData, textureName);
-        }
-
-        // set up declared textures
-        foreach (RenderTextureHolder value in _declaredTextures.Values)
-        {
-            DeclareRenderTextureData data = value.Data;
-            RenderTexture? texture = value.Texture;
-            if (texture != null)
-            {
-                Shader.SetGlobalTexture(data.PropertyId, texture);
-            }
         }
     }
 
@@ -380,6 +332,61 @@ internal class PostProcessingController : CullingCameraController
         }
     }
 
+    private void OnPreRender()
+    {
+        Camera.MonoOrStereoscopicEye stereoActiveEye = Camera.stereoActiveEye;
+
+        foreach (CullingCameraController controller in _cullingCameraControllers.Values)
+        {
+            if (controller is not CullingTextureController cullingTextureController)
+            {
+                continue;
+            }
+
+            Camera camera = cullingTextureController.Camera;
+            if (camera.enabled == false)
+            {
+                camera.Render();
+            }
+
+            if (cullingTextureController.RenderTextures.TryGetValue(
+                    stereoActiveEye,
+                    out RenderTexture colorTexture))
+            {
+                Shader.SetGlobalTexture(cullingTextureController.Key, colorTexture);
+            }
+
+            if (cullingTextureController.DepthKey != null &&
+                cullingTextureController.RenderTexturesDepth.TryGetValue(
+                    stereoActiveEye,
+                    out RenderTexture depthTexture))
+            {
+                Shader.SetGlobalTexture(cullingTextureController.DepthKey.Value, depthTexture);
+            }
+        }
+
+        // set declared texture properties
+        foreach (RenderTextureHolder value in _declaredTextures.Values)
+        {
+            CreateScreenTextureData data = value.Data;
+            if (value.Textures.TryGetValue(stereoActiveEye, out RenderTexture texture))
+            {
+                Shader.SetGlobalTexture(data.PropertyId, texture);
+            }
+        }
+    }
+
+    private CullingTextureController CreateCamera()
+    {
+        GameObject newObject = new("VivifyCamera");
+        newObject.SetActive(false);
+        newObject.transform.SetParent(transform, false);
+        newObject.AddComponent<Camera>();
+        CullingTextureController result = _instantiator.InstantiateComponent<CullingTextureController>(newObject, [this]);
+        CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), newObject);
+        return result;
+    }
+
     [UsedImplicitly]
     [Inject]
     private void Construct(SiraLog log, IInstantiator instantiator)
@@ -388,11 +395,15 @@ internal class PostProcessingController : CullingCameraController
         _instantiator = instantiator;
     }
 
+    private void Start()
+    {
+        _defaultCullingMask = Camera.cullingMask;
+    }
+
     private void OnDestroy()
     {
-        foreach (RenderTextureHolder declaredTexturesValue in _declaredTextures.Values)
+        foreach (RenderTexture texture in _declaredTextures.Values.SelectMany(n => n.Textures.Values))
         {
-            RenderTexture? texture = declaredTexturesValue.Texture;
             if (texture != null)
             {
                 texture.Release();

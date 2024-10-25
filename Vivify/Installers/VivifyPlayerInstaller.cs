@@ -34,18 +34,17 @@ internal class VivifyPlayerInstaller : Installer
 
         Container.BindInterfacesAndSelfTo<CameraPropertyManager>().AsSingle();
 
-        Container.BindInterfacesAndSelfTo<PostProcessingEffectApplier>().AsSingle();
+        Container.BindInterfacesAndSelfTo<CameraEffectApplier>().AsSingle();
 
         // Custom Events
         Container.BindInterfacesTo<ApplyPostProcessing>().AsSingle();
         Container.BindInterfacesTo<AssignObjectPrefab>().AsSingle();
         Container.BindInterfacesTo<DeclareCullingTexture>().AsSingle();
         Container.BindInterfacesTo<DeclareRenderTexture>().AsSingle();
-        Container.BindInterfacesTo<DestroyTexture>().AsSingle();
         Container.BindInterfacesTo<DestroyPrefab>().AsSingle();
         Container.BindInterfacesTo<Events.InstantiatePrefab>().AsSingle();
         Container.BindInterfacesTo<SetAnimatorProperty>().AsSingle();
-        Container.BindInterfacesTo<SetCameraProperty>().AsSingle();
+        Container.BindInterfacesAndSelfTo<SetCameraProperty>().AsSingle();
         Container.BindInterfacesTo<SetGlobalProperty>().AsSingle();
         Container.BindInterfacesAndSelfTo<SetMaterialProperty>().AsSingle();
         Container.BindInterfacesTo<SetRenderingSettings>().AsSingle();

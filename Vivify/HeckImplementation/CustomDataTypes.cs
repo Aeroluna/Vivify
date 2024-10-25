@@ -249,45 +249,32 @@ internal class SetRenderingSettingsData : ICustomEventCustomData
     internal List<RenderingSettingsProperty> Properties { get; } = [];
 }
 
-internal class DeclareCullingTextureData : ICustomEventCustomData
+internal class CreateCameraData : ICustomEventCustomData
 {
-    internal DeclareCullingTextureData(CustomData customData, Dictionary<string, Track> tracks)
+    internal CreateCameraData(CustomData customData, Dictionary<string, Track> tracks)
     {
         Name = customData.GetRequired<string>(ID_FIELD);
-        Tracks = customData.GetTrackArray(tracks, false);
-        Whitelist = customData.Get<bool?>(WHITELIST) ?? false;
-        DepthTexture = customData.Get<bool?>(DEPTH_TEXTURE) ?? false;
+        Texture = customData.GetRequired<string>(TEXTURE);
+        DepthTexture = customData.Get<string?>(DEPTH_TEXTURE);
+        CustomData? propertyData = customData.Get<CustomData?>(PROPERTIES);
+        if (propertyData != null)
+        {
+            Property = CameraProperty.CreateCameraProperty(propertyData, tracks);
+        }
     }
-
-    internal bool DepthTexture { get; }
 
     internal string Name { get; }
 
-    internal IEnumerable<Track> Tracks { get; }
+    internal string Texture { get; }
 
-    internal bool Whitelist { get; }
+    internal string? DepthTexture { get; }
+
+    internal CameraProperty? Property { get; }
 }
 
-internal class DestroyTextureData : ICustomEventCustomData
+internal class CreateScreenTextureData : ICustomEventCustomData
 {
-    internal DestroyTextureData(CustomData customData)
-    {
-        object nameRaw = customData.GetRequired<object>(ID_FIELD);
-        Name = nameRaw switch
-        {
-            string nameString => [nameString],
-            List<object> nameArray => nameArray.Select(n => (string)n).ToArray(),
-            _ => throw new InvalidCastException(
-                $"[{ID_FIELD}] was not an allowable type. Was [{nameRaw.GetType().FullName}].")
-        };
-    }
-
-    internal string[] Name { get; }
-}
-
-internal class DeclareRenderTextureData : ICustomEventCustomData
-{
-    internal DeclareRenderTextureData(CustomData customData)
+    internal CreateScreenTextureData(CustomData customData)
     {
         Name = customData.GetRequired<string>(ID_FIELD);
         PropertyId = Shader.PropertyToID(Name);
@@ -320,9 +307,9 @@ internal class DeclareRenderTextureData : ICustomEventCustomData
     internal float YRatio { get; }
 }
 
-internal class DestroyPrefabData : ICustomEventCustomData
+internal class DestroyObjectData : ICustomEventCustomData
 {
-    internal DestroyPrefabData(CustomData customData)
+    internal DestroyObjectData(CustomData customData)
     {
         object nameRaw = customData.GetRequired<object>(ID_FIELD);
         Id = nameRaw switch

@@ -14,26 +14,26 @@ internal class DeclareRenderTexture : ICustomEvent
 {
     private readonly SiraLog _log;
     private readonly DeserializedData _deserializedData;
-    private readonly PostProcessingEffectApplier _postProcessingEffectApplier;
+    private readonly CameraEffectApplier _cameraEffectApplier;
 
     private DeclareRenderTexture(
         SiraLog log,
         [Inject(Id = ID)] DeserializedData deserializedData,
-        PostProcessingEffectApplier postProcessingEffectApplier)
+        CameraEffectApplier cameraEffectApplier)
     {
         _log = log;
         _deserializedData = deserializedData;
-        _postProcessingEffectApplier = postProcessingEffectApplier;
+        _cameraEffectApplier = cameraEffectApplier;
     }
 
     public void Callback(CustomEventData customEventData)
     {
-        if (!_deserializedData.Resolve(customEventData, out DeclareRenderTextureData? data))
+        if (!_deserializedData.Resolve(customEventData, out CreateScreenTextureData? data))
         {
             return;
         }
 
-        _postProcessingEffectApplier.DeclaredTextureDatas.Add(data.Name, data);
+        _cameraEffectApplier.DeclaredTextureDatas.Add(data.Name, data);
         _log.Debug($"Created texture [{data.Name}]");
     }
 }

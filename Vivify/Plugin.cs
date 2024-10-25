@@ -4,7 +4,6 @@ using IPA.Config.Stores;
 using IPA.Logging;
 using JetBrains.Annotations;
 using SiraUtil.Zenject;
-using UnityEngine.SceneManagement;
 using Vivify.Installers;
 using static Vivify.VivifyController;
 

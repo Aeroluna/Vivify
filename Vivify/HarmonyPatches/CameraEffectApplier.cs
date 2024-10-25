@@ -1,23 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using CustomJSONData.CustomBeatmap;
 using Heck.ReLoad;
 using JetBrains.Annotations;
 using SiraUtil.Affinity;
 using UnityEngine;
 using Vivify.PostProcessing;
-using Vivify.TrackGameObject;
 using Zenject;
 
 namespace Vivify.HarmonyPatches;
 
-internal class PostProcessingEffectApplier : IAffinity, IDisposable
+internal class CameraEffectApplier : IAffinity, IDisposable
 {
     private readonly Dictionary<MainEffectController, PostProcessingController> _postProcessingControllers = new();
 
     private readonly ReLoader? _reLoader;
+    private readonly int _prewarmCount;
 
     [UsedImplicitly]
-    private PostProcessingEffectApplier(
+    private CameraEffectApplier(
+        IReadonlyBeatmapData beatmapData,
         [InjectOptional] ReLoader? reLoader)
     {
         _reLoader = reLoader;
@@ -25,11 +28,17 @@ internal class PostProcessingEffectApplier : IAffinity, IDisposable
         {
             reLoader.Rewinded += OnRewind;
         }
+
+        // TODO: correctly count concurrent created cameras
+        _prewarmCount = ((CustomBeatmapData)beatmapData).customEventDatas.Any(
+            n => n.eventType == VivifyController.DECLARE_CULLING_TEXTURE)
+            ? 1
+            : 0;
     }
 
-    internal Dictionary<string, CullingTextureTracker> CullingTextureDatas { get; } = new();
+    internal Dictionary<string, CreateCameraData> CameraDatas { get; } = new();
 
-    internal Dictionary<string, DeclareRenderTextureData> DeclaredTextureDatas { get; } = new();
+    internal Dictionary<string, CreateScreenTextureData> DeclaredTextureDatas { get; } = new();
 
     internal List<MaterialData> PreEffects { get; } = [];
 
@@ -52,12 +61,7 @@ internal class PostProcessingEffectApplier : IAffinity, IDisposable
 
     private void Reset()
     {
-        foreach (CullingTextureTracker cullingTextureTracker in CullingTextureDatas.Values)
-        {
-            cullingTextureTracker.Dispose();
-        }
-
-        CullingTextureDatas.Clear();
+        CameraDatas.Clear();
         DeclaredTextureDatas.Clear();
 
         PreEffects.Clear();
@@ -77,8 +81,9 @@ internal class PostProcessingEffectApplier : IAffinity, IDisposable
             }
 
             _postProcessingControllers[__instance] = postProcessingController;
-            postProcessingController.CullingTextureDatas = CullingTextureDatas;
+            postProcessingController.CameraDatas = CameraDatas;
             postProcessingController.DeclaredTextureDatas = DeclaredTextureDatas;
+            postProcessingController.PrewarmCameras(_prewarmCount);
         }
 
         RenderTextureDescriptor descriptor = src.descriptor;
