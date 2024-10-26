@@ -105,10 +105,17 @@ internal class CameraEffectApplier : IAffinity, IDisposable
                 RenderTexture.ReleaseTemporary(main);
             }
 
-            main = postProcessingController.RenderImage(temp, PostEffects);
-            if (temp != main)
+            if (postProcessingController.MainEffect)
             {
-                RenderTexture.ReleaseTemporary(temp);
+                main = postProcessingController.RenderImage(temp, PostEffects);
+                if (temp != main)
+                {
+                    RenderTexture.ReleaseTemporary(temp);
+                }
+            }
+            else
+            {
+                main = temp;
             }
 
             Graphics.Blit(main, dest);

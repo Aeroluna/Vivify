@@ -89,6 +89,8 @@ internal class CameraPropertyManager : IInitializable, IDisposable
         private CameraClearFlags? _clearFlags;
         private Color? _backgroundColor;
         private CullingTextureTracker? _cullingTextureData;
+        private bool? _bloomPrePass;
+        private bool? _mainEffect;
 
         internal DepthTextureMode? DepthTextureMode
         {
@@ -138,6 +140,30 @@ internal class CameraPropertyManager : IInitializable, IDisposable
             }
         }
 
+        internal bool? BloomPrePass
+        {
+            set
+            {
+                _bloomPrePass = value;
+                foreach (CameraPropertyController controller in _controllers)
+                {
+                    controller.BloomPrePass = value;
+                }
+            }
+        }
+
+        internal bool? MainEffect
+        {
+            set
+            {
+                _mainEffect = value;
+                foreach (CameraPropertyController controller in _controllers)
+                {
+                    controller.MainEffect = value;
+                }
+            }
+        }
+
         public void Dispose()
         {
             _cullingTextureData?.Dispose();
@@ -149,6 +175,8 @@ internal class CameraPropertyManager : IInitializable, IDisposable
             controller.ClearFlags = _clearFlags;
             controller.BackgroundColor = _backgroundColor;
             controller.CullingTextureData = _cullingTextureData;
+            controller.BloomPrePass = _bloomPrePass;
+            controller.MainEffect = _mainEffect;
             _controllers.Add(controller);
         }
 

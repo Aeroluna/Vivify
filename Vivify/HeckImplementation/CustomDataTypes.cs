@@ -286,7 +286,7 @@ internal class CreateScreenTextureData : ICustomEventCustomData
         FilterMode = customData.GetStringToEnum<FilterMode?>(FILTER);
         if (Format.HasValue && !SystemInfo.SupportsRenderTextureFormat(Format.Value))
         {
-            Plugin.Log.Warn($"Current graphics card does not support [{Format.Value}].");
+            Plugin.Log.Warn($"Current graphics card does not support [{Format.Value}]");
         }
     }
 

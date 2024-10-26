@@ -126,10 +126,17 @@ internal class CullingTextureController : CullingCameraController
             RenderTextures[Camera.stereoActiveEye] = colorTexture;
         }
 
-        (_mainEffectRenderer ??=
-            new MainEffectRenderer(gameObject.transform.parent.GetComponent<MainEffectController>())).Render(
-            src,
-            colorTexture);
+        if (MainEffect)
+        {
+            (_mainEffectRenderer ??=
+                new MainEffectRenderer(gameObject.transform.parent.GetComponent<MainEffectController>())).Render(
+                src,
+                colorTexture);
+        }
+        else
+        {
+            Graphics.Blit(src, colorTexture);
+        }
 
         if (DepthKey == null)
         {

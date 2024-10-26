@@ -57,13 +57,22 @@ internal class SetCameraProperty : ICustomEvent
             properties.BackgroundColor = property.BackgroundColor;
         }
 
-        // ReSharper disable once InvertIf
         if (property.HasCulling)
         {
             CameraProperty.CullingData? cullingData = property.Culling;
             properties.CullingTextureData = cullingData != null
                 ? new CullingTextureTracker(cullingData.Tracks, cullingData.Whitelist)
                 : null;
+        }
+
+        if (property.HasBloomPrePass)
+        {
+            properties.BloomPrePass = property.BloomPrePass;
+        }
+
+        if (property.HasMainEffect)
+        {
+            properties.MainEffect = property.MainEffect;
         }
     }
 }

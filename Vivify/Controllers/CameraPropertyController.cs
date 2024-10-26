@@ -20,6 +20,7 @@ internal class CameraPropertyController : MonoBehaviour
     private Color _cachedBackgroundColor;
 
     private CullingCameraController _cullingCameraController = null!;
+    private BloomPrePass _bloomPrePass = null!;
 #if LATEST
     private SettingsManager _settingsManager = null!;
 #endif
@@ -85,6 +86,16 @@ internal class CameraPropertyController : MonoBehaviour
         set => _cullingCameraController.CullingTextureData = value;
     }
 
+    internal bool? BloomPrePass
+    {
+        set => _bloomPrePass.enabled = value ?? true;
+    }
+
+    internal bool? MainEffect
+    {
+        set => _cullingCameraController.MainEffect = value ?? true;
+    }
+
     internal string? Id { get; set; }
 
     internal void Reset()
@@ -93,6 +104,8 @@ internal class CameraPropertyController : MonoBehaviour
         ClearFlags = null;
         BackgroundColor = null;
         CullingTextureData = null;
+        BloomPrePass = null;
+        MainEffect = null;
     }
 
 #if LATEST
@@ -113,7 +126,8 @@ internal class CameraPropertyController : MonoBehaviour
 #else
         _visualEffectsController = GetComponent<VisualEffectsController>();
 #endif
-        _cullingCameraController = _camera.GetComponent<CullingCameraController>();
+        _cullingCameraController = GetComponent<CullingCameraController>();
+        _bloomPrePass = GetComponent<BloomPrePass>();
     }
 
     private void OnEnable()

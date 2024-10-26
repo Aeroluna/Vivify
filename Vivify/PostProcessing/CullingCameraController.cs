@@ -15,12 +15,13 @@ internal abstract class CullingCameraController : MonoBehaviour
 
     internal abstract int DefaultCullingMask { get; }
 
+    internal bool MainEffect { get; set; }
+
     internal Camera Camera => _camera ??= GetComponent<Camera>();
 
     internal CullingTextureTracker? CullingTextureData
     {
         get => _cullingTextureData;
-
         set
         {
             _cullingTextureData = value;

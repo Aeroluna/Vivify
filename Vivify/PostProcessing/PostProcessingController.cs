@@ -153,7 +153,7 @@ internal class PostProcessingController : CullingCameraController
                                     continue;
                                 }
 
-                                RenderTexture temp = RenderTexture.GetTemporary(source.descriptor);
+                                RenderTexture temp = RenderTexture.GetTemporary(source!.descriptor);
                                 temp.filterMode = source.filterMode;
                                 Graphics.Blit(source, temp, material, materialData.Pass);
                                 Graphics.Blit(temp, source);
@@ -382,8 +382,8 @@ internal class PostProcessingController : CullingCameraController
         newObject.SetActive(false);
         newObject.transform.SetParent(transform, false);
         newObject.AddComponent<Camera>();
-        CullingTextureController result = _instantiator.InstantiateComponent<CullingTextureController>(newObject, [this]);
         CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), newObject);
+        CullingTextureController result = _instantiator.InstantiateComponent<CullingTextureController>(newObject, [this]);
         return result;
     }
 

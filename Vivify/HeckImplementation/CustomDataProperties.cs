@@ -83,19 +83,27 @@ internal class CameraProperty
         bool hasClearFlags,
         bool hasBackgroundColor,
         bool hasCulling,
+        bool hasBloomPrePass,
+        bool hasMainEffect,
         DepthTextureMode? depthTextureMode,
         CameraClearFlags? clearFlags,
         Color? backgroundColor,
-        CullingData? culling)
+        CullingData? culling,
+        bool? bloomPrePass,
+        bool? mainEffect)
     {
         HasDepthTextureMode = hasDepthTextureMode;
         HasClearFlags = hasClearFlags;
         HasBackgroundColor = hasBackgroundColor;
         HasCulling = hasCulling;
+        HasBloomPrePass = hasBloomPrePass;
+        HasMainEffect = hasMainEffect;
         DepthTextureMode = depthTextureMode;
         ClearFlags = clearFlags;
         BackgroundColor = backgroundColor;
         Culling = culling;
+        BloomPrePass = bloomPrePass;
+        MainEffect = mainEffect;
     }
 
     internal bool HasDepthTextureMode { get; }
@@ -106,6 +114,10 @@ internal class CameraProperty
 
     internal bool HasCulling { get; }
 
+    internal bool HasBloomPrePass { get; }
+
+    internal bool HasMainEffect { get; }
+
     internal DepthTextureMode? DepthTextureMode { get; }
 
     internal CameraClearFlags? ClearFlags { get; }
@@ -113,6 +125,10 @@ internal class CameraProperty
     internal Color? BackgroundColor { get; }
 
     internal CullingData? Culling { get; }
+
+    internal bool? BloomPrePass { get; }
+
+    internal bool? MainEffect { get; }
 
     internal static CameraProperty CreateCameraProperty(CustomData customData, Dictionary<string, Track> tracks)
     {
@@ -145,15 +161,29 @@ internal class CameraProperty
         bool hasCulling = customData.TryGetValue(CULLING, out object? cullingData);
         CullingData? culling = hasCulling && cullingData != null ? new CullingData((CustomData)cullingData, tracks) : null;
 
+        bool hasBloomPrePass = customData.TryGetValue(BLOOMPREPASS, out object? bloomPrePassString);
+        bool? bloomPrePass = hasBloomPrePass && bloomPrePassString != null
+            ? (bool)bloomPrePassString
+            : null;
+
+        bool hasMainEffect = customData.TryGetValue(MAIN_EFFECT, out object? mainEffectString);
+        bool? mainEffect = hasMainEffect && mainEffectString != null
+            ? (bool)mainEffectString
+            : null;
+
         return new CameraProperty(
             hasDepthTextureMode,
             hasClearFlags,
             hasBackgroundColor,
             hasCulling,
+            hasBloomPrePass,
+            hasMainEffect,
             depthTextureMode,
             clearFlags,
             backgroundColor,
-            culling);
+            culling,
+            bloomPrePass,
+            mainEffect);
     }
 
     internal class CullingData

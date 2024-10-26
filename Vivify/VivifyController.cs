@@ -21,9 +21,6 @@ public static class VivifyController
     internal const string ID_FIELD = "id";
     internal const string ORDER = "order";
 
-    internal const string CULLING = "culling";
-    internal const string WHITELIST = "whitelist";
-
     internal const string X_RATIO = "xRatio";
     internal const string Y_RATIO = "yRatio";
     internal const string WIDTH = "width";
@@ -34,6 +31,10 @@ public static class VivifyController
     internal const string CAMERA_DEPTH_TEXTURE_MODE = "depthTextureMode";
     internal const string CAMERA_CLEAR_FLAGS = "clearFlags";
     internal const string CAMERA_BACKGROUND_COLOR = "backgroundColor";
+    internal const string CULLING = "culling";
+    internal const string WHITELIST = "whitelist";
+    internal const string MAIN_EFFECT = "mainEffect";
+    internal const string BLOOMPREPASS = "bloomPrePass";
 
     internal const string ASSIGN_PREFAB_LOAD_MODE = "loadMode";
     internal const string NOTE_PREFAB = "colorNotes";
