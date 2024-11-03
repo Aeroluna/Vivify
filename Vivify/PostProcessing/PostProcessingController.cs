@@ -156,7 +156,8 @@ internal class PostProcessingController : CullingCameraController
                                 RenderTexture temp = RenderTexture.GetTemporary(source!.descriptor);
                                 temp.filterMode = source.filterMode;
                                 Graphics.Blit(source, temp, material, materialData.Pass);
-                                Graphics.Blit(temp, source);
+                                Graphics.CopyTexture(temp, source); // somehow not laggy but blit is?
+                                ////Graphics.Blit(temp, source);
                                 RenderTexture.ReleaseTemporary(temp);
 
                                 continue;

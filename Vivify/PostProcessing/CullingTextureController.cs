@@ -2,7 +2,6 @@
 using HarmonyLib;
 using JetBrains.Annotations;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using Vivify.Controllers;
 using Vivify.Managers;
@@ -118,12 +117,15 @@ internal class CullingTextureController : CullingCameraController
             return;
         }
 
-        if (!RenderTextures.TryGetValue(Camera.stereoActiveEye, out RenderTexture colorTexture) ||
+        Camera.MonoOrStereoscopicEye stereoActiveEye = Camera.stereoActiveEye;
+        RenderTextureDescriptor descriptor = src.descriptor;
+
+        if (!RenderTextures.TryGetValue(stereoActiveEye, out RenderTexture colorTexture) ||
             !RTEquals(colorTexture, src))
         {
             colorTexture?.Release();
-            colorTexture = new RenderTexture(src.descriptor);
-            RenderTextures[Camera.stereoActiveEye] = colorTexture;
+            colorTexture = new RenderTexture(descriptor);
+            RenderTextures[stereoActiveEye] = colorTexture;
         }
 
         if (MainEffect)
@@ -143,14 +145,13 @@ internal class CullingTextureController : CullingCameraController
             return;
         }
 
-        if (!RenderTexturesDepth.TryGetValue(Camera.stereoActiveEye, out RenderTexture depthTexture) ||
+        if (!RenderTexturesDepth.TryGetValue(stereoActiveEye, out RenderTexture depthTexture) ||
             !RTEquals(depthTexture, src))
         {
             depthTexture?.Release();
-            RenderTextureDescriptor descriptor = src.descriptor;
-            descriptor.graphicsFormat = GraphicsFormat.None;
-            depthTexture = new RenderTexture(src.descriptor);
-            RenderTexturesDepth[Camera.stereoActiveEye] = depthTexture;
+            descriptor.colorFormat = RenderTextureFormat.R8;
+            depthTexture = new RenderTexture(descriptor);
+            RenderTexturesDepth[stereoActiveEye] = depthTexture;
         }
 
         if (depthTexture.dimension == TextureDimension.Tex2DArray)
