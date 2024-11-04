@@ -254,7 +254,7 @@ internal class CreateCameraData : ICustomEventCustomData
     internal CreateCameraData(CustomData customData, Dictionary<string, Track> tracks)
     {
         Name = customData.GetRequired<string>(ID_FIELD);
-        Texture = customData.GetRequired<string>(TEXTURE);
+        Texture = customData.Get<string>(TEXTURE);
         DepthTexture = customData.Get<string?>(DEPTH_TEXTURE);
         CustomData? propertyData = customData.Get<CustomData?>(PROPERTIES);
         if (propertyData != null)
@@ -265,7 +265,7 @@ internal class CreateCameraData : ICustomEventCustomData
 
     internal string Name { get; }
 
-    internal string Texture { get; }
+    internal string? Texture { get; }
 
     internal string? DepthTexture { get; }
 

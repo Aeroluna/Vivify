@@ -27,7 +27,7 @@ internal class CullingTextureController : CullingCameraController
 
     internal override int DefaultCullingMask => _postProcessingController.DefaultCullingMask;
 
-    internal int Key { get; private set; }
+    internal int? Key { get; private set; }
 
     internal int? DepthKey { get; private set; }
 
@@ -38,7 +38,11 @@ internal class CullingTextureController : CullingCameraController
     internal void Init(CreateCameraData cameraData)
     {
         _cameraPropertyController.Id = cameraData.Name;
-        Key = Shader.PropertyToID(cameraData.Texture);
+        if (cameraData.Texture != null)
+        {
+            Key = Shader.PropertyToID(cameraData.Texture);
+        }
+
         if (cameraData.DepthTexture != null)
         {
             DepthKey = Shader.PropertyToID(cameraData.DepthTexture);
@@ -120,62 +124,64 @@ internal class CullingTextureController : CullingCameraController
         Camera.MonoOrStereoscopicEye stereoActiveEye = Camera.stereoActiveEye;
         RenderTextureDescriptor descriptor = src.descriptor;
 
-        if (!RenderTextures.TryGetValue(stereoActiveEye, out RenderTexture colorTexture) ||
-            !RTEquals(colorTexture, src))
+        if (Key != null)
         {
-            colorTexture?.Release();
-            colorTexture = new RenderTexture(descriptor);
-            RenderTextures[stereoActiveEye] = colorTexture;
-        }
-
-        if (MainEffect)
-        {
-            (_mainEffectRenderer ??=
-                new MainEffectRenderer(gameObject.transform.parent.GetComponent<MainEffectController>())).Render(
-                src,
-                colorTexture);
-        }
-        else
-        {
-            Graphics.Blit(src, colorTexture);
-        }
-
-        if (DepthKey == null)
-        {
-            return;
-        }
-
-        if (!RenderTexturesDepth.TryGetValue(stereoActiveEye, out RenderTexture depthTexture) ||
-            !RTEquals(depthTexture, src))
-        {
-            depthTexture?.Release();
-            descriptor.colorFormat = RenderTextureFormat.R8;
-            depthTexture = new RenderTexture(descriptor);
-            RenderTexturesDepth[stereoActiveEye] = depthTexture;
-        }
-
-        if (depthTexture.dimension == TextureDimension.Tex2DArray)
-        {
-            Material? sliceMaterial = _depthShaderManager.DepthArrayMaterial;
-            if (sliceMaterial == null)
+            if (!RenderTextures.TryGetValue(stereoActiveEye, out RenderTexture colorTexture) ||
+                !RTEquals(colorTexture, src))
             {
-                return;
+                colorTexture?.Release();
+                colorTexture = new RenderTexture(descriptor);
+                RenderTextures[stereoActiveEye] = colorTexture;
             }
 
-            sliceMaterial.SetFloat(_arraySliceIndex, 0);
-            Graphics.Blit(null, depthTexture, sliceMaterial, -1, 0);
-            sliceMaterial.SetFloat(_arraySliceIndex, 1);
-            Graphics.Blit(null, depthTexture, sliceMaterial, -1, 1);
-        }
-        else
-        {
-            Material? depthMaterial = _depthShaderManager.DepthMaterial;
-            if (depthMaterial == null)
+            if (MainEffect)
             {
-                return;
+                (_mainEffectRenderer ??=
+                    new MainEffectRenderer(gameObject.transform.parent.GetComponent<MainEffectController>())).Render(
+                    src,
+                    colorTexture);
+            }
+            else
+            {
+                Graphics.Blit(src, colorTexture);
+            }
+        }
+
+        // ReSharper disable once InvertIf
+        if (DepthKey != null)
+        {
+            if (!RenderTexturesDepth.TryGetValue(stereoActiveEye, out RenderTexture depthTexture) ||
+                !RTEquals(depthTexture, src))
+            {
+                depthTexture?.Release();
+                descriptor.colorFormat = RenderTextureFormat.R8;
+                depthTexture = new RenderTexture(descriptor);
+                RenderTexturesDepth[stereoActiveEye] = depthTexture;
             }
 
-            Graphics.Blit(null, depthTexture, depthMaterial);
+            if (depthTexture.dimension == TextureDimension.Tex2DArray)
+            {
+                Material? sliceMaterial = _depthShaderManager.DepthArrayMaterial;
+                if (sliceMaterial == null)
+                {
+                    return;
+                }
+
+                sliceMaterial.SetFloat(_arraySliceIndex, 0);
+                Graphics.Blit(null, depthTexture, sliceMaterial, -1, 0);
+                sliceMaterial.SetFloat(_arraySliceIndex, 1);
+                Graphics.Blit(null, depthTexture, sliceMaterial, -1, 1);
+            }
+            else
+            {
+                Material? depthMaterial = _depthShaderManager.DepthMaterial;
+                if (depthMaterial == null)
+                {
+                    return;
+                }
+
+                Graphics.Blit(null, depthTexture, depthMaterial);
+            }
         }
     }
 }

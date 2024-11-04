@@ -350,11 +350,12 @@ internal class PostProcessingController : CullingCameraController
                 camera.Render();
             }
 
-            if (cullingTextureController.RenderTextures.TryGetValue(
+            if (cullingTextureController.Key != null &&
+                cullingTextureController.RenderTextures.TryGetValue(
                     stereoActiveEye,
                     out RenderTexture colorTexture))
             {
-                Shader.SetGlobalTexture(cullingTextureController.Key, colorTexture);
+                Shader.SetGlobalTexture(cullingTextureController.Key.Value, colorTexture);
             }
 
             if (cullingTextureController.DepthKey != null &&
