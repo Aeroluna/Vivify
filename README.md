@@ -18,11 +18,10 @@ This documentation assumes basic understanding of custom events and tracks.
 - [`SetMaterialProperty`](#setmaterialproperty)
 - [`SetGlobalProperty`](#setglobalproperty)
 - [`Blit`](#blit)
-- [`DeclareCullingTexture`](#declarecullingtexture)
-- [`DeclareRenderTexture`](#declarerendertexture)
-- [`DestroyTexture`](#destroytexture)
+- [`CreateCamera`](#createcamera)
+- [`CreateScreenTexture`](#createscreentexture)
 - [`InstantiatePrefab`](#instantiateprefab)
-- [`DestroyPrefab`](#destroyprefab)
+- [`DestroyObject`](#destroyobject)
 - [`SetAnimatorProperty`](#setanimatorproperty)
 - [`SetCameraProperty`](#setcameraproperty)
 - [`AssignObjectPrefab`](#assignobjectprefab)
@@ -131,8 +130,8 @@ Currently provided settings:
   "t": "SetMaterialProperty",
   "d": {
     "asset": string, // File path to the desired material.
-    "duration": float, // The length of the event in beats (defaults to 0).
-    "easing": string, // An easing for the animation to follow (defaults to easeLinear).
+    "duration": float, // The length of the event in beats. Defaults to 0.
+    "easing": string, // An easing for the animation to follow. Defaults to "easeLinear".
     "properties": [{
       "id": string, // Name of the property on the material.
       "type": string, // Type of the property (Texture, Float, Color).
@@ -151,8 +150,8 @@ Allows setting material properties, e.g. Texture, Float, Color.
   "b": float, // Time in beats.
   "t": "SetGlobalProperty",
   "d": {
-    "duration": float, // The length of the event in beats (defaults to 0).
-    "easing": string, // An easing for the animation to follow (defaults to easeLinear).
+    "duration": float, // The length of the event in beats. Defaults to 0.
+    "easing": string, // An easing for the animation to follow. Defaults to "easeLinear".
     "properties": [{
       "id": string, // Name of the property.
       "type": string, // Type of the property (Texture, Float, Color).
@@ -211,7 +210,7 @@ their default value.
     "order": string, // (Optional) BeforeMainEffect, AfterMainEffect. Whether to activate before the main bloom effect or after. Defaults fo AfterMainEffect
     "source": string, // (Optional) Which texture to pass to the shader as "_MainTex". "_Main" is reserved for the camera. Default = "_Main"
     "destination": string, // (Optional) Which render texture to save to. Can be an array. "_Main" is reserved for the camera. Default = "_Main"
-    "duration": float, // (Optional) How long will this material be applied. Default = 0
+    "duration": float, // (Optional) How long will this material be applied. Defaults to 0
     "easing": string, // (Optional) See SetMaterialProperty.
     "properties": ? // (Optional) See SetMaterialProperty.
   }
@@ -242,47 +241,53 @@ This event allows you to call a [SetMaterialProperty](#SetMaterialProperty) from
 }
 ```
 
-## DeclareCullingTexture
+## CreateCamera
 
 ```js
 {
   "b": float, // Time in beats.
-  "t": "DeclareCullingTexture",
+  "t": "CreateCamera",
   "d": {
-    "id": string, // Name of the culling mask, this is what you must name your sampler in your shader.
-    "track": string/string[], // Name(s) of your track(s). Everything on the track(s) will be added to this mask.
-    "whitelist": bool, // (Optional) When true, will cull everything but the selected tracks. Default = false.
-    "depthTexture": bool // (Optional) When true, write depth texture to "[id]_Depth". Default = false.
+    "id": string, // Id of the camera.
+    "texture": string, // (Optional) Will render to a new texture set to this key.
+    "depthTexture": string // (Optional) Renders just the depth to this texture.
+    "properties": ? // (Optional) See SetCameraProperty
   }
 }
 ```
 
-Declares a culling mask where the selected tracks are culled (or if whitelist = true, only the selected tracks are
-rendered) of which Vivify will automatically create a texture for you to sample from your shader. If the named field
-is `_Main` then the culling will apply to the main camera.
+Creates an additional camera that will render to the desired texture. Useful for creating a secondary texture where a certain track is culled.
 
 ```js
 // Example
 {
   "b": 0.0,
-  "t": "DeclareCullingTexture",
+  "t": "CreateCamera",
   "d": {
-    "id": "_NotesCulled",
-    "track": "allnotes"
+    "id": "NotesCam",
+    "texture": "_Notes",
+    "depthTexture": "_Notes_Depth",
+    "properties": {
+      "culling": {
+        "track": "allnotes",
+        "whitelist": true,
+      },
+      "depthTextureMode": ["Depth"]
+    }
   }
 }
 ```
 
 ```csharp
 //Example where notes are not rendered on the right side of the screen
-UNITY_DECLARE_SCREENSPACE_TEXTURE(_NotesCulled);
+UNITY_DECLARE_SCREENSPACE_TEXTURE(_Notes);
 
 fixed4 frag(v2f i) : SV_Target
 {
   UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
   if (i.uv.x > 0.5)
   {
-    return UNITY_SAMPLE_SCREENSPACE_TEXTURE(_NotesCulled, UnityStereoTransformScreenSpaceTex(i.uv));
+    return UNITY_SAMPLE_SCREENSPACE_TEXTURE(_Notes, UnityStereoTransformScreenSpaceTex(i.uv));
   }
   else {
     return UNITY_SAMPLE_SCREENSPACE_TEXTURE(_MainTex, UnityStereoTransformScreenSpaceTex(i.uv));
@@ -290,12 +295,12 @@ fixed4 frag(v2f i) : SV_Target
 }
 ```
 
-## DeclareRenderTexture
+## CreateScreenTexture
 
 ```js
 {
   "b": float, // Time in beats.
-  "t": "DeclareRenderTexture",
+  "t": "CreateScreenTexture",
   "d": {
     "id": string, // Name of the texture
     "xRatio": float, // (Optional) Number to divide width by, i.e. on a 1920x1080 screen, an xRatio of 2 will give you a 960x1080 texture.
@@ -339,22 +344,6 @@ sampler named what you put in "id".
 }
 ```
 
-## DestroyTexture
-
-```js
-{
-  "b": float, // Time in beats.
-  "t": "DestroyTexture",
-  "d": {
-    "id": string or string[], // Names(s) of textures to destroy.
-  }
-}
-```
-
-Destroys a texture. It is important to destroy any textures created through `DeclareCullingTexture` because the scene
-will have to be rendered again for each active culling texture. This can also be used for textures created
-through `DeclareRenderTexture` to free up memory.
-
 ## InstantiatePrefab
 
 ```js
@@ -377,19 +366,23 @@ through `DeclareRenderTexture` to free up memory.
 Instantiates a prefab in the scene. If left-handed option is enabled, then the position, rotation, and scale will be
 mirrored.
 
-## DestroyPrefab
+## DestroyObject
 
 ```js
 {
   "b": float, // Time in beats.
-  "t": "DestroyPrefab",
+  "t": "DestroyObject",
   "d": {
-    "id": string or string[], // Id(s) of prefab to destroy.
+    "id": string or string[], // Id(s) of object to destroy.
   }
 }
 ```
 
-Destroys a prefab in the scene.
+Destroys an object in the scene. Can be a prefab, camera, or texture id.
+
+It is important to destroy any cameras created through `CreateCamera` because the scene
+will have to be rendered again for each active camera. This can also be used for textures created
+through `DeclareRenderTexture` to free up memory.
 
 ## SetAnimatorProperty
 
@@ -428,14 +421,21 @@ Allows setting animator properties. This will search the prefab for all Animator
   "b": float, // Time in beats.
   "t": "SetCameraProperty",
   "d": {
-    "depthTextureMode": [], // Sets the depth texture mode on the camera. Can be [Depth, DepthNormals, MotionVectors].
-    "clearFlags": string, // Can be [Skybox, SolidColor, Depth, Nothing]. See https://docs.unity3d.com/ScriptReference/CameraClearFlags.html
-    "backgroundColor": [] // [R, G, B, (Optional) A] Color to clear screen with. Only used with SolidColor clear flag.
+    "id": string, // (Optional) Id of camera to affect. Default to "_Main".
+    "depthTextureMode": [], // (Optional) Sets the depth texture mode on the camera. Can be [Depth, DepthNormals, MotionVectors].
+    "clearFlags": string, // (Optional) Can be [Skybox, SolidColor, Depth, Nothing]. See https://docs.unity3d.com/ScriptReference/CameraClearFlags.html
+    "backgroundColor": [], // (Optional) [R, G, B, (Optional) A] Color to clear screen with. Only used with SolidColor clear flag.
+    "culling": { // (Optional) Sets a culling mask where the selected tracks are culled
+        "track": string/string[], // Name(s) of your track(s). Everything on the track(s) will be added to this mask.
+        "whitelist": bool // (Optional) When true, will cull everything but the selected tracks. Defaults to false.
+    },
+    "bloomPrePass": bool, // (Optional) Enable or disable the bloom pre pass effect.
+    "mainEffect": bool // (Optional) Enable or disable the main bloom effect.
   }
 }
 ```
 
-Remember to clear the `depthTextureMode` to `[]` after you are done using it as rendering a depth texture can impact
+Setting any field to `null` will return it to its default. Remember to clear the `depthTextureMode` to `null` after you are done using it as rendering a depth texture can impact
 performance. See https://docs.unity3d.com/Manual/SL-CameraDepthTexture.html for more info. Note: if the player has the
 Smoke option enabled, the `depthTextureMode` will always have `Depth`.
 
