@@ -16,9 +16,10 @@
     <Description>Bring your map to life!</Description>
   </PropertyGroup>
   <ItemGroup>
-    <DependsOn Include="Heck" Version="^1.6.4"/>
+    <DependsOn Include="BeatSaberMarkupLanguage" Version="^1.5.9"/>
     <DependsOn Include="BSIPA" Version="^4.2.2"/>
     <DependsOn Include="CustomJSONData" Version="^2.6.3"/>
+    <DependsOn Include="Heck" Version="^1.6.4"/>
     <DependsOn Include="SiraUtil" Version="^3.0.5"/>
   </ItemGroup>
 
