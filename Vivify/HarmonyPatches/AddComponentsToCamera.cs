@@ -32,6 +32,14 @@ internal class AddComponentsToCamera : IAffinity
         SafeAddComponent<CameraPropertyController>(gameObject);
     }
 
+    [AffinityPrefix]
+    [AffinityPatch(typeof(ImageEffectController), nameof(ImageEffectController.OnRenderImage))]
+    private bool StopRenderImage(RenderTexture src, RenderTexture dest)
+    {
+        Graphics.Blit(src, dest);
+        return false;
+    }
+
     private void SafeAddComponent<T>(GameObject gameObject)
         where T : Component
     {

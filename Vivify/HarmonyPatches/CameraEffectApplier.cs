@@ -70,66 +70,24 @@ internal class CameraEffectApplier : IAffinity, IDisposable
 
     [AffinityPrefix]
     [AffinityPatch(typeof(MainEffectController), nameof(MainEffectController.ImageEffectControllerCallback))]
-    private bool ApplyVivifyEffect(MainEffectController __instance, RenderTexture src, RenderTexture dest)
+    private void ApplyVivifyEffect(MainEffectController __instance, RenderTexture src, RenderTexture dest)
     {
-        if (!_postProcessingControllers.TryGetValue(__instance, out PostProcessingController? postProcessingController))
+        if (_postProcessingControllers.TryGetValue(__instance, out PostProcessingController? postProcessingController))
         {
-            postProcessingController = __instance.GetComponent<PostProcessingController?>();
-            if (postProcessingController == null)
-            {
-                return true;
-            }
-
-            _postProcessingControllers[__instance] = postProcessingController;
-            postProcessingController.CameraDatas = CameraDatas;
-            postProcessingController.DeclaredTextureDatas = DeclaredTextureDatas;
-            postProcessingController.PrewarmCameras(_prewarmCount);
+            return;
         }
 
-        RenderTextureDescriptor descriptor = src.descriptor;
-        postProcessingController.CreateDeclaredTextures(descriptor);
-        RenderTexture main = src;
-        if (PreEffects.Count > 0)
+        postProcessingController = __instance.GetComponent<PostProcessingController?>();
+        if (postProcessingController == null)
         {
-            main = postProcessingController.RenderImage(main, PreEffects);
+            return;
         }
 
-        MainEffectSO mainEffect = __instance._mainEffectContainer.mainEffect;
-
-        if (PostEffects.Count > 0)
-        {
-            RenderTexture temp = RenderTexture.GetTemporary(descriptor);
-            mainEffect.Render(main, temp, __instance._fadeValue);
-            if (main != src)
-            {
-                RenderTexture.ReleaseTemporary(main);
-            }
-
-            if (postProcessingController.MainEffect)
-            {
-                main = postProcessingController.RenderImage(temp, PostEffects);
-                if (temp != main)
-                {
-                    RenderTexture.ReleaseTemporary(temp);
-                }
-            }
-            else
-            {
-                main = temp;
-            }
-
-            Graphics.Blit(main, dest);
-            RenderTexture.ReleaseTemporary(main);
-        }
-        else
-        {
-            mainEffect.Render(main, dest, __instance._fadeValue);
-            if (main != src)
-            {
-                RenderTexture.ReleaseTemporary(main);
-            }
-        }
-
-        return false;
+        _postProcessingControllers[__instance] = postProcessingController;
+        postProcessingController.CameraDatas = CameraDatas;
+        postProcessingController.DeclaredTextureDatas = DeclaredTextureDatas;
+        postProcessingController.PreEffects = PreEffects;
+        postProcessingController.PostEffects = PostEffects;
+        postProcessingController.PrewarmCameras(_prewarmCount);
     }
 }

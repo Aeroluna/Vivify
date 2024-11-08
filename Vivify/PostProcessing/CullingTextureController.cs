@@ -66,6 +66,9 @@ internal class CullingTextureController : CullingCameraController
         transform1.localPosition = Vector3.zero;
         transform1.localRotation = Quaternion.identity;
         camera.cullingMatrix = other.projectionMatrix * other.worldToCameraMatrix;
+        camera.projectionMatrix = other.projectionMatrix;
+        camera.nonJitteredProjectionMatrix = other.nonJitteredProjectionMatrix;
+        camera.worldToCameraMatrix = other.worldToCameraMatrix;
     }
 
     // very simple comparison
@@ -100,6 +103,7 @@ internal class CullingTextureController : CullingCameraController
         // copyfrom lags for some reason
         ////Camera.CopyFrom(_postProcessingController.Camera);
         Camera other = _postProcessingController.Camera;
+        Camera.stereoTargetEye = other.stereoTargetEye;
         Camera.fieldOfView = other.fieldOfView;
         Camera.aspect = other.aspect;
         Camera.depth = other.depth - 1;
