@@ -12,11 +12,11 @@
     <PluginId>Vivify</PluginId>
     <PluginName>Vivify</PluginName>
     <Author>Aeroluna</Author>
-    <Version>0.1.6</Version>
+    <Version>0.1.7</Version>
     <Description>Bring your map to life!</Description>
   </PropertyGroup>
   <ItemGroup>
-    <DependsOn Include="_Heck" Version="^1.6.4"/>
+    <DependsOn Include="Heck" Version="^1.6.4"/>
     <DependsOn Include="BSIPA" Version="^4.2.2"/>
     <DependsOn Include="CustomJSONData" Version="^2.6.3"/>
     <DependsOn Include="SiraUtil" Version="^3.0.5"/>
@@ -43,7 +43,6 @@
     <Reference Include="HMRendering" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\HMRendering.dll" Publicize="true"/>
     <Reference Include="IPA.Loader" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\IPA.Loader.dll"/>
     <Reference Include="Main" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Main.dll" Publicize="true"/>
-    <Reference Include="Newtonsoft.Json" HintPath="$(BeatSaberDir)\Libs\Newtonsoft.Json.dll"/>
     <Reference Include="Rendering" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Rendering.dll" Publicize="true"/>
     <Reference Include="SaberTrail" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\SaberTrail.dll" Publicize="true"/>
     <Reference Include="SiraUtil" HintPath="$(BeatSaberDir)\Plugins\SiraUtil.dll" Publicize="true"/>
