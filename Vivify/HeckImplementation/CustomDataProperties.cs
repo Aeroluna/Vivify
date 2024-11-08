@@ -347,7 +347,7 @@ internal class SetCameraPropertyData : ICustomEventCustomData
     internal SetCameraPropertyData(CustomData customData, Dictionary<string, Track> tracks)
     {
         Id = customData.Get<string?>(ID_FIELD) ?? CAMERA_TARGET;
-        Property = CameraProperty.CreateCameraProperty(customData, tracks);
+        Property = CameraProperty.CreateCameraProperty(customData.GetRequired<CustomData>(PROPERTIES), tracks);
     }
 
     internal string Id { get; }
