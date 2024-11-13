@@ -422,15 +422,17 @@ Allows setting animator properties. This will search the prefab for all Animator
   "t": "SetCameraProperty",
   "d": {
     "id": string, // (Optional) Id of camera to affect. Default to "_Main".
-    "depthTextureMode": [], // (Optional) Sets the depth texture mode on the camera. Can be [Depth, DepthNormals, MotionVectors].
-    "clearFlags": string, // (Optional) Can be [Skybox, SolidColor, Depth, Nothing]. See https://docs.unity3d.com/ScriptReference/CameraClearFlags.html
-    "backgroundColor": [], // (Optional) [R, G, B, (Optional) A] Color to clear screen with. Only used with SolidColor clear flag.
-    "culling": { // (Optional) Sets a culling mask where the selected tracks are culled
-        "track": string/string[], // Name(s) of your track(s). Everything on the track(s) will be added to this mask.
-        "whitelist": bool // (Optional) When true, will cull everything but the selected tracks. Defaults to false.
-    },
-    "bloomPrePass": bool, // (Optional) Enable or disable the bloom pre pass effect.
-    "mainEffect": bool // (Optional) Enable or disable the main bloom effect.
+    "properties": { 
+      "depthTextureMode": [], // (Optional) Sets the depth texture mode on the camera. Can be [Depth, DepthNormals, MotionVectors].
+      "clearFlags": string, // (Optional) Can be [Skybox, SolidColor, Depth, Nothing]. See https://docs.unity3d.com/ScriptReference/CameraClearFlags.html
+      "backgroundColor": [], // (Optional) [R, G, B, (Optional) A] Color to clear screen with. Only used with SolidColor clear flag.
+      "culling": { // (Optional) Sets a culling mask where the selected tracks are culled
+          "track": string/string[], // Name(s) of your track(s). Everything on the track(s) will be added to this mask.
+          "whitelist": bool // (Optional) When true, will cull everything but the selected tracks. Defaults to false.
+      },
+      "bloomPrePass": bool, // (Optional) Enable or disable the bloom pre pass effect.
+      "mainEffect": bool // (Optional) Enable or disable the main bloom effect.
+    }
   }
 }
 ```
