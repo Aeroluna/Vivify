@@ -306,7 +306,7 @@ internal class PostProcessingController : CullingCameraController
                         }
                         else
                         {
-                            _log.Warn($"Unable to find destination [{materialDataTarget}]");
+                            _log.Warn($"[{gameObject.name}] Unable to find destination [{materialDataTarget}]");
                         }
                     }
                 }
@@ -348,7 +348,7 @@ internal class PostProcessingController : CullingCameraController
                             }
                         }
 
-                        _log.Warn($"Unable to find destination [{materialDataTarget}]");
+                        _log.Warn($"[{gameObject.name}] Unable to find destination [{materialDataTarget}]");
                     }
                 }
             }
@@ -373,14 +373,14 @@ internal class PostProcessingController : CullingCameraController
                         }
                         else
                         {
-                            _log.Warn($"Unable to find destination [{materialDataTarget}]");
+                            _log.Warn($"[{gameObject.name}] Unable to find destination [{materialDataTarget}]");
                         }
                     }
                 }
             }
             else
             {
-                _log.Warn($"Unable to find source [{materialData.Source}]");
+                _log.Warn($"[{gameObject.name}] Unable to find source [{materialData.Source}]");
             }
 
             continue;
@@ -445,6 +445,8 @@ internal class PostProcessingController : CullingCameraController
                 texture.Release();
             }
         }
+
+        _declaredTextures.Clear();
 
         foreach (CullingCameraController cullingCameraController in _cullingCameraControllers.Values.Concat(
                      _disabledCullingCameraControllers))
