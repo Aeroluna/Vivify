@@ -22,7 +22,7 @@ internal class ApplyPostProcessing : ICustomEvent
     private readonly SiraLog _log;
     private readonly AssetBundleManager _assetBundleManager;
     private readonly DeserializedData _deserializedData;
-    private readonly IAudioTimeSource _audioTimeSource;
+    private readonly BeatmapCallbacksController _beatmapCallbacksController;
     private readonly IBpmController _bpmController;
     private readonly SetMaterialProperty _setMaterialProperty;
     private readonly CameraEffectApplier _cameraEffectApplier;
@@ -32,7 +32,7 @@ internal class ApplyPostProcessing : ICustomEvent
         SiraLog log,
         AssetBundleManager assetBundleManager,
         [Inject(Id = ID)] DeserializedData deserializedData,
-        IAudioTimeSource audioTimeSource,
+        BeatmapCallbacksController beatmapCallbacksController,
         IBpmController bpmController,
         SetMaterialProperty setMaterialProperty,
         CameraEffectApplier cameraEffectApplier,
@@ -41,7 +41,7 @@ internal class ApplyPostProcessing : ICustomEvent
         _log = log;
         _assetBundleManager = assetBundleManager;
         _deserializedData = deserializedData;
-        _audioTimeSource = audioTimeSource;
+        _beatmapCallbacksController = beatmapCallbacksController;
         _bpmController = bpmController;
         _setMaterialProperty = setMaterialProperty;
         _cameraEffectApplier = cameraEffectApplier;
@@ -92,7 +92,7 @@ internal class ApplyPostProcessing : ICustomEvent
             return;
         }
 
-        if (duration <= 0 || _audioTimeSource.songTime > customEventData.time + duration)
+        if (duration <= 0 || _beatmapCallbacksController.songTime > customEventData.time + duration)
         {
             return;
         }
@@ -112,7 +112,7 @@ internal class ApplyPostProcessing : ICustomEvent
     {
         while (true)
         {
-            float elapsedTime = _audioTimeSource.songTime - startTime;
+            float elapsedTime = _beatmapCallbacksController.songTime - startTime;
             if (elapsedTime < 0)
             {
                 break;
