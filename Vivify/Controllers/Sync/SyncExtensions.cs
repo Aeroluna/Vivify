@@ -46,6 +46,18 @@ internal static class SyncExtensions
                                 new object[] { startTime });
                         }
                     });
+            gameObject
+                .GetComponentsInChildren<AudioSource>()
+                .Do(
+                    n =>
+                    {
+                        if (n.playOnAwake)
+                        {
+                            instantiator.InstantiateComponent<AudioSourceSyncController>(
+                                n.gameObject,
+                                new object[] { startTime });
+                        }
+                    });
         }
     }
 }
