@@ -57,15 +57,15 @@ internal class AssetBundleManager : IDisposable
 #if !PRE_V1_37_1
         string path = Path.Combine(
             Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!,
-            BUNDLE + BUNDLE_SUFFIX);
+            BUNDLE_FILE);
 #else
         string path = Path.Combine(
             ((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath,
-            BUNDLE + BUNDLE_SUFFIX);
+            BUNDLE_FILE);
 #endif
         if (!File.Exists(path))
         {
-            _log.Error($"[{BUNDLE + BUNDLE_SUFFIX}] not found");
+            _log.Error($"[{BUNDLE_FILE}] not found");
             return;
         }
 
@@ -76,7 +76,7 @@ internal class AssetBundleManager : IDisposable
         else
         {
             CustomData levelCustomData = customBeatmapData.levelCustomData;
-            uint? assetBundleChecksum = levelCustomData.Get<CustomData>(ASSET_BUNDLE)?.Get<uint>(BUNDLE_SUFFIX);
+            uint? assetBundleChecksum = levelCustomData.Get<CustomData>(ASSET_BUNDLE)?.Get<uint>(BUNDLE_CHECKSUM);
             if (assetBundleChecksum != null)
             {
                 _mainBundle = AssetBundle.LoadFromFile(path, assetBundleChecksum.Value);

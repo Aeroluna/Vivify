@@ -108,19 +108,20 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         string path =
             Path.Combine(
                 Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!,
-                BUNDLE + BUNDLE_SUFFIX);
+                BUNDLE_FILE);
 #else
         string path = Path.Combine(
             ((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath,
-            BUNDLE + BUNDLE_SUFFIX);
+            BUNDLE_FILE);
 #endif
         if (File.Exists(path))
         {
             return false;
         }
 
+        _log.Error($"[{path}] not found, attempting to download remotely");
         uint assetBundleChecksum =
-            levelCustomData.GetRequired<CustomData>(ASSET_BUNDLE).GetRequired<uint>(BUNDLE_SUFFIX);
+            levelCustomData.GetRequired<CustomData>(ASSET_BUNDLE).GetRequired<uint>(BUNDLE_CHECKSUM);
         _doAbort = false;
         _downloadFinished = false;
         if (_config.AllowDownload)

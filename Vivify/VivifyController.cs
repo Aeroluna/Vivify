@@ -71,12 +71,15 @@ public static class VivifyController
     internal const string CAMERA_TARGET = "_Main";
 
     internal const string ASSET_BUNDLE = "_assetBundle";
-    internal const string BUNDLE = "bundle";
+
+    internal const string BUNDLE_FILE = $"bundle{BUNDLE_SUFFIX}.vivify";
 
 #if !V1_29_1
-    internal const string BUNDLE_SUFFIX = "_windows2021";
+    internal const string BUNDLE_SUFFIX = "Windows2021";
+    internal const string BUNDLE_CHECKSUM = "_windows2021";
 #else
-    internal const string BUNDLE_SUFFIX = "_windows2019";
+    internal const string BUNDLE_SUFFIX = "Windows2019";
+    internal const string BUNDLE_CHECKSUM = "_windows2019";
 #endif
 
     internal const string CAPABILITY = "Vivify";
