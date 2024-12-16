@@ -134,14 +134,14 @@ Currently provided settings:
     "easing": string, // An easing for the animation to follow. Defaults to "easeLinear".
     "properties": [{
       "id": string, // Name of the property on the material.
-      "type": string, // Type of the property (Texture, Float, Color).
+      "type": string, // Type of the property (Texture, Float, Color, Vector, Keyword).
       "value": ? // What to set the property to, type varies depending on property type.
     }]
   }
 }
 ```
 
-Allows setting material properties, e.g. Texture, Float, Color.
+Allows setting material properties, e.g. Texture, Float, Color, Vector, Keyword.
 
 ## SetGlobalProperty
 
@@ -154,14 +154,14 @@ Allows setting material properties, e.g. Texture, Float, Color.
     "easing": string, // An easing for the animation to follow. Defaults to "easeLinear".
     "properties": [{
       "id": string, // Name of the property.
-      "type": string, // Type of the property (Texture, Float, Color).
+      "type": string, // Type of the property (Texture, Float, Color, Vector, Keyword).
       "value": ? // What to set the property to, type varies depending on property type.
     }]
   }
 }
 ```
 
-Allows setting global properties, e.g. Texture, Float, Color. These will persist even after the map ends, do not rely on
+Allows setting global properties, e.g. Texture, Float, Color, Vector, Keyword. These will persist even after the map ends, do not rely on
 their default value.
 
 ### Property types
@@ -172,6 +172,7 @@ their default value.
   definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
 - Vector: May either be an array (`"value": [0, 1, 0]`) or a point
   definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
+- Keyword: May either be a direct value (`"value": true`) or a point definition (`"value": [[0,0], [1, 1]]`) where values equal to or greater than 1 will enable the keyword.
 
 ```js
 // Example

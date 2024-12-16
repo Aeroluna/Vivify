@@ -30,7 +30,8 @@ internal enum MaterialPropertyType
     FloatArray,
     Int,
     Vector,
-    VectorArray
+    VectorArray,
+    Keyword
 }
 
 internal enum AnimatorPropertyType

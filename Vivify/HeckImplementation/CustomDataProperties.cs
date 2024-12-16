@@ -32,12 +32,18 @@ internal class MaterialProperty
 {
     internal MaterialProperty(CustomData rawData, MaterialPropertyType materialPropertyType, object value)
     {
-        Name = Shader.PropertyToID(rawData.GetRequired<string>(ID_FIELD));
+        string id = rawData.GetRequired<string>(ID_FIELD);
+        Id = materialPropertyType switch
+        {
+            MaterialPropertyType.Keyword => id,
+            _ => Shader.PropertyToID(id)
+        };
+
         Type = materialPropertyType;
         Value = value;
     }
 
-    internal int Name { get; }
+    internal object Id { get; }
 
     internal MaterialPropertyType Type { get; }
 
@@ -68,7 +74,12 @@ internal class MaterialProperty
                     type,
                     value,
                     pointDefinitions),
-                _ => throw new InvalidOperationException($"[{type}] not currently supported.")
+                MaterialPropertyType.Keyword => new AnimatedMaterialProperty<float>(
+                    rawData,
+                    type,
+                    value,
+                    pointDefinitions),
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Type not currently supported.")
             };
         }
 

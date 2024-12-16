@@ -8,7 +8,6 @@ using Heck.Animation;
 using Heck.Deserialize;
 using Heck.Event;
 using JetBrains.Annotations;
-using SiraUtil.Logging;
 using UnityEngine;
 using Vivify.Managers;
 using Zenject;
@@ -24,18 +23,15 @@ internal class SetGlobalProperty : ICustomEvent
     private readonly IBpmController _bpmController;
     private readonly CoroutineDummy _coroutineDummy;
     private readonly DeserializedData _deserializedData;
-    private readonly SiraLog _log;
 
     [UsedImplicitly]
     private SetGlobalProperty(
-        SiraLog log,
         AssetBundleManager assetBundleManager,
         [Inject(Id = ID)] DeserializedData deserializedData,
         IAudioTimeSource audioTimeSource,
         IBpmController bpmController,
         CoroutineDummy coroutineDummy)
     {
-        _log = log;
         _assetBundleManager = assetBundleManager;
         _deserializedData = deserializedData;
         _audioTimeSource = audioTimeSource;
@@ -59,110 +55,156 @@ internal class SetGlobalProperty : ICustomEvent
 
         foreach (MaterialProperty property in properties)
         {
-            int name = property.Name;
             MaterialPropertyType type = property.Type;
             object value = property.Value;
             bool noDuration = duration == 0 || startTime + duration < _audioTimeSource.songTime;
-            switch (type)
+            switch (property.Id)
             {
-                case MaterialPropertyType.Texture:
-                    string texValue = Convert.ToString(value);
-                    if (_assetBundleManager.TryGetAsset(texValue, out Texture? texture))
+                case int propertyId:
+                    switch (type)
                     {
-                        Shader.SetGlobalTexture(name, texture);
+                        case MaterialPropertyType.Texture:
+                            string texValue = Convert.ToString(value);
+                            if (_assetBundleManager.TryGetAsset(texValue, out Texture? texture))
+                            {
+                                Shader.SetGlobalTexture(propertyId, texture);
+                            }
+
+                            continue;
+
+                        case MaterialPropertyType.Color:
+                            if (property is AnimatedMaterialProperty<Vector4> colorAnimated)
+                            {
+                                if (noDuration)
+                                {
+                                    Shader.SetGlobalColor(propertyId, colorAnimated.PointDefinition.Interpolate(1));
+                                }
+                                else
+                                {
+                                    StartCoroutine(
+                                        colorAnimated.PointDefinition,
+                                        propertyId,
+                                        MaterialPropertyType.Color,
+                                        duration,
+                                        startTime,
+                                        easing);
+                                }
+                            }
+                            else
+                            {
+                                List<float> color = ((List<object>)value).Select(Convert.ToSingle).ToList();
+                                Shader.SetGlobalColor(
+                                    propertyId,
+                                    new Color(color[0], color[1], color[2], color.Count > 3 ? color[3] : 1));
+                            }
+
+                            continue;
+
+                        case MaterialPropertyType.Float:
+                            if (property is AnimatedMaterialProperty<float> floatAnimated)
+                            {
+                                if (noDuration)
+                                {
+                                    Shader.SetGlobalFloat(propertyId, floatAnimated.PointDefinition.Interpolate(1));
+                                }
+                                else
+                                {
+                                    StartCoroutine(
+                                        floatAnimated.PointDefinition,
+                                        propertyId,
+                                        MaterialPropertyType.Float,
+                                        duration,
+                                        startTime,
+                                        easing);
+                                }
+                            }
+                            else
+                            {
+                                Shader.SetGlobalFloat(propertyId, Convert.ToSingle(value));
+                            }
+
+                            continue;
+
+                        case MaterialPropertyType.Vector:
+                            if (property is AnimatedMaterialProperty<Vector4> vectorAnimated)
+                            {
+                                if (noDuration)
+                                {
+                                    Shader.SetGlobalVector(propertyId, vectorAnimated.PointDefinition.Interpolate(1));
+                                }
+                                else
+                                {
+                                    StartCoroutine(
+                                        vectorAnimated.PointDefinition,
+                                        propertyId,
+                                        MaterialPropertyType.Vector,
+                                        duration,
+                                        startTime,
+                                        easing);
+                                }
+                            }
+                            else
+                            {
+                                List<float> vector = ((List<object>)value).Select(Convert.ToSingle).ToList();
+                                Shader.SetGlobalVector(propertyId, new Vector4(vector[0], vector[1], vector[2], vector[3]));
+                            }
+
+                            continue;
                     }
 
                     break;
 
-                case MaterialPropertyType.Color:
-                    if (property is AnimatedMaterialProperty<Vector4> colorAnimated)
+                case string name:
+                    switch (type)
                     {
-                        if (noDuration)
-                        {
-                            Shader.SetGlobalColor(name, colorAnimated.PointDefinition.Interpolate(1));
-                        }
-                        else
-                        {
-                            StartCoroutine(
-                                colorAnimated.PointDefinition,
-                                name,
-                                MaterialPropertyType.Color,
-                                duration,
-                                startTime,
-                                easing);
-                        }
-                    }
-                    else
-                    {
-                        List<float> color = ((List<object>)value).Select(Convert.ToSingle).ToList();
-                        Shader.SetGlobalColor(
-                            name,
-                            new Color(color[0], color[1], color[2], color.Count > 3 ? color[3] : 1));
-                    }
+                        case MaterialPropertyType.Keyword:
+                            if (property is AnimatedMaterialProperty<float> keywordAnimated)
+                            {
+                                if (noDuration)
+                                {
+                                    SetGlobalKeyword(name, keywordAnimated.PointDefinition.Interpolate(1) >= 1);
+                                }
+                                else
+                                {
+                                    StartCoroutine(
+                                        keywordAnimated.PointDefinition,
+                                        name,
+                                        MaterialPropertyType.Float,
+                                        duration,
+                                        startTime,
+                                        easing);
+                                }
+                            }
+                            else
+                            {
+                                SetGlobalKeyword(name, (bool)value);
+                            }
 
-                    break;
-
-                case MaterialPropertyType.Float:
-                    if (property is AnimatedMaterialProperty<float> floatAnimated)
-                    {
-                        if (noDuration)
-                        {
-                            Shader.SetGlobalFloat(name, floatAnimated.PointDefinition.Interpolate(1));
-                        }
-                        else
-                        {
-                            StartCoroutine(
-                                floatAnimated.PointDefinition,
-                                name,
-                                MaterialPropertyType.Float,
-                                duration,
-                                startTime,
-                                easing);
-                        }
-                    }
-                    else
-                    {
-                        Shader.SetGlobalFloat(name, Convert.ToSingle(value));
+                            continue;
                     }
 
-                    break;
-
-                case MaterialPropertyType.Vector:
-                    if (property is AnimatedMaterialProperty<Vector4> vectorAnimated)
-                    {
-                        if (noDuration)
-                        {
-                            Shader.SetGlobalVector(name, vectorAnimated.PointDefinition.Interpolate(1));
-                        }
-                        else
-                        {
-                            StartCoroutine(
-                                vectorAnimated.PointDefinition,
-                                name,
-                                MaterialPropertyType.Vector,
-                                duration,
-                                startTime,
-                                easing);
-                        }
-                    }
-                    else
-                    {
-                        List<float> vector = ((List<object>)value).Select(Convert.ToSingle).ToList();
-                        Shader.SetGlobalVector(name, new Vector4(vector[0], vector[1], vector[2], vector[3]));
-                    }
-
-                    break;
-
-                default:
-                    _log.Warn($"{type} not currently supported");
                     break;
             }
+
+            throw new ArgumentOutOfRangeException(nameof(type), type, "Type not currently supported.");
+        }
+    }
+
+    private static void SetGlobalKeyword(string keyword, bool value)
+    {
+        if (value)
+        {
+            Shader.EnableKeyword(keyword);
+        }
+        else
+        {
+            Shader.DisableKeyword(keyword);
         }
     }
 
     private IEnumerator AnimateGlobalPropertyCoroutine<T>(
         PointDefinition<T> points,
-        int name,
+        object id,
         MaterialPropertyType type,
         float duration,
         float startTime,
@@ -176,23 +218,35 @@ internal class SetGlobalProperty : ICustomEvent
             if (elapsedTime < duration)
             {
                 float time = Easings.Interpolate(Mathf.Min(elapsedTime / duration, 1f), easing);
-                switch (type)
+                switch (id)
                 {
-                    case MaterialPropertyType.Color:
-                        Shader.SetGlobalColor(name, (points as PointDefinition<Vector4>)!.Interpolate(time));
+                    case int propertyId:
+                        switch (type)
+                        {
+                            case MaterialPropertyType.Color:
+                                Shader.SetGlobalColor(propertyId, (points as PointDefinition<Vector4>)!.Interpolate(time));
+                                break;
+
+                            case MaterialPropertyType.Float:
+                                Shader.SetGlobalFloat(propertyId, (points as PointDefinition<float>)!.Interpolate(time));
+                                break;
+
+                            case MaterialPropertyType.Vector:
+                                Shader.SetGlobalVector(propertyId, (points as PointDefinition<Vector4>)!.Interpolate(time));
+                                break;
+                        }
+
                         break;
 
-                    case MaterialPropertyType.Float:
-                        Shader.SetGlobalFloat(name, (points as PointDefinition<float>)!.Interpolate(time));
-                        break;
+                    case string name:
+                        switch (type)
+                        {
+                            case MaterialPropertyType.Keyword:
+                                SetGlobalKeyword(name, (points as PointDefinition<float>)!.Interpolate(time) >= 1);
+                                break;
+                        }
 
-                    case MaterialPropertyType.Vector:
-                        Shader.SetGlobalVector(name, (points as PointDefinition<Vector4>)!.Interpolate(time));
                         break;
-
-                    default:
-                        _log.Warn($"[{type.ToString()}] not supported yet");
-                        yield break;
                 }
 
                 yield return null;
@@ -206,13 +260,13 @@ internal class SetGlobalProperty : ICustomEvent
 
     private void StartCoroutine<T>(
         PointDefinition<T> points,
-        int name,
+        object id,
         MaterialPropertyType type,
         float duration,
         float startTime,
         Functions easing)
         where T : struct
     {
-        _coroutineDummy.StartCoroutine(AnimateGlobalPropertyCoroutine(points, name, type, duration, startTime, easing));
+        _coroutineDummy.StartCoroutine(AnimateGlobalPropertyCoroutine(points, id, type, duration, startTime, easing));
     }
 }
