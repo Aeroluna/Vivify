@@ -16,13 +16,15 @@ using static Vivify.VivifyController;
 namespace Vivify.Events;
 
 [CustomEvent(SET_GLOBAL_PROPERTY)]
-internal class SetGlobalProperty : ICustomEvent
+internal class SetGlobalProperty : ICustomEvent, IInitializable, IDisposable
 {
     private readonly AssetBundleManager _assetBundleManager;
     private readonly IAudioTimeSource _audioTimeSource;
     private readonly IBpmController _bpmController;
     private readonly CoroutineDummy _coroutineDummy;
     private readonly DeserializedData _deserializedData;
+
+    private readonly List<ResettableProperty> _resettableProperties = [];
 
     [UsedImplicitly]
     private SetGlobalProperty(
@@ -37,6 +39,92 @@ internal class SetGlobalProperty : ICustomEvent
         _audioTimeSource = audioTimeSource;
         _bpmController = bpmController;
         _coroutineDummy = coroutineDummy;
+    }
+
+    public void Initialize()
+    {
+        foreach (ICustomEventCustomData customEventCustomData in _deserializedData.CustomEventCustomDatas.Values)
+        {
+            if (customEventCustomData is not SetGlobalPropertyData setGlobalPropertyData)
+            {
+                continue;
+            }
+
+            foreach (MaterialProperty materialProperty in setGlobalPropertyData.Properties)
+            {
+                object original = materialProperty.Id switch
+                {
+                    int propertyId => materialProperty.Type switch
+                    {
+                        MaterialPropertyType.Texture => Shader.GetGlobalTexture(propertyId),
+                        MaterialPropertyType.Color => Shader.GetGlobalColor(propertyId),
+                        MaterialPropertyType.Float => Shader.GetGlobalFloat(propertyId),
+                        MaterialPropertyType.Vector => Shader.GetGlobalVector(propertyId),
+                        _ => new ArgumentOutOfRangeException()
+                    },
+                    string name => materialProperty.Type switch
+                    {
+                        MaterialPropertyType.Keyword => Shader.IsKeywordEnabled(name),
+                        _ => new ArgumentOutOfRangeException()
+                    },
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+
+                _resettableProperties.Add(
+                    new ResettableProperty(materialProperty.Id, materialProperty.Type, original));
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        foreach (ResettableProperty resettableProperty in _resettableProperties)
+        {
+            object original = resettableProperty.Value;
+            switch (resettableProperty.Id)
+            {
+                case int propertyId:
+                    switch (resettableProperty.Type)
+                    {
+                        case MaterialPropertyType.Texture:
+                            Shader.SetGlobalTexture(propertyId, (Texture)original);
+                            break;
+
+                        case MaterialPropertyType.Color:
+                            Shader.SetGlobalColor(propertyId, (Color)original);
+                            break;
+
+                        case MaterialPropertyType.Float:
+                            Shader.SetGlobalFloat(propertyId, (float)original);
+                            break;
+
+                        case MaterialPropertyType.Vector:
+                            Shader.SetGlobalVector(propertyId, (Vector4)original);
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    break;
+
+                case string name:
+                    switch (resettableProperty.Type)
+                    {
+                        case MaterialPropertyType.Keyword:
+                            SetGlobalKeyword(name, (bool)original);
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 
     public void Callback(CustomEventData customEventData)
@@ -268,5 +356,21 @@ internal class SetGlobalProperty : ICustomEvent
         where T : struct
     {
         _coroutineDummy.StartCoroutine(AnimateGlobalPropertyCoroutine(points, id, type, duration, startTime, easing));
+    }
+
+    private readonly struct ResettableProperty
+    {
+        internal ResettableProperty(object id, MaterialPropertyType type, object value)
+        {
+            Id = id;
+            Type = type;
+            Value = value;
+        }
+
+        internal object Id { get; }
+
+        internal MaterialPropertyType Type { get; }
+
+        internal object Value { get; }
     }
 }
