@@ -462,7 +462,7 @@ internal class PostProcessingController : CullingCameraController
     }
 }
 
-internal readonly struct MaterialData : IComparable<MaterialData>
+internal readonly record struct MaterialData : IComparable<MaterialData>
 {
     internal MaterialData(
         Material? material,

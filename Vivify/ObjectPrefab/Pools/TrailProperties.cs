@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Vivify.ObjectPrefab.Pools;
 
-internal readonly struct TrailProperties
+internal readonly struct TrailProperties : IEquatable<TrailProperties>
 {
     internal TrailProperties(
         Vector3? topPos,

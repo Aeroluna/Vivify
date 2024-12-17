@@ -26,14 +26,14 @@ internal static class SyncExtensions
                     n =>
                         instantiator.InstantiateComponent<AnimatorSyncController>(
                             n.gameObject,
-                            new object[] { startTime }));
+                            [startTime]));
             gameObject
                 .GetComponentsInChildren<ParticleSystem>()
                 .Do(
                     n =>
                         instantiator.InstantiateComponent<ParticleSystemSyncController>(
                             n.gameObject,
-                            new object[] { startTime }));
+                            [startTime]));
             gameObject
                 .GetComponentsInChildren<VideoPlayer>()
                 .Do(
@@ -43,7 +43,7 @@ internal static class SyncExtensions
                         {
                             instantiator.InstantiateComponent<VideoPlayerSyncController>(
                                 n.gameObject,
-                                new object[] { startTime });
+                                [startTime]);
                         }
                     });
             gameObject
@@ -55,7 +55,7 @@ internal static class SyncExtensions
                         {
                             instantiator.InstantiateComponent<AudioSourceSyncController>(
                                 n.gameObject,
-                                new object[] { startTime });
+                                [startTime]);
                         }
                     });
         }
