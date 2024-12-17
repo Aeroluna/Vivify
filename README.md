@@ -25,23 +25,22 @@ This documentation assumes basic understanding of custom events and tracks.
 - [`SetAnimatorProperty`](#setanimatorproperty)
 - [`SetCameraProperty`](#setcameraproperty)
 - [`AssignObjectPrefab`](#assignobjectprefab)
-- [`SetRenderSetting`](#setrendersetting)
+- [`SetRenderSettings`](#setrendersettings)
 
 ## Setting up Unity
 
-First, you should to download the Unity Hub at https://unity3d.com/get-unity/download. Beat Saber 1.29.1 uses version
+First, you should download the Unity Hub at https://unity3d.com/get-unity/download. Beat Saber 1.29.1 uses version
 2019.4.28f and Beat Saber 1.30.0+ uses 2021.3.16f1. For maximum compatibility, you should use 2019.4.28f found in
 the [archive](https://unity3d.com/get-unity/download/archive) and use Swifter's VivifyTemplate to build your
 bundles https://github.com/Swifter1243/VivifyTemplate. 2019 bundles built without using that script will have
-nonfunctioning shader keywords in 2021.
+non-functioning shader keywords in 2021.
 
 Make sure you have `Virtual Reality Supported` enabled in your project and your stereo rendering mode is set
 to `Single Pass`. (Edit > Project Settings > Player > XR Settings > Deprecated Settings > Virtual Reality Supported).
 
 ## Writing VR shaders
 
-Beat Saber v1.29.1 uses Single Pass Stereo renderering (
-See https://docs.unity3d.com/2019.4/Documentation/Manual/SinglePassStereoRendering.html for more info). Use the unity
+Beat Saber v1.29.1 uses Single Pass Stereo rendering (See https://docs.unity3d.com/2019.4/Documentation/Manual/SinglePassStereoRendering.html for more info). Use the unity
 built-in function `UnityStereoTransformScreenSpaceTex` to fix your shaders in vr.
 
 ```csharp
@@ -87,7 +86,7 @@ Map Folder
 When referencing an asset's file path in an event, remember to write in all lower case. You can use the above Asset
 Bundle Browser tool to see the path of specific assets.
 
-By default when Vivify will check against a checksum when loading an asset bundle, but this checksum check can be
+By default, when Vivify will check against a checksum when loading an asset bundle, but this checksum check can be
 disabled by enabling debug mode using the "-aerolunaisthebestmodder" launch parameter. You can add the checksum to the
 map by using the `"_assetBundle"` field in the info.dat.
 
@@ -107,7 +106,7 @@ map by using the `"_assetBundle"` field in the info.dat.
   ...
 ```
 
-Currently provided settings:
+Current provided settings:
 
 - `"_anisotropicFiltering"`: (0 - 2) Disable, Enable, ForceEnable.
 - `"_antiAliasing"`: (0, 2, 4, 8)
@@ -168,7 +167,7 @@ their default value.
 
 - Texture: Must be a string that is a direct path file to a texture.
 - Float: May either be a direct value (`"value": 10.4`) or a point definition (`"value": [[0,0], [10, 1]]`).
-- Color: May either be a RGBA array (`"value": [0, 1, 0]`) or a point
+- Color: May either be an RGBA array (`"value": [0, 1, 0]`) or a point
   definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
 - Vector: May either be an array (`"value": [0, 1, 0]`) or a point
   definition (`"value": [1, 0, 0, 0, 0.2], [0, 0, 1, 0, 0.6]`)
@@ -522,7 +521,7 @@ instancing shaders" at https://docs.unity3d.com/Manual/gpu-instancing-shader.htm
 
 Property does not have to be a point definition. When enabling a render setting with a performance cost, remember to disable it after you no longer need it to gain performance back.
 
-Currently provided settings:
+Current provided settings:
 
 `"renderSettings"`: https://docs.unity3d.com/ScriptReference/RenderSettings.html
 
