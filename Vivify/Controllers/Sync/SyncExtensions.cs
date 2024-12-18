@@ -46,7 +46,7 @@ internal static class SyncExtensions
                                 [startTime]);
                         }
                     });
-            gameObject
+            /*gameObject
                 .GetComponentsInChildren<AudioSource>()
                 .Do(
                     n =>
@@ -57,7 +57,7 @@ internal static class SyncExtensions
                                 n.gameObject,
                                 [startTime]);
                         }
-                    });
+                    });*/
         }
     }
 }
