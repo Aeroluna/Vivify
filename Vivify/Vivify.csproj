@@ -12,14 +12,14 @@
     <PluginId>Vivify</PluginId>
     <PluginName>Vivify</PluginName>
     <Author>Aeroluna</Author>
-    <Version>0.1.9</Version>
+    <Version>0.1.10</Version>
     <Description>Bring your map to life!</Description>
   </PropertyGroup>
   <ItemGroup>
     <DependsOn Include="BeatSaberMarkupLanguage" Version="^1.5.9"/>
     <DependsOn Include="BSIPA" Version="^4.2.2"/>
     <DependsOn Include="CustomJSONData" Version="^2.6.3"/>
-    <DependsOn Include="Heck" Version="^1.6.4"/>
+    <DependsOn Include="Heck" Version="^1.7.2"/>
     <DependsOn Include="SiraUtil" Version="^3.0.5"/>
   </ItemGroup>
 
