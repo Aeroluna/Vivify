@@ -11,6 +11,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{C0C01C7A-812F-415F-94F7-456B1187BD62}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{6D8843E4-465A-409F-98AD-AE38730D2F7E}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build.yml = .github\workflows\build.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug-1.34.2|Any CPU = Debug-1.34.2|Any CPU
@@ -19,8 +26,8 @@ Global
 		Release-1.29.1|Any CPU = Release-1.29.1|Any CPU
 		Debug-1.37.1|Any CPU = Debug-1.37.1|Any CPU
 		Release-1.37.1|Any CPU = Release-1.37.1|Any CPU
-		Release-1.39.0|Any CPU = Release-1.39.0|Any CPU
-		Debug-1.39.0|Any CPU = Debug-1.39.0|Any CPU
+		Release-1.40.0|Any CPU = Release-1.40.0|Any CPU
+		Debug-1.40.0|Any CPU = Debug-1.40.0|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.34.2|Any CPU.ActiveCfg = Debug-1.34.2|Any CPU
@@ -35,15 +42,19 @@ Global
 		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.37.1|Any CPU.Build.0 = Debug-1.37.1|Any CPU
 		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.37.1|Any CPU.ActiveCfg = Release-1.37.1|Any CPU
 		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.37.1|Any CPU.Build.0 = Release-1.37.1|Any CPU
-		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.39.0|Any CPU.ActiveCfg = Debug-1.39.0|Any CPU
-		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.39.0|Any CPU.Build.0 = Debug-1.39.0|Any CPU
-		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.39.0|Any CPU.ActiveCfg = Release-1.39.0|Any CPU
-		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.39.0|Any CPU.Build.0 = Release-1.39.0|Any CPU
+		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.40.0|Any CPU.ActiveCfg = Release-1.40.0|Any CPU
+		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.40.0|Any CPU.Build.0 = Release-1.40.0|Any CPU
+		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.40.0|Any CPU.ActiveCfg = Debug-1.40.0|Any CPU
+		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.40.0|Any CPU.Build.0 = Debug-1.40.0|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BA7BB093-BD77-4387-8D0B-0918249E28E8}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C0C01C7A-812F-415F-94F7-456B1187BD62} = {56B8F5E7-4F1D-4AD0-BB45-50CA9BCBF0BA}
+		{6D8843E4-465A-409F-98AD-AE38730D2F7E} = {C0C01C7A-812F-415F-94F7-456B1187BD62}
 	EndGlobalSection
 EndGlobal

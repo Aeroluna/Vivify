@@ -11,5 +11,5 @@ public class Config
 {
     public bool AllowDownload { get; set; }
 
-    public string BundleRepository { get; set; } = "https://aeroluna.dev/bundles/";
+    public string BundleRepository { get; set; } = "https://repo.totalbs.dev/bundles/";
 }

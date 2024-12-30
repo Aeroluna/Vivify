@@ -320,34 +320,33 @@ internal class PostProcessingController : CullingCameraController
                     {
                         Blit(source, main, material, materialData.Pass);
                     }
-                    else
+                    else if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder))
                     {
-                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder))
+                        // extra stuff becuase we cannot blit directly into itself
+                        if (sourceHolder == targetHolder)
                         {
-                            // extra stuff becuase we cannot blit directly into itself
-                            if (sourceHolder == targetHolder)
+                            if (material == null)
                             {
-                                if (material == null)
-                                {
-                                    return;
-                                }
-
-                                RenderTexture temp = RenderTexture.GetTemporary(source!.descriptor);
-                                temp.filterMode = source.filterMode;
-                                Graphics.Blit(source, temp, material, materialData.Pass);
-                                Graphics.Blit(temp, source);
-                                RenderTexture.ReleaseTemporary(temp);
-
+                                _log.Warn($"[{materialDataTarget}] Attempting to blit to self without material");
                                 continue;
                             }
 
-                            if (targetHolder.Textures.TryGetValue(stereoActiveEye, out RenderTexture? target))
-                            {
-                                Blit(source, target, material, materialData.Pass);
-                                continue;
-                            }
+                            RenderTexture temp = RenderTexture.GetTemporary(source!.descriptor);
+                            temp.filterMode = source.filterMode;
+                            Graphics.Blit(source, temp, material, materialData.Pass);
+                            Graphics.Blit(temp, source);
+                            RenderTexture.ReleaseTemporary(temp);
+
+                            continue;
                         }
 
+                        if (targetHolder.Textures.TryGetValue(stereoActiveEye, out RenderTexture? target))
+                        {
+                            Blit(source, target, material, materialData.Pass);
+                        }
+                    }
+                    else
+                    {
                         _log.Warn($"[{gameObject.name}] Unable to find destination [{materialDataTarget}]");
                     }
                 }
@@ -364,17 +363,14 @@ internal class PostProcessingController : CullingCameraController
                     {
                         Blit(source, main, material, materialData.Pass);
                     }
+                    else if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder) &&
+                            targetHolder.Textures.TryGetValue(stereoActiveEye, out RenderTexture? target))
+                    {
+                        Blit(source, target, material, materialData.Pass);
+                    }
                     else
                     {
-                        if (_declaredTextures.TryGetValue(materialDataTarget, out RenderTextureHolder targetHolder) &&
-                            targetHolder.Textures.TryGetValue(stereoActiveEye, out RenderTexture? target))
-                        {
-                            Blit(source, target, material, materialData.Pass);
-                        }
-                        else
-                        {
-                            _log.Warn($"[{gameObject.name}] Unable to find destination [{materialDataTarget}]");
-                        }
+                        _log.Warn($"[{gameObject.name}] Unable to find destination [{materialDataTarget}]");
                     }
                 }
             }
