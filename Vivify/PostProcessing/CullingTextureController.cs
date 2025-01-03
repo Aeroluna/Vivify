@@ -25,6 +25,8 @@ internal class CullingTextureController : CullingCameraController
     private DepthShaderManager _depthShaderManager = null!;
     private CameraPropertyController _cameraPropertyController = null!;
 
+    private bool _ready;
+
     internal override int DefaultCullingMask => _postProcessingController.DefaultCullingMask;
 
     internal int? Key { get; private set; }
@@ -82,7 +84,9 @@ internal class CullingTextureController : CullingCameraController
     private static bool CamEquals(Camera lhs, Camera rhs)
     {
         return lhs.stereoEnabled == rhs.stereoEnabled &&
-               Mathf.Approximately(lhs.fieldOfView, rhs.fieldOfView);
+               Mathf.Approximately(lhs.fieldOfView, rhs.fieldOfView) &&
+               Mathf.Approximately(lhs.nearClipPlane, rhs.nearClipPlane) &&
+               Mathf.Approximately(lhs.farClipPlane, rhs.farClipPlane);
     }
 
     [UsedImplicitly]
@@ -107,10 +111,14 @@ internal class CullingTextureController : CullingCameraController
         Camera.fieldOfView = other.fieldOfView;
         Camera.aspect = other.aspect;
         Camera.depth = other.depth - 1;
+        Camera.nearClipPlane = other.nearClipPlane;
+        Camera.farClipPlane = other.farClipPlane;
+        Camera.layerCullDistances = other.layerCullDistances;
+        Camera.targetTexture = null;
         RefreshCullingMask();
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
         RenderTextures.Values.Do(n => n.Release());
         RenderTextures.Clear();
@@ -120,13 +128,32 @@ internal class CullingTextureController : CullingCameraController
 
     private void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
-        if (CullingTextureData == null)
-        {
-            return;
-        }
-
         Camera.MonoOrStereoscopicEye stereoActiveEye = Camera.stereoActiveEye;
         RenderTextureDescriptor descriptor = src.descriptor;
+
+        if (!_ready)
+        {
+            if (!RenderTextures.TryGetValue(stereoActiveEye, out RenderTexture colorTexture) ||
+                !RTEquals(colorTexture, src))
+            {
+                colorTexture?.Release();
+                colorTexture = new RenderTexture(descriptor);
+                RenderTextures[stereoActiveEye] = colorTexture;
+                colorTexture.Create();
+            }
+
+            if (!RenderTexturesDepth.TryGetValue(stereoActiveEye, out RenderTexture depthTexture) ||
+                !RTEquals(depthTexture, src))
+            {
+                depthTexture?.Release();
+                descriptor.colorFormat = RenderTextureFormat.R8;
+                depthTexture = new RenderTexture(descriptor);
+                RenderTexturesDepth[stereoActiveEye] = depthTexture;
+                depthTexture.Create();
+            }
+
+            _ready = true;
+        }
 
         if (Key != null)
         {
@@ -186,6 +213,11 @@ internal class CullingTextureController : CullingCameraController
 
                 Graphics.Blit(null, depthTexture, depthMaterial);
             }
+        }
+
+        if (Key == null && DepthKey == null)
+        {
+            gameObject.SetActive(false);
         }
     }
 }

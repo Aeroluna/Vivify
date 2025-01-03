@@ -68,4 +68,9 @@ internal abstract class CullingCameraController : MonoBehaviour
 
         _cachedLayers.Clear();
     }
+
+    private void OnDisable()
+    {
+        Camera.cullingMask = DefaultCullingMask;
+    }
 }

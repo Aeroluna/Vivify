@@ -40,7 +40,6 @@ internal class PostProcessingController : CullingCameraController
 
     internal override int DefaultCullingMask => _defaultCullingMask ?? Camera.cullingMask;
 
-    // TODO: make this create the render textures as well
     internal void PrewarmCameras(int count)
     {
         count -= _disabledCullingCameraControllers.Count + _cullingCameraControllers.Count;
@@ -406,11 +405,12 @@ internal class PostProcessingController : CullingCameraController
     private CullingTextureController CreateCamera()
     {
         GameObject newObject = new("VivifyCamera");
-        newObject.SetActive(false);
+        ////newObject.SetActive(false);
         newObject.transform.SetParent(transform, false);
         newObject.AddComponent<Camera>();
         CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), newObject);
-        CullingTextureController result = _instantiator.InstantiateComponent<CullingTextureController>(newObject, [this]);
+        CullingTextureController result =
+            _instantiator.InstantiateComponent<CullingTextureController>(newObject, [this]);
         return result;
     }
 
@@ -427,7 +427,7 @@ internal class PostProcessingController : CullingCameraController
         _imageEffectController = GetComponent<ImageEffectController>();
     }
 
-    private void Start()
+    private void OnEnable()
     {
         _defaultCullingMask = Camera.cullingMask;
     }

@@ -16,6 +16,8 @@ internal class AddComponentsToCamera : IAffinity
 
     private readonly List<Component> _injected = [];
 
+    private readonly Dictionary<ImageEffectController, PostProcessingController> _postProcessingControllers = new();
+
     [UsedImplicitly]
     private AddComponentsToCamera(SiraLog log, DiContainer container)
     {
@@ -34,8 +36,28 @@ internal class AddComponentsToCamera : IAffinity
 
     [AffinityPrefix]
     [AffinityPatch(typeof(ImageEffectController), nameof(ImageEffectController.OnRenderImage))]
-    private bool StopRenderImage(RenderTexture src, RenderTexture dest)
+    private bool StopRenderImage(ImageEffectController __instance, RenderTexture src, RenderTexture dest)
     {
+        if (!_postProcessingControllers.TryGetValue(
+                __instance,
+                out PostProcessingController? postProcessingController))
+        {
+            postProcessingController = __instance.GetComponent<PostProcessingController>();
+            if (postProcessingController != null)
+            {
+                _postProcessingControllers[__instance] = postProcessingController;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        if (!postProcessingController.enabled)
+        {
+            return true;
+        }
+
         Graphics.Blit(src, dest);
         return false;
     }
