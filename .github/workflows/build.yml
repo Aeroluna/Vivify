@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         game-version: [ 1.29.1, 1.34.2, 1.37.1, 1.40.0 ]
-    uses: Aeroluna/workflows/.github/workflows/bs-build-version-release.yml@master
+    uses: Aeroluna/workflows/.github/workflows/bs-build-version-release.yml@main
     with:
       project-path: Vivify/Vivify.csproj
       game-version: ${{ matrix.game-version }}
@@ -26,7 +26,7 @@ jobs:
     needs: build
     permissions:
       contents: write
-    uses: Aeroluna/workflows/.github/workflows/bs-create-release-from-project.yml@master
+    uses: Aeroluna/workflows/.github/workflows/bs-create-release-from-project.yml@main
     with:
       project-path: Vivify/Vivify.csproj
     secrets: inherit
