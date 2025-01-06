@@ -99,6 +99,7 @@ internal class CullingTextureController : CullingCameraController
         _postProcessingController = postProcessingController;
         _depthShaderManager = depthShaderManager;
         _cameraPropertyController = instantiator.InstantiateComponent<CameraPropertyController>(gameObject);
+        _cameraPropertyController.enabled = false;
         Camera.CopyFrom(_postProcessingController.Camera);
     }
 
@@ -152,6 +153,7 @@ internal class CullingTextureController : CullingCameraController
                 depthTexture.Create();
             }
 
+            _cameraPropertyController.enabled = true;
             _ready = true;
         }
 
