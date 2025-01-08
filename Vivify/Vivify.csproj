@@ -21,7 +21,7 @@
     <DependsOn Include="CustomJSONData" Version="^2.6.3"/>
     <DependsOn Include="Heck" Version="^1.7.2"/>
     <DependsOn Include="SiraUtil" Version="^3.0.5"/>
-    <DependsOn Include="CameraUtils" Version="^1.0.5"/>
+    <DependsOn Include="CameraUtils" Version="^1.0.3"/>
   </ItemGroup>
 
   <ItemDefinitionGroup>
