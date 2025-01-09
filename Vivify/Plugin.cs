@@ -18,13 +18,17 @@ internal class Plugin
     {
         Log = pluginLogger;
 
-        zenjector.Install<VivifyAppInstaller>(Location.App, conf.Generated<Config>());
+        Config config = conf.Generated<Config>();
+        Config = config;
+        zenjector.Install<VivifyAppInstaller>(Location.App, config);
         zenjector.Install<VivifyPlayerInstaller>(Location.Player);
         zenjector.Install<VivifyMenuInstaller>(Location.Menu);
         zenjector.UseLogger(pluginLogger);
 
         HeckPatchManager.Register(HARMONY_ID);
     }
+
+    internal static Config Config { get; private set; } = null!;
 
     internal static Logger Log { get; private set; } = null!;
 

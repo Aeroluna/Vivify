@@ -13,12 +13,12 @@ using Vivify.PostProcessing;
 namespace Vivify.HarmonyPatches;
 
 [HeckPatch]
-internal class Camera2Priority
+internal static class Camera2Priority
 {
-    private static readonly HashSet<(string Name, GameObject GameObject)> _nonAllocCams = [];
+    private static readonly HashSet<(string Name, MonoBehaviour MonoBehaviour)> _nonAllocCams = [];
 
+    private static MethodBase? _cameraGetter;
     private static MethodBase? _switchToCamlist;
-
     private static IDictionary? _cams;
 
     [UsedImplicitly]
@@ -50,6 +50,18 @@ internal class Camera2Priority
                 Plugin.Log.Warn("Could not find [Camera2.Managers.CamManager.cams].");
                 return false;
             }
+
+            _cameraGetter = assembly
+                .GetType("Camera2.Behaviours.Cam2")
+                ?.GetProperty("UCamera", AccessTools.all)
+                ?.GetGetMethod(true);
+
+            // ReSharper disable once InvertIf
+            if (_cameraGetter == null)
+            {
+                Plugin.Log.Warn("Could not find [Camera2.Behaviours.Cam2.UCamera].");
+                return false;
+            }
         }
 
         return _switchToCamlist != null;
@@ -69,17 +81,28 @@ internal class Camera2Priority
         _nonAllocCams.Clear();
         foreach (DictionaryEntry entry in _cams ?? throw new InvalidOperationException())
         {
-            _nonAllocCams.Add(((string)entry.Key, ((MonoBehaviour)entry.Value).gameObject));
+            _nonAllocCams.Add(((string)entry.Key, (MonoBehaviour)entry.Value));
         }
 
-        string? mainCam = cams?.First(n => _nonAllocCams.Any(m => m.Name == n));
-        Plugin.Log.Info($"Switching main Vivify Cam2 to [{mainCam ?? "null"}]");
-        foreach ((string Name, GameObject GameObject) cam in _nonAllocCams)
+        if (_cameraGetter == null)
         {
-            PostProcessingController postProcessingController = cam.GameObject.GetComponentInChildren<PostProcessingController>();
+            throw new InvalidOperationException();
+        }
+
+        string[] mainCam = _nonAllocCams
+            .Where(n => cams?.Contains(n.Name) ?? false)
+            .OrderBy(n => ((Camera)_cameraGetter.Invoke(n.MonoBehaviour, null)).depth)
+            .Take(Plugin.Config.MaxCamera2Cams)
+            .Select(n => n.Name)
+            .ToArray();
+        string cameraLog = mainCam.Length > 0 ? string.Join(", ", mainCam) : "null";
+        Plugin.Log.Info($"Switching main Vivify Cam2 to [{cameraLog}]");
+        foreach ((string Name, MonoBehaviour MonoBehaviour) cam in _nonAllocCams)
+        {
+            PostProcessingController postProcessingController = cam.MonoBehaviour.GetComponentInChildren<PostProcessingController>();
             if (postProcessingController != null)
             {
-                postProcessingController.enabled = cam.Name == mainCam;
+                postProcessingController.enabled = mainCam.Contains(cam.Name);
             }
         }
     }
