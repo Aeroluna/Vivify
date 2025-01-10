@@ -25,9 +25,11 @@ internal sealed class CullingTextureTracker : TrackGameObjectTracker
     {
         get
         {
+            // ReSharper disable once InvertIf
             if (_gameObjectsDirty)
             {
                 _gameObjects = _maskRenderers.SelectMany(n => n.ChildRenderers).Select(n => n.gameObject).ToArray();
+                _gameObjectsDirty = false;
             }
 
             return _gameObjects;
