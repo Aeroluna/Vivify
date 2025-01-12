@@ -24,6 +24,20 @@
     <DependsOn Include="CameraUtils" Version="^1.0.3"/>
   </ItemGroup>
 
+  <Choose>
+    <When Condition="$(Configuration.EndsWith('1.29.1'))">
+      <ItemGroup>
+        <EmbeddedResource Include="Resources\DepthBlit2019" LogicalName="Vivify.Resources.DepthBlit" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <DependsOn Include="AssetBundleLoadingTools" Version="^1.0.0"/>
+        <EmbeddedResource Include="Resources\DepthBlit2021" LogicalName="Vivify.Resources.DepthBlit" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+
   <ItemDefinitionGroup>
     <Reference Private="False"/>
   </ItemDefinitionGroup>
@@ -67,19 +81,6 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\AssetBundleDownloading.bsml"/>
   </ItemGroup>
-
-  <Choose>
-    <When Condition="$(Configuration.EndsWith('1.29.1'))">
-      <ItemGroup>
-        <EmbeddedResource Include="Resources\DepthBlit2019" LogicalName="Vivify.Resources.DepthBlit" />
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <ItemGroup>
-        <EmbeddedResource Include="Resources\DepthBlit2021" LogicalName="Vivify.Resources.DepthBlit" />
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
 
   <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks.Luna" Version="2.1.0"/>
