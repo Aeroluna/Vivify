@@ -157,6 +157,7 @@ internal class PostProcessingController : CullingCameraController
     private void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
         RenderTextureDescriptor descriptor = src.descriptor;
+        descriptor.msaaSamples = 1;
         CreateDeclaredTextures(descriptor);
         RenderTexture temp = RenderTexture.GetTemporary(descriptor);
         RenderImage(src, temp, PreEffects);
