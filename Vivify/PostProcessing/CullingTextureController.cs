@@ -131,27 +131,12 @@ internal class CullingTextureController : CullingCameraController
     {
         Camera.MonoOrStereoscopicEye stereoActiveEye = Camera.stereoActiveEye;
         RenderTextureDescriptor descriptor = src.descriptor;
+        descriptor.msaaSamples = 1;
 
         if (!_ready)
         {
-            if (!RenderTextures.TryGetValue(stereoActiveEye, out RenderTexture colorTexture) ||
-                !RTEquals(colorTexture, src))
-            {
-                colorTexture?.Release();
-                colorTexture = new RenderTexture(descriptor);
-                RenderTextures[stereoActiveEye] = colorTexture;
-                colorTexture.Create();
-            }
-
-            if (!RenderTexturesDepth.TryGetValue(stereoActiveEye, out RenderTexture depthTexture) ||
-                !RTEquals(depthTexture, src))
-            {
-                depthTexture?.Release();
-                descriptor.colorFormat = RenderTextureFormat.R8;
-                depthTexture = new RenderTexture(descriptor);
-                RenderTexturesDepth[stereoActiveEye] = depthTexture;
-                depthTexture.Create();
-            }
+            GetRenderTexture(RenderTextures, descriptor, false, true);
+            GetRenderTexture(RenderTexturesDepth, descriptor, true, true);
 
             _cameraPropertyController.enabled = true;
             _ready = true;
@@ -159,13 +144,7 @@ internal class CullingTextureController : CullingCameraController
 
         if (Key != null)
         {
-            if (!RenderTextures.TryGetValue(stereoActiveEye, out RenderTexture colorTexture) ||
-                !RTEquals(colorTexture, src))
-            {
-                colorTexture?.Release();
-                colorTexture = new RenderTexture(descriptor);
-                RenderTextures[stereoActiveEye] = colorTexture;
-            }
+            RenderTexture colorTexture = GetRenderTexture(RenderTextures, descriptor, false, false);
 
             if (MainEffect)
             {
@@ -183,14 +162,7 @@ internal class CullingTextureController : CullingCameraController
         // ReSharper disable once InvertIf
         if (DepthKey != null)
         {
-            if (!RenderTexturesDepth.TryGetValue(stereoActiveEye, out RenderTexture depthTexture) ||
-                !RTEquals(depthTexture, src))
-            {
-                depthTexture?.Release();
-                descriptor.colorFormat = RenderTextureFormat.R8;
-                depthTexture = new RenderTexture(descriptor);
-                RenderTexturesDepth[stereoActiveEye] = depthTexture;
-            }
+            RenderTexture depthTexture = GetRenderTexture(RenderTexturesDepth, descriptor, false, false);
 
             if (depthTexture.dimension == TextureDimension.Tex2DArray)
             {
@@ -220,6 +192,34 @@ internal class CullingTextureController : CullingCameraController
         if (Key == null && DepthKey == null)
         {
             gameObject.SetActive(false);
+        }
+
+        return;
+
+        RenderTexture GetRenderTexture(Dictionary<Camera.MonoOrStereoscopicEye, RenderTexture> dictionary, RenderTextureDescriptor renderTextureDescriptor, bool depth, bool create)
+        {
+            // ReSharper disable once InvertIf
+            if (!dictionary.TryGetValue(stereoActiveEye, out RenderTexture renderTexture) ||
+                !RTEquals(renderTexture, src))
+            {
+                renderTexture?.Release();
+
+                if (depth)
+                {
+                    renderTextureDescriptor.colorFormat = RenderTextureFormat.R8;
+                }
+
+                renderTexture = new RenderTexture(renderTextureDescriptor);
+
+                dictionary[stereoActiveEye] = renderTexture;
+
+                if (create)
+                {
+                    renderTexture.Create();
+                }
+            }
+
+            return renderTexture;
         }
     }
 }
