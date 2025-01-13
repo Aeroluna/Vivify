@@ -30,6 +30,9 @@ internal class AddComponentsToCamera : IAffinity
     private void AddComponents(MainEffectController __instance)
     {
         GameObject gameObject = __instance.gameObject;
+#if !V1_29_1
+        SafeAddComponent<MultipassKeywordController>(gameObject);
+#endif
         SafeAddComponent<PostProcessingController>(gameObject);
         SafeAddComponent<CameraPropertyController>(gameObject);
     }
