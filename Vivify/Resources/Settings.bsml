@@ -1,0 +1,4 @@
+﻿<settings-container>
+  <list-setting text='Max Camera2 Cameras' value='max-camera2-cams' apply-on-change='true' choices='ints'
+                hover-hint='Will apply post processing to X cameras with the lowest layer. Only affects Camera2 cams.'/>
+</settings-container>

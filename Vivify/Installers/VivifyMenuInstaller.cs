@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Vivify.Controllers;
+using Vivify.Settings;
 using Zenject;
 
 namespace Vivify.Installers;
@@ -9,6 +10,7 @@ internal class VivifyMenuInstaller : Installer
 {
     public override void InstallBindings()
     {
+        Container.BindInterfacesTo<SettingsMenu>().AsSingle();
         Container
             .Bind<AssetBundleDownloadViewController.CoroutineBastard>()
             .FromNewComponentOnNewGameObject()

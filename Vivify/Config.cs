@@ -9,7 +9,7 @@ namespace Vivify;
 [UsedImplicitly(ImplicitUseTargetFlags.Members)]
 public class Config
 {
-    public int MaxCamera2Cams { get; set; } = 1;
+    public int MaxCamera2Cams { get; set; } = 20;
 
     public bool AllowDownload { get; set; }
 

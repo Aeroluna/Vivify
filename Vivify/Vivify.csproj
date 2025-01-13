@@ -80,6 +80,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\AssetBundleDownloading.bsml"/>
+    <EmbeddedResource Include="Resources\Settings.bsml" />
   </ItemGroup>
 
   <ItemGroup>
