@@ -64,6 +64,7 @@
     <Reference Include="SaberTrail" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\SaberTrail.dll" Publicize="true"/>
     <Reference Include="SiraUtil" HintPath="$(BeatSaberDir)\Plugins\SiraUtil.dll" Publicize="true"/>
     <Reference Include="Unity.TextMeshPro" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Unity.TextMeshPro.dll"/>
+    <Reference Include="Unity.XR.OpenXR" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Unity.XR.OpenXR.dll"/>
     <Reference Include="UnityEngine.AnimationModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.AnimationModule.dll"/>
     <Reference Include="UnityEngine.AssetBundleModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.AssetBundleModule.dll"/>
     <Reference Include="UnityEngine.AudioModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.AudioModule.dll"/>

@@ -3,6 +3,7 @@ using HarmonyLib;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.XR.OpenXR;
 using Vivify.Controllers;
 using Vivify.Managers;
 using Zenject;
@@ -67,6 +68,14 @@ internal class CullingTextureController : CullingCameraController
         Transform transform1 = transform;
         transform1.localPosition = Vector3.zero;
         transform1.localRotation = Quaternion.identity;
+
+#if !V1_29_1
+        if (OpenXRSettings.Instance.renderMode == OpenXRSettings.RenderMode.MultiPass)
+        {
+            return;
+        }
+#endif
+
         camera.cullingMatrix = other.projectionMatrix * other.worldToCameraMatrix;
         camera.projectionMatrix = other.projectionMatrix;
         camera.nonJitteredProjectionMatrix = other.nonJitteredProjectionMatrix;
