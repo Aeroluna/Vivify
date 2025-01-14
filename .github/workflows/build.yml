@@ -13,7 +13,7 @@ jobs:
     name: Build
     strategy:
       matrix:
-        game-version: [ 1.29.1, 1.34.2, 1.37.1, 1.40.0 ]
+        game-version: [ 1.29.1, 1.34.2, 1.37.1, 1.39.1, 1.40.0 ]
     uses: Aeroluna/workflows/.github/workflows/bs-build-version-release.yml@main
     with:
       project-path: Vivify/Vivify.csproj

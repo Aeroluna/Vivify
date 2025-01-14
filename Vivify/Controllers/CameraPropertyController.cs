@@ -2,7 +2,7 @@
 using Vivify.Managers;
 using Vivify.PostProcessing;
 using Vivify.TrackGameObject;
-#if LATEST
+#if !PRE_V1_39_1
 using JetBrains.Annotations;
 using Zenject;
 #elif PRE_V1_37_1
@@ -21,7 +21,7 @@ internal class CameraPropertyController : MonoBehaviour
 
     private CullingCameraController _cullingCameraController = null!;
     private BloomPrePass _bloomPrePass = null!;
-#if LATEST
+#if !PRE_V1_39_1
     private SettingsManager _settingsManager = null!;
 #endif
 #if !PRE_V1_37_1
@@ -39,7 +39,7 @@ internal class CameraPropertyController : MonoBehaviour
 #if !PRE_V1_37_1
                 if (_depthTextureController != null)
                 {
-#if LATEST
+#if !PRE_V1_39_1
                     _depthTextureController.Init(_settingsManager);
 #else
                     _depthTextureController.Start();
@@ -108,7 +108,7 @@ internal class CameraPropertyController : MonoBehaviour
         MainEffect = null;
     }
 
-#if LATEST
+#if !PRE_V1_39_1
     [UsedImplicitly]
     [Inject]
     private void Construct(
