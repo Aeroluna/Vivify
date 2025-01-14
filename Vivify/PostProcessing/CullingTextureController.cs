@@ -3,12 +3,14 @@ using HarmonyLib;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.XR.OpenXR;
 using Vivify.Controllers;
 using Vivify.Managers;
 using Zenject;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
+#if !V1_29_1
+using UnityEngine.XR.OpenXR;
+#endif
 
 namespace Vivify.PostProcessing;
 
