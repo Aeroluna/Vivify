@@ -30,8 +30,6 @@ internal class CullingTextureController : CullingCameraController
 
     private bool _ready;
 
-    internal override int DefaultCullingMask => _postProcessingController.DefaultCullingMask;
-
     internal int? Key { get; private set; }
 
     internal int? DepthKey { get; private set; }
@@ -58,8 +56,6 @@ internal class CullingTextureController : CullingCameraController
 
     protected override void OnPreCull()
     {
-        base.OnPreCull();
-
         Camera camera = Camera;
         Camera other = _postProcessingController.Camera;
         if (!CamEquals(camera, other))
@@ -82,6 +78,8 @@ internal class CullingTextureController : CullingCameraController
         camera.projectionMatrix = other.projectionMatrix;
         camera.nonJitteredProjectionMatrix = other.nonJitteredProjectionMatrix;
         camera.worldToCameraMatrix = other.worldToCameraMatrix;
+
+        base.OnPreCull();
     }
 
     // very simple comparison
@@ -95,6 +93,7 @@ internal class CullingTextureController : CullingCameraController
     private static bool CamEquals(Camera lhs, Camera rhs)
     {
         return lhs.stereoEnabled == rhs.stereoEnabled &&
+               lhs.cullingMask == rhs.cullingMask &&
                Mathf.Approximately(lhs.fieldOfView, rhs.fieldOfView) &&
                Mathf.Approximately(lhs.nearClipPlane, rhs.nearClipPlane) &&
                Mathf.Approximately(lhs.farClipPlane, rhs.farClipPlane);
@@ -127,7 +126,7 @@ internal class CullingTextureController : CullingCameraController
         Camera.farClipPlane = other.farClipPlane;
         Camera.layerCullDistances = other.layerCullDistances;
         Camera.targetTexture = null;
-        RefreshCullingMask();
+        Camera.cullingMask = other.cullingMask;
     }
 
     private void OnDestroy()

@@ -38,8 +38,6 @@ internal class PostProcessingController : CullingCameraController
 
     internal List<MaterialData> PostEffects { get; set; } = [];
 
-    internal override int DefaultCullingMask => _defaultCullingMask ?? Camera.cullingMask;
-
     internal void PrewarmCameras(int count)
     {
         count -= _disabledCullingCameraControllers.Count + _cullingCameraControllers.Count;
@@ -426,11 +424,6 @@ internal class PostProcessingController : CullingCameraController
     private void Awake()
     {
         _imageEffectController = GetComponent<ImageEffectController>();
-    }
-
-    private void OnEnable()
-    {
-        _defaultCullingMask = Camera.cullingMask;
     }
 
     private void OnDestroy()

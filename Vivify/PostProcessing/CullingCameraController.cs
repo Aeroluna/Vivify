@@ -11,39 +11,30 @@ internal abstract class CullingCameraController : MonoBehaviour
 
     private Camera? _camera;
 
-    private CullingTextureTracker? _cullingTextureData;
-
-    internal abstract int DefaultCullingMask { get; }
+    private int? _cachedMask;
 
     internal bool MainEffect { get; set; }
 
     internal Camera Camera => _camera ??= GetComponent<Camera>();
 
-    internal CullingTextureTracker? CullingTextureData
-    {
-        get => _cullingTextureData;
-        set
-        {
-            _cullingTextureData = value;
-            RefreshCullingMask();
-        }
-    }
-
-    protected void RefreshCullingMask()
-    {
-        // flip culling mask when whitelist mode enabled
-        Camera.cullingMask = _cullingTextureData?.Whitelist ?? false ? 1 << CULLING_LAYER : DefaultCullingMask;
-    }
+    internal CullingTextureTracker? CullingTextureData { get; set; }
 
     protected virtual void OnPreCull()
     {
-        if (_cullingTextureData == null)
+        // flip culling mask when whitelist mode enabled
+        if (CullingTextureData?.Whitelist ?? false)
+        {
+            _cachedMask = Camera.cullingMask;
+            Camera.cullingMask = 1 << CULLING_LAYER;
+        }
+
+        if (CullingTextureData == null)
         {
             return;
         }
 
         // Set renderers to culling layer
-        GameObject[] gameObjects = _cullingTextureData.GameObjects;
+        GameObject[] gameObjects = CullingTextureData.GameObjects;
         int length = gameObjects.Length;
         for (int i = 0; i < length; i++)
         {
@@ -55,6 +46,11 @@ internal abstract class CullingCameraController : MonoBehaviour
 
     private void OnPostRender()
     {
+        if (_cachedMask != null)
+        {
+            Camera.cullingMask = _cachedMask.Value;
+        }
+
         if (_cachedLayers.Count == 0)
         {
             return;
@@ -67,10 +63,5 @@ internal abstract class CullingCameraController : MonoBehaviour
         }
 
         _cachedLayers.Clear();
-    }
-
-    private void OnDisable()
-    {
-        Camera.cullingMask = DefaultCullingMask;
     }
 }
