@@ -67,6 +67,8 @@ internal class CullingTextureController : CullingCameraController
         transform1.localPosition = Vector3.zero;
         transform1.localRotation = Quaternion.identity;
 
+        base.OnPreCull();
+
 #if !V1_29_1
         if (OpenXRSettings.Instance.renderMode == OpenXRSettings.RenderMode.MultiPass)
         {
@@ -78,8 +80,6 @@ internal class CullingTextureController : CullingCameraController
         camera.projectionMatrix = other.projectionMatrix;
         camera.nonJitteredProjectionMatrix = other.nonJitteredProjectionMatrix;
         camera.worldToCameraMatrix = other.worldToCameraMatrix;
-
-        base.OnPreCull();
     }
 
     // very simple comparison

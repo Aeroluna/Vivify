@@ -49,6 +49,7 @@ internal abstract class CullingCameraController : MonoBehaviour
         if (_cachedMask != null)
         {
             Camera.cullingMask = _cachedMask.Value;
+            _cachedMask = null;
         }
 
         if (_cachedLayers.Count == 0)

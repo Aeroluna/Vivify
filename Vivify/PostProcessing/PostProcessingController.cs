@@ -49,8 +49,6 @@ internal class PostProcessingController : CullingCameraController
 
     protected override void OnPreCull()
     {
-        base.OnPreCull();
-
         foreach ((CreateCameraData textureData, string id) in _activeCreateCameraDatas)
         {
             if (CameraDatas.ContainsValue(textureData))
@@ -132,6 +130,8 @@ internal class PostProcessingController : CullingCameraController
             _declaredTextures.Add(textureName, new RenderTextureHolder(declareRenderTextureData));
             _activeDeclaredTextures.Add(declareRenderTextureData, textureName);
         }
+
+        base.OnPreCull();
     }
 
     // Cool method for copying serialized fields
