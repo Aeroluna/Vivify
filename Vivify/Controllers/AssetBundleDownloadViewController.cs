@@ -124,7 +124,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
             levelCustomData.GetRequired<CustomData>(ASSET_BUNDLE).GetRequired<uint>(BUNDLE_CHECKSUM);
         _doAbort = false;
         _downloadFinished = false;
-        if (_config.AllowDownload)
+        /*if (_config.AllowDownload)
         {
             _coroutineBastard.StartCoroutine(
                 DownloadAndSave(
@@ -135,7 +135,10 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         {
             _downloadPath = path;
             _downloadChecksum = assetBundleChecksum;
-        }
+        }*/
+
+        _newView = View.Error;
+        _lastError = "Asset downloading not yet implemented,\nlook out for a newer version of Vivify!";
 
         return true;
     }
@@ -151,7 +154,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
     }
 
     // TODO: figure out a way to resolve the fact that multiplayer does NOT have enough time to download bundles
-    private IEnumerator DownloadAndSave(
+    /*private IEnumerator DownloadAndSave(
         string savePath,
         uint checksum)
     {
@@ -195,20 +198,20 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         File.WriteAllBytes(savePath, www.downloadHandler.data);
         _log.Debug($"Successfully downloaded bundle to [{savePath}].");
         _downloadFinished = true;
-    }
+    }*/
 
     [UsedImplicitly]
     [UIAction("accept-click")]
     private void OnAcceptClick()
     {
         _config.AllowDownload = true;
-        if (_downloadPath != null)
+        /*if (_downloadPath != null)
         {
             _coroutineBastard.StartCoroutine(
                 DownloadAndSave(
                     _downloadPath,
                     _downloadChecksum));
-        }
+        }*/
     }
 
     [UsedImplicitly]
