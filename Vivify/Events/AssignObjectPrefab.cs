@@ -13,7 +13,7 @@ using static Vivify.VivifyController;
 namespace Vivify.Events;
 
 [CustomEvent(ASSIGN_OBJECT_PREFAB)]
-internal class AssignObjectPrefab : ICustomEvent
+internal class AssignObjectPrefab : IInitializable, ICustomEvent
 {
     private readonly BeatmapObjectPrefabManager _beatmapObjectPrefabManager;
     private readonly DebrisPrefabManager _debrisPrefabManager;
@@ -36,6 +36,51 @@ internal class AssignObjectPrefab : ICustomEvent
         _notePrefabManager = notePrefabManager;
         _debrisPrefabManager = debrisPrefabManager;
         _saberPrefabManager = saberPrefabManager;
+    }
+
+    public void Initialize()
+    {
+        foreach (ICustomEventCustomData customEventCustomData in _deserializedData.CustomEventCustomDatas.Values)
+        {
+            if (customEventCustomData is not AssignObjectPrefabData data)
+            {
+                continue;
+            }
+
+            foreach ((string? key, AssignObjectPrefabData.IPrefabInfo value) in data.Assets)
+            {
+                if (key == null)
+                {
+                    continue;
+                }
+
+                if (value is not AssignObjectPrefabData.ObjectPrefabInfo objectPrefabInfo)
+                {
+                    continue;
+                }
+
+                string? asset = objectPrefabInfo.Asset;
+                if (!string.IsNullOrEmpty(asset))
+                {
+                    _beatmapObjectPrefabManager.PrewarmGameObjectPrefabPool(asset!, 10);
+                }
+
+                string? debrisAsset = objectPrefabInfo.DebrisAsset;
+                if (!string.IsNullOrEmpty(debrisAsset))
+                {
+                    _beatmapObjectPrefabManager.PrewarmGameObjectPrefabPool(asset!, 10);
+                }
+
+                string? anyDirectionAsset = objectPrefabInfo.AnyDirectionAsset;
+                if (!string.IsNullOrEmpty(anyDirectionAsset) &&
+                    key == NOTE_PREFAB)
+                {
+                    _beatmapObjectPrefabManager.PrewarmGameObjectPrefabPool(asset!, 10);
+                }
+
+                break;
+            }
+        }
     }
 
     public void Callback(CustomEventData customEventData)

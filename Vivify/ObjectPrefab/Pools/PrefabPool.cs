@@ -45,7 +45,7 @@ internal class PrefabPool : IPrefabPool<GameObject>
         GameObject spawned;
         if (_inactive.Count == 0)
         {
-            spawned = Object.Instantiate(_original);
+            spawned = _instantiator.InstantiatePrefab(_original);
         }
         else
         {
@@ -64,5 +64,16 @@ internal class PrefabPool : IPrefabPool<GameObject>
 
         _instantiator.SongSynchronize(spawned, startTime);
         return spawned;
+    }
+
+    internal void Prewarm(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            GameObject result = _instantiator.InstantiatePrefab(_original);
+            result.SetActive(false);
+            _inactive.Push(result);
+            _instantiator.SongSynchronize(result, 0);
+        }
     }
 }

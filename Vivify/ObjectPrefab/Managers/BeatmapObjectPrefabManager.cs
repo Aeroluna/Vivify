@@ -63,6 +63,12 @@ internal class BeatmapObjectPrefabManager : IDisposable
         _prefabPools.Values.Do(n => n.Dispose());
     }
 
+    internal void PrewarmGameObjectPrefabPool(string assetName, int count)
+    {
+        PrefabPool? prefabPool = GetGameObjectPrefabPool(assetName);
+        prefabPool?.Prewarm(count);
+    }
+
     internal void AssignGameObjectPrefab(
         PrefabList prefabList,
         string? assetName,
