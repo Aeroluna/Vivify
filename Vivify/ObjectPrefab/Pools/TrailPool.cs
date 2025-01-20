@@ -40,7 +40,11 @@ internal class TrailPool : IPrefabPool<FollowedSaberTrail>
 
     public FollowedSaberTrail Spawn(Component component, float _)
     {
-        FollowedSaberTrail spawned;
+        if (_active.TryGetValue(component, out FollowedSaberTrail spawned))
+        {
+            return spawned;
+        }
+
         if (_inactive.Count == 0)
         {
             GameObject gameObject = new("FollowedSaberTrail");

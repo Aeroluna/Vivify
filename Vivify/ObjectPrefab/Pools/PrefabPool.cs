@@ -42,7 +42,11 @@ internal class PrefabPool : IPrefabPool<GameObject>
 
     public GameObject Spawn(Component component, float startTime)
     {
-        GameObject spawned;
+        if (_active.TryGetValue(component, out GameObject spawned))
+        {
+            return spawned;
+        }
+
         if (_inactive.Count == 0)
         {
             spawned = _instantiator.InstantiatePrefab(_original);
