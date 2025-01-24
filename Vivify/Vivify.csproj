@@ -69,6 +69,7 @@
     <Reference Include="UnityEngine.AssetBundleModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.AssetBundleModule.dll"/>
     <Reference Include="UnityEngine.AudioModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.AudioModule.dll"/>
     <Reference Include="UnityEngine.CoreModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll"/>
+    <Reference Include="UnityEngine.JSONSerializeModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.JSONSerializeModule.dll"/>
     <Reference Include="UnityEngine.ParticleSystemModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.ParticleSystemModule.dll"/>
     <Reference Include="UnityEngine.UI" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UI.dll"/>
     <Reference Include="UnityEngine.UIModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UIModule.dll"/>

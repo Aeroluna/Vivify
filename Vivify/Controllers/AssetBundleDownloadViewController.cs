@@ -30,7 +30,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
     private VerticalLayoutGroup _barGroup = null!;
 
     private Config _config = null!;
-    private CoroutineBastard _coroutineBastard = null!;
+    private AssetDownloader _assetDownloader = null!;
     private View _currentView = View.None;
 
     private bool _doAbort;
@@ -124,9 +124,9 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
             levelCustomData.GetRequired<CustomData>(ASSET_BUNDLE).GetRequired<uint>(BUNDLE_CHECKSUM);
         _doAbort = false;
         _downloadFinished = false;
-        /*if (_config.AllowDownload)
+        if (_config.AllowDownload)
         {
-            _coroutineBastard.StartCoroutine(
+            _assetDownloader.StartCoroutine(
                 DownloadAndSave(
                     path,
                     assetBundleChecksum));
@@ -135,33 +135,67 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         {
             _downloadPath = path;
             _downloadChecksum = assetBundleChecksum;
-        }*/
-
-        _newView = View.Error;
-        _lastError = "Asset downloading not yet implemented,\nlook out for a newer version of Vivify!";
+        }
 
         return true;
     }
 
     [UsedImplicitly]
     [Inject]
-    private void Construct(SiraLog log, Config config, CoroutineBastard coroutineBastard)
+    private void Construct(SiraLog log, Config config, AssetDownloader assetDownloader)
     {
         _log = log;
         _config = config;
-        _coroutineBastard = coroutineBastard;
+        _assetDownloader = assetDownloader;
         _newView = config.AllowDownload ? View.Downloading : View.Tos;
     }
 
     // TODO: figure out a way to resolve the fact that multiplayer does NOT have enough time to download bundles
-    /*private IEnumerator DownloadAndSave(
+    private IEnumerator DownloadAndSave(
         string savePath,
         uint checksum)
     {
         _newView = View.Downloading;
         string url = _config.BundleRepository + checksum;
-        _log.Debug($"Attempting to download asset bundle from [{url}].");
-        using UnityWebRequest www = UnityWebRequest.Get(url);
+        _log.Debug($"Fetching asset bundle info from [{url}]");
+        using UnityWebRequest apiRequest = UnityWebRequest.Get(url);
+        apiRequest.SendWebRequest();
+
+        while (!apiRequest.isDone)
+        {
+            if (!_doAbort)
+            {
+                yield return null;
+                continue;
+            }
+
+            apiRequest.Abort();
+            _log.Debug("Fetch cancelled");
+            yield break;
+        }
+
+#pragma warning disable CS0618
+        if (apiRequest.isNetworkError || apiRequest.isHttpError)
+        {
+            if (apiRequest.isNetworkError)
+            {
+                _lastError = $"Network error while fetching bundle.\n{apiRequest.error}";
+            }
+            else if (apiRequest.isHttpError)
+            {
+                _lastError = $"Server sent error response code while fetching bundle.\n({apiRequest.responseCode})";
+            }
+
+            _log.Error(_lastError);
+            _newView = View.Error;
+            yield break;
+        }
+#pragma warning restore CS0618
+
+        RepoJson repoJson = JsonUtility.FromJson<RepoJson>(apiRequest.downloadHandler.text);
+        string downloadUrl = repoJson.downloadUrl;
+        _log.Debug($"Attempting to download asset bundle from [{downloadUrl}]");
+        using UnityWebRequest www = UnityWebRequest.Get(downloadUrl);
         www.SendWebRequest();
         while (!www.isDone)
         {
@@ -173,7 +207,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
             }
 
             www.Abort();
-            _log.Debug("Download cancelled.");
+            _log.Debug("Download cancelled");
             yield break;
         }
 
@@ -196,22 +230,22 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
 #pragma warning restore CS0618
 
         File.WriteAllBytes(savePath, www.downloadHandler.data);
-        _log.Debug($"Successfully downloaded bundle to [{savePath}].");
+        _log.Debug($"Successfully downloaded bundle to [{savePath}]");
         _downloadFinished = true;
-    }*/
+    }
 
     [UsedImplicitly]
     [UIAction("accept-click")]
     private void OnAcceptClick()
     {
         _config.AllowDownload = true;
-        /*if (_downloadPath != null)
+        if (_downloadPath != null)
         {
-            _coroutineBastard.StartCoroutine(
+            _assetDownloader.StartCoroutine(
                 DownloadAndSave(
                     _downloadPath,
                     _downloadChecksum));
-        }*/
+        }
     }
 
     [UsedImplicitly]
@@ -220,7 +254,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         _doAbort = true;
         if (_downloadWaiter != null)
         {
-            _coroutineBastard.StopCoroutine(_downloadWaiter);
+            _assetDownloader.StopCoroutine(_downloadWaiter);
         }
     }
 
@@ -229,7 +263,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
     {
         if (!_downloadFinished)
         {
-            _coroutineBastard.StartCoroutine(WaitForDownload());
+            _assetDownloader.StartCoroutine(WaitForDownload());
         }
         else
         {
@@ -308,5 +342,18 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         Finished?.Invoke();
     }
 
-    internal class CoroutineBastard : MonoBehaviour;
+    internal class AssetDownloader : MonoBehaviour;
+
+    [Serializable]
+    private class RepoJson
+    {
+        // might be ugly, but damn is it fast
+#pragma warning disable SA1401
+#pragma warning disable SA1307
+#pragma warning disable CS8618
+        public string downloadUrl;
+#pragma warning restore CS8618
+#pragma warning restore SA1307
+#pragma warning restore SA1401
+    }
 }

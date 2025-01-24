@@ -12,7 +12,7 @@ internal class VivifyMenuInstaller : Installer
     {
         Container.BindInterfacesTo<SettingsMenu>().AsSingle();
         Container
-            .Bind<AssetBundleDownloadViewController.CoroutineBastard>()
+            .Bind<AssetBundleDownloadViewController.AssetDownloader>()
             .FromNewComponentOnNewGameObject()
             .AsSingle();
         Container.BindInterfacesTo<AssetBundleDownloadViewController>().FromNewComponentAsViewController().AsSingle();
