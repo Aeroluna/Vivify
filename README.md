@@ -64,7 +64,7 @@ used with `#pragma vertex vert_img`.
 
 ### Creating an asset bundle
 
-Use https://github.com/Swifter1243/VivifyTemplate to create the bundle. (TODO: more instructions here)
+Use https://github.com/Swifter1243/VivifyTemplate (COMING SOON) to create the bundle. (TODO: more instructions here)
 
 (Optional) See https://docs.unity3d.com/Manual/AssetBundles-Browser.html. this tool allows you to browse the contents of
 a built asset bundle.
