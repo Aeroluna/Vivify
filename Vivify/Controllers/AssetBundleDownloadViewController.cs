@@ -97,7 +97,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
 #endif
 
         // check is vivify map
-        string[] requirements = beatmapCustomData.Get<List<object>>("_requirements")?.Cast<string>().ToArray() ?? [];
+        string[] requirements = beatmapCustomData.Get<List<object>>("_requirements")?.Cgit sast<string>().ToArray() ?? [];
         if (!requirements.Contains(CAPABILITY))
         {
             return false;
@@ -268,6 +268,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         else
         {
             Finished?.Invoke();
+            _newView = View.None;
         }
     }
 
@@ -311,6 +312,10 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
                     _tosGroup.gameObject.SetActive(false);
                     _downloadingGroup.gameObject.SetActive(true);
                     _error.gameObject.SetActive(false);
+
+                    _loadingBar.fillAmount = _downloadProgress;
+                    float percentage = _downloadProgress * 100;
+                    _percentageText.text = $"{percentage:0.0}%";
                     break;
 
                 case View.Error:
@@ -319,17 +324,14 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
                     _error.gameObject.SetActive(true);
                     _errorText.text = _lastError;
                     break;
+
+                case View.None:
+                    _tosGroup.gameObject.SetActive(false);
+                    _downloadingGroup.gameObject.SetActive(false);
+                    _error.gameObject.SetActive(false);
+                    break;
             }
         }
-
-        if (_currentView != View.Downloading)
-        {
-            return;
-        }
-
-        _loadingBar.fillAmount = _downloadProgress;
-        float percentage = _downloadProgress * 100;
-        _percentageText.text = $"{percentage:0.0}%";
     }
 
     private IEnumerator WaitForDownload()
@@ -340,6 +342,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         }
 
         Finished?.Invoke();
+        _newView = View.None;
     }
 
     internal class AssetDownloader : MonoBehaviour;
