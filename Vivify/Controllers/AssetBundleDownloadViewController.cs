@@ -312,10 +312,6 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
                     _tosGroup.gameObject.SetActive(false);
                     _downloadingGroup.gameObject.SetActive(true);
                     _error.gameObject.SetActive(false);
-
-                    _loadingBar.fillAmount = _downloadProgress;
-                    float percentage = _downloadProgress * 100;
-                    _percentageText.text = $"{percentage:0.0}%";
                     break;
 
                 case View.Error:
@@ -332,6 +328,15 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
                     break;
             }
         }
+
+        if (_currentView != View.Downloading)
+        {
+            return;
+        }
+
+        _loadingBar.fillAmount = _downloadProgress;
+        float percentage = _downloadProgress * 100;
+        _percentageText.text = $"{percentage:0.0}%";
     }
 
     private IEnumerator WaitForDownload()
