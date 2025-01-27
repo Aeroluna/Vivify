@@ -69,14 +69,14 @@ Use https://github.com/Swifter1243/VivifyTemplate to create the bundle. (TODO: m
 (Optional) See https://docs.unity3d.com/Manual/AssetBundles-Browser.html. this tool allows you to browse the contents of
 a built asset bundle.
 
-Bundles should be placed in your map folder and called either `bundle_windows2019`, `bundle_windows2021`. Although Quest
-support does not exist yet, bundles should still be built for them and be called `bundle_android2021`.
+Bundles should be placed in your map folder and called either `bundleWindows2019.vivify`, `bundleWindows2021.vivify`. Although Quest
+support does not exist yet, bundles should still be built for them and be called `bundleAndroid2021.vivify`.
 
 ```
 Map Folder
-├── bundle_windows2019
-├── bundle_windows2021
-├── bundle_android2021
+├── bundleWindows2019.vivify
+├── bundleWindows2021.vivify
+├── bundleAndroid2021.vivify
 ├── song.ogg
 ├── cover.jpg
 ├── ExpertPlusStandard.dat
