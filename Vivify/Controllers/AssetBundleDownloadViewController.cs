@@ -97,7 +97,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
 #endif
 
         // check is vivify map
-        string[] requirements = beatmapCustomData.Get<List<object>>("_requirements")?.Cgit sast<string>().ToArray() ?? [];
+        string[] requirements = beatmapCustomData.Get<List<object>>("_requirements")?.Cast<string>().ToArray() ?? [];
         if (!requirements.Contains(CAPABILITY))
         {
             return false;
