@@ -172,7 +172,7 @@ internal class CullingTextureController : CullingCameraController
         // ReSharper disable once InvertIf
         if (DepthKey != null)
         {
-            RenderTexture depthTexture = GetRenderTexture(RenderTexturesDepth, descriptor, false, false);
+            RenderTexture depthTexture = GetRenderTexture(RenderTexturesDepth, descriptor, true, false);
 
             if (depthTexture.dimension == TextureDimension.Tex2DArray)
             {
@@ -206,7 +206,11 @@ internal class CullingTextureController : CullingCameraController
 
         return;
 
-        RenderTexture GetRenderTexture(Dictionary<Camera.MonoOrStereoscopicEye, RenderTexture> dictionary, RenderTextureDescriptor renderTextureDescriptor, bool depth, bool create)
+        RenderTexture GetRenderTexture(
+            Dictionary<Camera.MonoOrStereoscopicEye, RenderTexture> dictionary,
+            RenderTextureDescriptor renderTextureDescriptor,
+            bool depth,
+            bool create)
         {
             // ReSharper disable once InvertIf
             if (!dictionary.TryGetValue(stereoActiveEye, out RenderTexture renderTexture) ||
