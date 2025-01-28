@@ -9,7 +9,7 @@ internal class MpbControllerHijacker : IHijacker<GameObject>
 {
     private readonly Transform _child;
     private readonly MaterialPropertyBlockController _materialPropertyBlockController;
-    private readonly Renderer[] _originalRenderers;
+    private readonly Renderer?[] _originalRenderers;
 #if PRE_V1_39_1
     private List<int>? _cachedNumberOfMaterialsInRenderers;
 #endif
@@ -55,9 +55,12 @@ internal class MpbControllerHijacker : IHijacker<GameObject>
 
         if (hideOriginal)
         {
-            foreach (Renderer renderer in _originalRenderers)
+            foreach (Renderer? renderer in _originalRenderers)
             {
-                renderer.enabled = false;
+                if (renderer != null)
+                {
+                    renderer.enabled = false;
+                }
             }
 
             _materialPropertyBlockController._renderers = newRenderers.ToArray();
@@ -87,9 +90,13 @@ internal class MpbControllerHijacker : IHijacker<GameObject>
             _cachedRenderers = null;
         }
 
-        foreach (Renderer renderer in _originalRenderers)
+        // other mods (looking at you, NoteCutGuide) can cause some of the original renderers to be destroyed
+        foreach (Renderer? renderer in _originalRenderers)
         {
-            renderer.enabled = true;
+            if (renderer != null)
+            {
+                renderer.enabled = true;
+            }
         }
     }
 }
