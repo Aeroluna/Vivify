@@ -229,6 +229,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         }
 #pragma warning restore CS0618
 
+        _downloadProgress = 1;
         File.WriteAllBytes(savePath, www.downloadHandler.data);
         _log.Debug($"Successfully downloaded bundle to [{savePath}]");
         _downloadFinished = true;
