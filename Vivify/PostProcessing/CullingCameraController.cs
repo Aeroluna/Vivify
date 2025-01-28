@@ -39,6 +39,11 @@ internal abstract class CullingCameraController : MonoBehaviour
         for (int i = 0; i < length; i++)
         {
             GameObject renderedObject = gameObjects[i];
+            if (renderedObject == null)
+            {
+                continue;
+            }
+
             _cachedLayers.Add((renderedObject, renderedObject.layer));
             renderedObject.layer = CULLING_LAYER;
         }
