@@ -14,6 +14,8 @@ namespace Vivify.Controllers;
 [RequireComponent(typeof(Camera))]
 internal class CameraPropertyController : MonoBehaviour
 {
+    private bool _injected;
+
     private Camera _camera = null!;
     private DepthTextureMode _cachedDepthTextureMode;
     private CameraClearFlags _cachedClearFlags;
@@ -115,6 +117,11 @@ internal class CameraPropertyController : MonoBehaviour
         SettingsManager settingsManager)
     {
         _settingsManager = settingsManager;
+        _injected = true;
+        if (isActiveAndEnabled)
+        {
+            OnEnable();
+        }
     }
 #endif
 
@@ -132,6 +139,11 @@ internal class CameraPropertyController : MonoBehaviour
 
     private void OnEnable()
     {
+        if (!_injected)
+        {
+            return;
+        }
+
         _cachedDepthTextureMode = _camera.depthTextureMode;
         _cachedClearFlags = _camera.clearFlags;
         _cachedBackgroundColor = _camera.backgroundColor;
