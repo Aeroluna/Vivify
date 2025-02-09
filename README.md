@@ -64,7 +64,7 @@ used with `#pragma vertex vert_img`.
 
 ### Creating an asset bundle
 
-Use https://github.com/Swifter1243/VivifyTemplate (COMING SOON) to create the bundle. (TODO: more instructions here)
+Use https://github.com/Swifter1243/VivifyTemplate to create the bundle. (TODO: more instructions here)
 
 (Optional) See https://docs.unity3d.com/Manual/AssetBundles-Browser.html. this tool allows you to browse the contents of
 a built asset bundle.
@@ -87,7 +87,7 @@ When referencing an asset's file path in an event, remember to write in all lowe
 Bundle Browser tool to see the path of specific assets.
 
 By default, when Vivify will check against a checksum when loading an asset bundle, but this checksum check can be
-disabled by enabling debug mode using the "-aerolunaisthebestmodder" launch parameter. You can add the checksum to the
+disabled by enabling debug mode using the `-aerolunaisthebestmodder` launch parameter. You can add the checksum to the
 map by using the `"_assetBundle"` field in the info.dat.
 
 ```js
@@ -105,21 +105,6 @@ map by using the `"_assetBundle"` field in the info.dat.
     {
   ...
 ```
-
-Current provided settings:
-
-- `"_anisotropicFiltering"`: (0 - 2) Disable, Enable, ForceEnable.
-- `"_antiAliasing"`: (0, 2, 4, 8)
-- `"_pixelLightCount"`: (int)
-- `"_realtimeReflectionProbes"`: (bool)
-- `"_shadowCascades"`: (0, 2, 4)
-- `"_shadowDistance"`: (float)
-- `"_shadowmaskMode"`: (0, 1) Shadowmask, DistanceShadowmask
-- `"_shadowNearPlaneOffset"`: (float)
-- `"_shadowProjection"`: (0, 1) CloseFit, StableFit
-- `"_shadowResolution"`: (0, 1, 2, 3) Low, Medium, High, VeryHigh.
-- `"_shadows"`: (0, 1, 2) Disable, HardOnly, All. WARNING: May cause random crashes, needs more investigation.
-- `"_softParticles"`: (bool)
 
 ## SetMaterialProperty
 
@@ -464,9 +449,9 @@ instancing shaders" at https://docs.unity3d.com/Manual/gpu-instancing-shader.htm
 - `colorNotes`:
     - `track`: `string` Only notes on this track(s) will be affected.
     - `asset`: `string` (Optional) File path to the desired prefab. Only applies to directional notes. Sets
-      properties `_Color` and `_Cutout`.
+      properties `_Color`, `_Cutout`, and `_CutoutTexOffset`.
     - `anyDirectionAsset`: `string` (Optional) Only applies to dot notes. Sets same properties as directional notes.
-    - `debrisAsset`: `string` (Optional) Applies to cut debris. Sets properties `_Cutout`, `_Color`, `_CutPlane`,
+    - `debrisAsset`: `string` (Optional) Applies to cut debris. Sets properties `_Color`, `_Cutout`, `_CutPlane`,
       and `_CutoutTexOffset`.
 - `burstSliders`:
     - `track`: `string` See above.
@@ -565,7 +550,7 @@ Current provided settings:
 
 `"xrSettings"`: https://docs.unity3d.com/ScriptReference/XR.XRSettings.html
 
-- `"useOcclusionMesh"`: (0, 1) Bool
+- `"useOcclusionMesh"`: (0, 1) Bool WARNING: Only works on 2019 versions.
 
 ```js
 // Example
