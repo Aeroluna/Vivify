@@ -148,6 +148,12 @@ internal class SaberTrailHijacker : IHijacker<FollowedSaberTrail>
                 .GetComponentsInChildren<SaberTrail>()
                 .Where(n => n != saberTrail)
                 .ToArray();
+
+            if (saberTrails.Length == 0)
+            {
+                return;
+            }
+
             HashSet<Renderer> renderers = _hijacker._originalRenderers;
             MeshRenderer[] newRenderers = saberTrails.Select(n => n._trailRenderer._meshRenderer).ToArray();
             renderers.UnionWith(newRenderers);
