@@ -23,8 +23,6 @@ internal class PostProcessingController : CullingCameraController
     private readonly List<CreateCameraData> _reusableCameraKeys = [];
     private readonly List<CreateScreenTextureData> _reusableDeclaredKeys = [];
 
-    private int? _defaultCullingMask;
-
     private SiraLog _log = null!;
     private IInstantiator _instantiator = null!;
 
