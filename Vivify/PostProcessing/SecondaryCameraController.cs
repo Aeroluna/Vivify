@@ -220,7 +220,7 @@ internal class CullingTextureController : CullingCameraController
 
                 if (depth)
                 {
-                    renderTextureDescriptor.colorFormat = RenderTextureFormat.R8;
+                    renderTextureDescriptor.colorFormat = RenderTextureFormat.RFloat;
                 }
 
                 renderTexture = new RenderTexture(renderTextureDescriptor);
