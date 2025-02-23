@@ -70,7 +70,7 @@ internal class ApplyPostProcessingData : ICustomEventCustomData
     internal ApplyPostProcessingData(CustomData customData, Dictionary<string, List<object>> pointDefinitions)
     {
         Easing = customData.GetStringToEnum<Functions?>(EASING) ?? Functions.easeLinear;
-        Duration = customData.GetRequired<float>(DURATION);
+        Duration = customData.Get<float?>(DURATION) ?? 0;
         Priority = customData.Get<int?>(PRIORITY) ?? 0;
         Source = customData.Get<string?>(SOURCE);
         Asset = customData.Get<string?>(ASSET);
