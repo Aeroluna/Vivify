@@ -26,8 +26,8 @@ Global
 		Release-1.29.1|Any CPU = Release-1.29.1|Any CPU
 		Debug-1.37.1|Any CPU = Debug-1.37.1|Any CPU
 		Release-1.37.1|Any CPU = Release-1.37.1|Any CPU
-		Release-1.40.0|Any CPU = Release-1.40.0|Any CPU
-		Debug-1.40.0|Any CPU = Debug-1.40.0|Any CPU
+		Release-1.40.3|Any CPU = Release-1.40.3|Any CPU
+		Debug-1.40.3|Any CPU = Debug-1.40.3|Any CPU
 		Debug-1.39.1|Any CPU = Debug-1.39.1|Any CPU
 		Release-1.39.1|Any CPU = Release-1.39.1|Any CPU
 	EndGlobalSection
@@ -44,10 +44,10 @@ Global
 		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.37.1|Any CPU.Build.0 = Debug-1.37.1|Any CPU
 		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.37.1|Any CPU.ActiveCfg = Release-1.37.1|Any CPU
 		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.37.1|Any CPU.Build.0 = Release-1.37.1|Any CPU
-		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.40.0|Any CPU.ActiveCfg = Release-1.40.0|Any CPU
-		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.40.0|Any CPU.Build.0 = Release-1.40.0|Any CPU
-		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.40.0|Any CPU.ActiveCfg = Debug-1.40.0|Any CPU
-		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.40.0|Any CPU.Build.0 = Debug-1.40.0|Any CPU
+		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.40.3|Any CPU.ActiveCfg = Release-1.40.3|Any CPU
+		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.40.3|Any CPU.Build.0 = Release-1.40.3|Any CPU
+		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.40.3|Any CPU.ActiveCfg = Debug-1.40.3|Any CPU
+		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.40.3|Any CPU.Build.0 = Debug-1.40.3|Any CPU
 		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.39.1|Any CPU.ActiveCfg = Debug-1.39.1|Any CPU
 		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Debug-1.39.1|Any CPU.Build.0 = Debug-1.39.1|Any CPU
 		{1A4D027F-DF68-498D-A3C7-89B997F38608}.Release-1.39.1|Any CPU.ActiveCfg = Release-1.39.1|Any CPU
