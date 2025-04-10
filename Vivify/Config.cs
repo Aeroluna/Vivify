@@ -13,5 +13,5 @@ public class Config
 
     public bool AllowDownload { get; set; }
 
-    public string BundleRepository { get; set; } = "https://repo.totalbs.dev/api/v1/bundle/";
+    public string BundleRepository { get; set; } = "https://repo.totalbs.dev/api/v1/bundles/";
 }
