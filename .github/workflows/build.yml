@@ -30,3 +30,12 @@ jobs:
     with:
       project-path: Vivify/Vivify.csproj
     secrets: inherit
+
+  upload:
+    name: Upload
+    needs: build
+    uses: Aeroluna/workflows/.github/workflows/bs-upload-to-beatmods.yml@main
+    with:
+      mods: '{"CustomJSONData": 129, "Heck": 338, "Vivify": 378}'
+    secrets:
+      token: ${{ secrets.PAT }}
