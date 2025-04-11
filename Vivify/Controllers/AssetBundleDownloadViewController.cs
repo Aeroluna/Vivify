@@ -119,22 +119,34 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
             return false;
         }
 
-        _log.Error($"[{path}] not found, attempting to download remotely");
-        uint assetBundleChecksum =
-            levelCustomData.GetRequired<CustomData>(ASSET_BUNDLE).GetRequired<uint>(BUNDLE_CHECKSUM);
-        _doAbort = false;
-        _downloadFinished = false;
-        if (_config.AllowDownload)
+        uint? assetBundleChecksum =
+            levelCustomData.Get<CustomData>(ASSET_BUNDLE)?.Get<uint?>(BUNDLE_CHECKSUM);
+
+        if (assetBundleChecksum == null)
         {
-            _assetDownloader.StartCoroutine(
-                DownloadAndSave(
-                    path,
-                    assetBundleChecksum));
+            _lastError =
+                $"This maps is missing required assets for your game version.\n" +
+                $"Please contact the mapper to update their map to include the assets.";
+            _newView = View.Error;
         }
         else
         {
-            _downloadPath = path;
-            _downloadChecksum = assetBundleChecksum;
+            _log.Error($"[{path}] not found, attempting to download remotely");
+            uint checksum = assetBundleChecksum.Value;
+            _doAbort = false;
+            _downloadFinished = false;
+            if (_config.AllowDownload)
+            {
+                _assetDownloader.StartCoroutine(
+                    DownloadAndSave(
+                        path,
+                        checksum));
+            }
+            else
+            {
+                _downloadPath = path;
+                _downloadChecksum = checksum;
+            }
         }
 
         return true;
