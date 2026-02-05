@@ -111,7 +111,7 @@ internal class NotePrefabManager : IDisposable
             data.Track,
             prefabDictionary,
             noteController,
-#if LATEST
+#if !PRE_V1_40_8
             noteController._noteMovement._floorMovement._beatTime);
 #else
             noteController._noteMovement._floorMovement.startTime);
@@ -191,7 +191,7 @@ internal class NotePrefabManager : IDisposable
             data.Track,
             prefabDictionary,
             noteController,
-#if LATEST
+#if !PRE_V1_40_8
             noteController._noteMovement._floorMovement._beatTime);
 #else
             noteController._noteMovement._floorMovement.startTime);

@@ -1,0 +1,13 @@
+name: Upload
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upload:
+    name: Upload
+    uses: Aeroluna/workflows/.github/workflows/bs-upload-release-to-beatmods.yml@main
+    with:
+      mods: '{"CustomJSONData": 129, "Heck": 338, "Vivify": 378}'
+    secrets:
+      token: ${{ secrets.PAT }}

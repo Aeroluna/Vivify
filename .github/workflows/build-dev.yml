@@ -1,10 +1,10 @@
-name: Build
+name: Build Dev
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "dev" ]
     paths:
-    - .github/workflows/build.yml
+    - .github/workflows/build-dev.yml
     - Vivify/**
     - Vivify.sln
 
@@ -19,14 +19,4 @@ jobs:
       project-path: Vivify/Vivify.csproj
       game-version: ${{ matrix.game-version }}
       additional-sources: '["Aeroluna/Heck", "Aeroluna/CustomJSONData"]'
-    secrets: inherit
-
-  create_release:
-    name: Create Release
-    needs: build
-    permissions:
-      contents: write
-    uses: Aeroluna/workflows/.github/workflows/bs-create-release-from-project.yml@main
-    with:
-      project-path: Vivify/Vivify.csproj
     secrets: inherit

@@ -5,6 +5,11 @@ using SiraUtil.Logging;
 using UnityEngine;
 using UnityEngine.Video;
 using Zenject;
+#if LATEST
+using AudioState = IAudioTimeSource;
+#else
+using AudioState = AudioTimeSyncController;
+#endif
 
 namespace Vivify.Controllers.Sync;
 
@@ -92,16 +97,16 @@ internal class VideoPlayerSyncController : MonoBehaviour, ISync
 
         switch (_audioTimeSyncController.state)
         {
-            case AudioTimeSyncController.State.Playing:
+            case AudioState.State.Playing:
                 ResyncTime();
                 _videoPlayer.Play();
                 break;
 
-            case AudioTimeSyncController.State.Paused:
+            case AudioState.State.Paused:
                 _videoPlayer.Pause();
                 break;
 
-            case AudioTimeSyncController.State.Stopped:
+            case AudioState.State.Stopped:
                 _videoPlayer.Stop();
                 break;
 

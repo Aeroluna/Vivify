@@ -226,7 +226,8 @@ internal class BeatmapObjectPrefabManager : IDisposable
                 return null;
             }
 
-            _trailPools[(assetName, trailProperties)] = trailPool = new TrailPool(material, trailProperties);
+            _trailPools[(assetName, trailProperties)] =
+                trailPool = new TrailPool(material, trailProperties, _instantiator);
         }
 
         return trailPool;

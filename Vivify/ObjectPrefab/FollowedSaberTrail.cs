@@ -19,7 +19,15 @@ internal class FollowedSaberTrail : SaberTrail
     {
         if (_trailRenderer == null)
         {
+#if LATEST
+            _trailRenderer = _container.InstantiatePrefabForComponentAt<SaberTrailRenderer>(
+                followed._trailRendererPrefab,
+                Vector3.zero,
+                Quaternion.identity,
+                null);
+#else
             _trailRenderer = Instantiate(followed._trailRendererPrefab, Vector3.zero, Quaternion.identity);
+#endif
             _trailRenderer.transform.SetParent(followed._trailRenderer.transform.parent);
             _trailRenderer._meshRenderer.material = Material;
         }
@@ -40,9 +48,15 @@ internal class FollowedSaberTrail : SaberTrail
         _granularity = trailProperties.Granularity ?? 60;
     }
 
+#if LATEST
+    private new void Start()
+    {
+    }
+#else
     private new void Awake()
     {
     }
+#endif
 
     private void Update()
     {

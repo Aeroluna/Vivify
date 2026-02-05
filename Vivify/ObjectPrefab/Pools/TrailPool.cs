@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
+using Zenject;
 using Object = UnityEngine.Object;
 
 namespace Vivify.ObjectPrefab.Pools;
@@ -11,11 +12,13 @@ internal class TrailPool : IPrefabPool<FollowedSaberTrail>
     private readonly Stack<FollowedSaberTrail> _inactive = new();
     private readonly Material _material;
     private readonly TrailProperties _trailProperties;
+    private readonly IInstantiator _instantiator;
 
-    internal TrailPool(Material material, TrailProperties trailProperties)
+    internal TrailPool(Material material, TrailProperties trailProperties, IInstantiator instantiator)
     {
         _material = material;
         _trailProperties = trailProperties;
+        _instantiator = instantiator;
     }
 
     public void Despawn(Component component)
@@ -48,7 +51,7 @@ internal class TrailPool : IPrefabPool<FollowedSaberTrail>
         if (_inactive.Count == 0)
         {
             GameObject gameObject = new("FollowedSaberTrail");
-            spawned = gameObject.AddComponent<FollowedSaberTrail>();
+            spawned = _instantiator.InstantiateComponent<FollowedSaberTrail>(gameObject);
             spawned.Material = _material;
         }
         else
