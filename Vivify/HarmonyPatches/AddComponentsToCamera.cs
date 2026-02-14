@@ -37,6 +37,18 @@ internal class AddComponentsToCamera : IAffinity
         SafeAddComponent<CameraPropertyController>(gameObject);
     }
 
+    [AffinityPostfix]
+    [AffinityPatch(typeof(MirrorRendererSO), nameof(MirrorRendererSO.CreateOrUpdateMirrorCamera))]
+    private void AddMirrorComponents(MirrorRendererSO __instance)
+    {
+        GameObject gameObject = __instance._mirrorCamera.gameObject;
+#if !V1_29_1
+        SafeAddComponent<MultipassKeywordController>(gameObject);
+#endif
+        SafeAddComponent<PostProcessingController>(gameObject); // this MIGHT be dicey
+        SafeAddComponent<CameraPropertyController>(gameObject);
+    }
+
     [AffinityPrefix]
     [AffinityPatch(typeof(ImageEffectController), nameof(ImageEffectController.OnRenderImage))]
     private bool StopRenderImage(ImageEffectController __instance, RenderTexture src, RenderTexture dest)
