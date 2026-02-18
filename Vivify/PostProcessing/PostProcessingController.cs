@@ -18,7 +18,7 @@ internal class PostProcessingController : CullingCameraController
     private readonly Dictionary<CreateScreenTextureData, string> _activeDeclaredTextures = new();
     private readonly Dictionary<string, CullingCameraController> _cullingCameraControllers = new();
     private readonly Dictionary<string, RenderTextureHolder> _declaredTextures = new();
-    private readonly Stack<CullingTextureController> _disabledCullingCameraControllers = new();
+    private readonly Stack<SecondaryCameraController> _disabledCullingCameraControllers = new();
 
     private readonly List<CreateCameraData> _reusableCameraKeys = [];
     private readonly List<CreateScreenTextureData> _reusableDeclaredKeys = [];
@@ -55,10 +55,10 @@ internal class PostProcessingController : CullingCameraController
             }
 
             if (_cullingCameraControllers.TryGetValue(id, out CullingCameraController cameraController) &&
-                cameraController is CullingTextureController cullingTextureController2)
+                cameraController is SecondaryCameraController secondaryCameraController2)
             {
-                cullingTextureController2.gameObject.SetActive(false);
-                _disabledCullingCameraControllers.Push(cullingTextureController2);
+                secondaryCameraController2.gameObject.SetActive(false);
+                _disabledCullingCameraControllers.Push(secondaryCameraController2);
             }
 
             _cullingCameraControllers.Remove(id);
@@ -81,7 +81,7 @@ internal class PostProcessingController : CullingCameraController
 
             _activeCreateCameraDatas[cameraData] = textureName;
 
-            CullingTextureController finalController = _disabledCullingCameraControllers.Count > 0
+            SecondaryCameraController finalController = _disabledCullingCameraControllers.Count > 0
                 ? _disabledCullingCameraControllers.Pop()
                 : CreateCamera();
 
@@ -177,31 +177,31 @@ internal class PostProcessingController : CullingCameraController
 
         foreach (CullingCameraController controller in _cullingCameraControllers.Values)
         {
-            if (controller is not CullingTextureController cullingTextureController)
+            if (controller is not SecondaryCameraController secondaryCameraController)
             {
                 continue;
             }
 
-            Camera camera = cullingTextureController.Camera;
-            if (camera.enabled == false)
+            Camera camera = secondaryCameraController.Camera;
+            if (!camera.enabled)
             {
                 camera.Render();
             }
 
-            if (cullingTextureController.Key != null &&
-                cullingTextureController.RenderTextures.TryGetValue(
+            if (secondaryCameraController.Key != null &&
+                secondaryCameraController.RenderTextures.TryGetValue(
                     stereoActiveEye,
                     out RenderTexture colorTexture))
             {
-                Shader.SetGlobalTexture(cullingTextureController.Key.Value, colorTexture);
+                Shader.SetGlobalTexture(secondaryCameraController.Key.Value, colorTexture);
             }
 
-            if (cullingTextureController.DepthKey != null &&
-                cullingTextureController.RenderTexturesDepth.TryGetValue(
+            if (secondaryCameraController.DepthKey != null &&
+                secondaryCameraController.RenderTexturesDepth.TryGetValue(
                     stereoActiveEye,
                     out RenderTexture depthTexture))
             {
-                Shader.SetGlobalTexture(cullingTextureController.DepthKey.Value, depthTexture);
+                Shader.SetGlobalTexture(secondaryCameraController.DepthKey.Value, depthTexture);
             }
         }
 
@@ -350,11 +350,11 @@ internal class PostProcessingController : CullingCameraController
             else if (_cullingCameraControllers.TryGetValue(
                          materialData.Source,
                          out CullingCameraController cullingCameraController) &&
-                     cullingCameraController is CullingTextureController cullingTextureController)
+                     cullingCameraController is SecondaryCameraController secondaryCameraController)
             {
                 foreach (string materialDataTarget in materialData.Targets)
                 {
-                    cullingTextureController.RenderTextures.TryGetValue(stereoActiveEye, out RenderTexture? source);
+                    secondaryCameraController.RenderTextures.TryGetValue(stereoActiveEye, out RenderTexture? source);
                     if (materialDataTarget == CAMERA_TARGET)
                     {
                         Blit(source, main, material, materialData.Pass);
@@ -399,15 +399,15 @@ internal class PostProcessingController : CullingCameraController
         RenderTexture.ReleaseTemporary(main);
     }
 
-    private CullingTextureController CreateCamera()
+    private SecondaryCameraController CreateCamera()
     {
         GameObject newObject = new("VivifyCamera");
         ////newObject.SetActive(false);
         newObject.transform.SetParent(transform, false);
         newObject.AddComponent<Camera>();
         CopyComponent<BloomPrePass, LateBloomPrePass>(gameObject.GetComponent<BloomPrePass>(), newObject);
-        CullingTextureController result =
-            _instantiator.InstantiateComponent<CullingTextureController>(newObject, [this]);
+        SecondaryCameraController result =
+            _instantiator.InstantiateComponent<SecondaryCameraController>(newObject, [this]);
         return result;
     }
 
@@ -439,7 +439,7 @@ internal class PostProcessingController : CullingCameraController
         foreach (CullingCameraController cullingCameraController in _cullingCameraControllers.Values.Concat(
                      _disabledCullingCameraControllers))
         {
-            if (cullingCameraController is CullingTextureController)
+            if (cullingCameraController is SecondaryCameraController)
             {
                 Destroy(cullingCameraController.gameObject);
             }

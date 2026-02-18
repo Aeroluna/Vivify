@@ -18,7 +18,7 @@ namespace Vivify.PostProcessing;
 // https://forum.unity.com/threads/how-to-create-stereo-rendertextures-and-cameras.925175/#post-6968408
 // also for some reason trying to manually force a camera to render with Camera.Render() causes it to not write to the right eye
 // so we have a camera for each culling mask
-internal class CullingTextureController : CullingCameraController
+internal class SecondaryCameraController : CullingCameraController
 {
     private static readonly int _arraySliceIndex = Shader.PropertyToID("_ArraySliceIndex");
 
