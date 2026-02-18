@@ -5,7 +5,7 @@ using static Vivify.VivifyController;
 
 namespace Vivify.PostProcessing;
 
-internal abstract class CullingCameraController : MonoBehaviour
+internal class CullingCameraController : MonoBehaviour
 {
     private readonly HashSet<(GameObject, int)> _cachedLayers = [];
 
@@ -63,7 +63,7 @@ internal abstract class CullingCameraController : MonoBehaviour
         }
 
         // reset renderer layers
-        foreach ((GameObject? cachedObject, int layer) in _cachedLayers)
+        foreach ((GameObject cachedObject, int layer) in _cachedLayers)
         {
             cachedObject.layer = layer;
         }

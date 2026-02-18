@@ -20,7 +20,7 @@ internal class CameraPropertyController : MonoBehaviour
     private Color _cachedBackgroundColor;
 
     private CullingCameraController _cullingCameraController = null!;
-    private BloomPrePass _bloomPrePass = null!;
+    private BloomPrePass? _bloomPrePass;
 #if !PRE_V1_40_8
     private SettingsManager _settingsManager = null!;
     private bool _injected;
@@ -89,7 +89,7 @@ internal class CameraPropertyController : MonoBehaviour
 
     internal bool? BloomPrePass
     {
-        set => _bloomPrePass.enabled = value ?? true;
+        set => _bloomPrePass?.enabled = value ?? true;
     }
 
     internal bool? MainEffect
