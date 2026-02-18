@@ -45,7 +45,6 @@ internal class AddComponentsToCamera : IAffinity
 #if !V1_29_1
         SafeAddComponent<MultipassKeywordController>(gameObject);
 #endif
-        SafeAddComponent<PostProcessingController>(gameObject); // this MIGHT be dicey
         SafeAddComponent<CameraPropertyController>(gameObject);
     }
 
