@@ -125,7 +125,7 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         if (assetBundleChecksum == null)
         {
             _lastError =
-                $"This maps is missing required assets for your game version.\n" +
+                $"This map is missing required assets for your game version.\n" +
                 $"Please contact the mapper to update their map to include the assets.";
             _newView = View.Error;
         }
