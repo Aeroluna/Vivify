@@ -94,9 +94,58 @@ internal class AssetBundleManager : IDisposable
         }
 
         string[] assetnames = _mainBundle.GetAllAssetNames();
+        TMPro.TMP_FontAsset fallbackFont = null;
+
         foreach (string name in assetnames)
         {
             Object asset = _mainBundle.LoadAsset(name);
+
+            // Sanitize the raw prefab asset and inject a fallback font if broken
+            if (asset is GameObject gameObject)
+            {
+                TMPro.TMP_Text[] textComponents = gameObject.GetComponentsInChildren<TMPro.TMP_Text>(true);
+                foreach (TMPro.TMP_Text textComponent in textComponents)
+                {
+                    if (textComponent.font == null || textComponent.fontSharedMaterial == null || textComponent.font.material == null)
+                    {
+                        if (fallbackFont == null)
+                        {
+                            TMPro.TMP_FontAsset[] fonts = Resources.FindObjectsOfTypeAll<TMPro.TMP_FontAsset>();
+                            foreach (TMPro.TMP_FontAsset f in fonts)
+                            {
+                                if (f.name == "Teko-Medium SDF")
+                                {
+                                    fallbackFont = f;
+                                    break;
+                                }
+                            }
+                            if (fallbackFont == null && fonts.Length > 0)
+                            {
+                                fallbackFont = fonts[0];
+                            }
+                        }
+
+                        if (fallbackFont != null)
+                        {
+                            _log.Warn($"[Vivify] Repairing broken TMPro component on raw prefab: {name} with fallback font.");
+                            textComponent.font = fallbackFont;
+                            textComponent.fontSharedMaterial = fallbackFont.material;
+
+                            textComponent.textWrappingMode = TMPro.TextWrappingModes.Normal;
+                            textComponent.overflowMode = TMPro.TextOverflowModes.Overflow;
+
+                            textComponent.SetAllDirty();
+                            textComponent.ForceMeshUpdate(true);
+                        }
+                        else
+                        {
+                            _log.Warn($"[Vivify] Stripping broken TMPro component from raw asset bundle prefab: {name} (No fallback available)");
+                            Object.DestroyImmediate(textComponent, true);
+                        }
+                    }
+                }
+            }
+
             _assets.Add(name, asset);
         }
 
