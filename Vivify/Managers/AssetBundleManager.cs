@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using CustomJSONData.CustomBeatmap;
 using Heck;
 using JetBrains.Annotations;
@@ -104,10 +105,50 @@ internal class AssetBundleManager : IDisposable
             return;
         }
 
-        string[] assetnames = _mainBundle.GetAllAssetNames();
-        foreach (string name in assetnames)
+        string[] assetNames = _mainBundle.GetAllAssetNames();
+        TMPro.TMP_FontAsset? fallbackFont = null;
+
+        foreach (string name in assetNames)
         {
             Object asset = _mainBundle.LoadAsset(name);
+
+            // Sanitize the raw prefab asset and inject a fallback font if broken
+            if (asset is GameObject gameObject)
+            {
+                TMPro.TMP_Text[] textComponents = gameObject.GetComponentsInChildren<TMPro.TMP_Text>(true);
+                foreach (TMPro.TMP_Text textComponent in textComponents)
+                {
+                    if (textComponent.font != null &&
+                        textComponent.fontSharedMaterial != null &&
+                        textComponent.font.material != null)
+                    {
+                        continue;
+                    }
+
+                    if (fallbackFont == null)
+                    {
+                        TMPro.TMP_FontAsset[] fonts = Resources.FindObjectsOfTypeAll<TMPro.TMP_FontAsset>();
+                        fallbackFont = fonts.FirstOrDefault(n => n.name == "Teko-Medium SDF");
+                        if (fallbackFont == null && fonts.Length > 0)
+                        {
+                            fallbackFont = fonts[0];
+                        }
+                    }
+
+                    if (fallbackFont == null)
+                    {
+                        throw new InvalidOperationException("Could not find fallback font.");
+                    }
+
+                    _log.Warn($"Repairing broken TMPro component on prefab: [{name}]");
+                    textComponent.font = fallbackFont;
+                    textComponent.fontSharedMaterial = fallbackFont.material;
+
+                    textComponent.SetAllDirty();
+                    textComponent.ForceMeshUpdate(true);
+                }
+            }
+
             _assets.Add(name, asset);
         }
 
