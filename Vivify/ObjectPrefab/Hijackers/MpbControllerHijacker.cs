@@ -2,6 +2,7 @@
 using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
+using Zenject;
 
 namespace Vivify.ObjectPrefab.Hijackers;
 
@@ -16,7 +17,7 @@ internal class MpbControllerHijacker : IHijacker<GameObject>
     private Renderer[]? _cachedRenderers;
 
     [UsedImplicitly]
-    internal MpbControllerHijacker(Component component)
+    private MpbControllerHijacker(TickableManager tickableManager, Component component)
     {
         _originalRenderers = component.GetComponentsInChildren<Renderer>();
         _child = component.transform.GetChild(0);
@@ -26,6 +27,10 @@ internal class MpbControllerHijacker : IHijacker<GameObject>
         {
             _materialPropertyBlockController =
                 component.transform.GetChild(0).GetComponent<MaterialPropertyBlockController>();
+            tickableManager.Add(
+                new NoteMaterialProperties(
+                    _materialPropertyBlockController,
+                    component.GetComponentInChildren<DisappearingArrowController>()._arrowCutoutEffect));
         }
         else
         {
