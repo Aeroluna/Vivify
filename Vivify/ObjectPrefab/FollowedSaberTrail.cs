@@ -19,7 +19,7 @@ internal class FollowedSaberTrail : SaberTrail
     {
         if (_trailRenderer == null)
         {
-#if LATEST
+#if !PRE_V1_44_1
             _trailRenderer = _container.InstantiatePrefabForComponentAt<SaberTrailRenderer>(
                 followed._trailRendererPrefab,
                 Vector3.zero,
@@ -52,7 +52,7 @@ internal class FollowedSaberTrail : SaberTrail
         _granularity = trailProperties.Granularity ?? 60;
     }
 
-#if LATEST
+#if !PRE_V1_44_1
     private new void Start()
     {
     }

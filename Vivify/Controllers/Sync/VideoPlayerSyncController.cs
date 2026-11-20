@@ -5,7 +5,7 @@ using SiraUtil.Logging;
 using UnityEngine;
 using UnityEngine.Video;
 using Zenject;
-#if LATEST
+#if !PRE_V1_44_1
 using AudioState = IAudioTimeSource;
 #else
 using AudioState = AudioTimeSyncController;

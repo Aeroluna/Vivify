@@ -13,4 +13,8 @@
   <vertical id='error' anchor-max-y='0.8' child-expand-height='false' child-control-height='false'>
     <text text='error' id='errortext' align='Center' font-size='5' size-delta-y='20'/>
   </vertical>
+  <vertical id='warn' anchor-max-y='0.8' child-expand-height='false' child-control-height='false'>
+    <text text='This map was built for a different game version.&#xA;There may be minor differences but should still be fully playable.' align='Center' font-size='5' size-delta-y='20'/>
+    <primary-button text='play anyways' on-click='warn-accept-click' preferred-height='10' preferred-width='36'/>
+  </vertical>
 </bg>

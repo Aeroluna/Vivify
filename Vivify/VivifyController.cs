@@ -72,21 +72,52 @@ public static class VivifyController
 
     internal const string ASSET_BUNDLE = "_assetBundle";
 
-    internal const string BUNDLE_FILE = $"bundle{BUNDLE_SUFFIX}.vivify";
-
-#if !V1_29_1
-    internal const string BUNDLE_SUFFIX = "Windows2021";
-    internal const string BUNDLE_CHECKSUM = "_windows2021";
-#else
-    internal const string BUNDLE_SUFFIX = "Windows2019";
-    internal const string BUNDLE_CHECKSUM = "_windows2019";
-#endif
-
     internal const string CAPABILITY = "Vivify";
     internal const string ID = "Vivify";
     internal const string HARMONY_ID = "aeroluna.Vivify";
 
     internal const int CULLING_LAYER = 22;
+
+    internal const string BUNDLE_FILE = $"bundle{BUNDLE_SUFFIX}.vivify";
+
+#if LATEST
+    internal const string BUNDLE_SUFFIX = "Windows6000_3";
+    internal const string BUNDLE_CHECKSUM = "_windows6000_3";
+
+    internal static (string File, string Checksum)[] Fallback { get; } = [];
+#elif V1_44_1
+    internal const string BUNDLE_SUFFIX = "Windows6000_0";
+    internal const string BUNDLE_CHECKSUM = "_windows6000_0";
+
+    internal static (string File, string Checksum)[] Fallback { get; } =
+        [
+            ("bundleWindows2021.vivify", "_windows2021"),
+            ("bundleWindows2022.vivify", "_windows2022")
+        ];
+#elif V1_40_8
+    internal const string BUNDLE_SUFFIX = "Windows2022";
+    internal const string BUNDLE_CHECKSUM = "_windows2022";
+
+    internal static (string File, string Checksum)[] Fallback { get; } =
+        [
+            ("bundleWindows2021.vivify", "_windows2021"),
+            ("bundleWindows6000_0.vivify", "_windows6000_0")
+        ];
+#elif !V1_29_1
+    internal const string BUNDLE_SUFFIX = "Windows2021";
+    internal const string BUNDLE_CHECKSUM = "_windows2021";
+
+    internal static (string File, string Checksum)[] Fallback { get; } =
+        [
+            ("bundleWindows2022.vivify", "_windows2022"),
+            ("bundleWindows6000_0.vivify", "_windows6000_0")
+        ];
+#else
+    internal const string BUNDLE_SUFFIX = "Windows2019";
+    internal const string BUNDLE_CHECKSUM = "_windows2019";
+
+    internal static (string File, string Checksum)[] Fallback { get; } = [];
+#endif
 
     internal static Capability Capability { get; } = new(CAPABILITY);
 }

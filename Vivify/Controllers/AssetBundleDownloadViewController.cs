@@ -62,6 +62,13 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
     [UIComponent("tos")]
     private VerticalLayoutGroup _tosGroup = null!;
 
+#if !V1_29_1
+    private bool _showWarn;
+
+    [UIComponent("warn")]
+    private VerticalLayoutGroup _warn = null!;
+#endif
+
     public event Action? Finished;
 
     private enum View
@@ -69,15 +76,19 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         None,
         Tos,
         Downloading,
-        Error
+        Error,
+        Warn
     }
 
     public override string ResourceName => "Vivify.Resources.AssetBundleDownloading.bsml";
 
     public bool Init(StartStandardLevelParameters standardLevelParameters)
     {
+        _showWarn = false;
+
 #if !PRE_V1_37_1
-        if (standardLevelParameters.BeatmapLevel.previewMediaData is not FileSystemPreviewMediaData fileSystemPreviewMediaData)
+        if (standardLevelParameters.BeatmapLevel.previewMediaData is not FileSystemPreviewMediaData
+            fileSystemPreviewMediaData)
         {
             return false;
         }
@@ -105,22 +116,47 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
 
         // check if bundle already downloaded
 #if !PRE_V1_37_1
-        string path =
-            Path.Combine(
-                Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!,
-                BUNDLE_FILE);
+        string directory = Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!;
 #else
-        string path = Path.Combine(
-            ((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath,
-            BUNDLE_FILE);
+        string directory = ((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath;
 #endif
+        string path = Path.Combine(directory, BUNDLE_FILE);
+
         if (File.Exists(path))
         {
             return false;
         }
 
-        uint? assetBundleChecksum =
-            levelCustomData.Get<CustomData>(ASSET_BUNDLE)?.Get<uint?>(BUNDLE_CHECKSUM);
+        foreach ((string file, string _) in Fallback)
+        {
+            if (!File.Exists(Path.Combine(directory, file)))
+            {
+                continue;
+            }
+
+            _showWarn = true;
+            _newView = View.Warn;
+            return true;
+        }
+
+        CustomData? assetBundleData = levelCustomData.Get<CustomData>(ASSET_BUNDLE);
+        uint? assetBundleChecksum = assetBundleData?.Get<uint?>(BUNDLE_CHECKSUM);
+
+        if (assetBundleChecksum == null)
+        {
+            foreach ((string file, string checksum) in Fallback)
+            {
+                assetBundleChecksum = assetBundleData?.Get<uint?>(checksum);
+                if (assetBundleChecksum == null)
+                {
+                    continue;
+                }
+
+                path = Path.Combine(directory, file);
+                _showWarn = true;
+                break;
+            }
+        }
 
         if (assetBundleChecksum == null)
         {
@@ -262,6 +298,13 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
     }
 
     [UsedImplicitly]
+    [UIAction("warn-accept-click")]
+    private void OnWarnAcceptClick()
+    {
+        Finished?.Invoke();
+    }
+
+    [UsedImplicitly]
     private void OnEarlyDismiss()
     {
         _doAbort = true;
@@ -277,6 +320,10 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
         if (!_downloadFinished)
         {
             _assetDownloader.StartCoroutine(WaitForDownload());
+        }
+        else if (_showWarn)
+        {
+            _newView = View.Warn;
         }
         else
         {
@@ -318,19 +365,29 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
                     _tosGroup.gameObject.SetActive(true);
                     _downloadingGroup.gameObject.SetActive(false);
                     _error.gameObject.SetActive(false);
+                    _warn.gameObject.SetActive(false);
                     break;
 
                 case View.Downloading:
                     _tosGroup.gameObject.SetActive(false);
                     _downloadingGroup.gameObject.SetActive(true);
                     _error.gameObject.SetActive(false);
+                    _warn.gameObject.SetActive(false);
                     break;
 
                 case View.Error:
                     _tosGroup.gameObject.SetActive(false);
                     _downloadingGroup.gameObject.SetActive(false);
                     _error.gameObject.SetActive(true);
+                    _warn.gameObject.SetActive(false);
                     _errorText.text = _lastError;
+                    break;
+
+                case View.Warn:
+                    _tosGroup.gameObject.SetActive(false);
+                    _downloadingGroup.gameObject.SetActive(false);
+                    _error.gameObject.SetActive(false);
+                    _warn.gameObject.SetActive(true);
                     break;
             }
         }
@@ -352,7 +409,14 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
             yield return null;
         }
 
-        Finished?.Invoke();
+        if (_showWarn)
+        {
+            _newView = View.Warn;
+        }
+        else
+        {
+            Finished?.Invoke();
+        }
     }
 
     internal class AssetDownloader : MonoBehaviour;

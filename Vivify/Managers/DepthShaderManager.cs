@@ -71,7 +71,7 @@ internal class DepthShaderManager : IInitializable
         Task getDepthBlitArraySlice = LoadAssetAsync<Material>(bundle, "assets/depthblitarrayslice.mat")
             .ContinueWith(n => DepthArrayMaterial = n.Result);
         await Task.WhenAll(getDepthBlit, getDepthBlitArraySlice);
-#if LATEST
+#if !PRE_V1_44_1
         await bundle.UnloadAsync(false);
 #elif V1_29_1
         bundle.Unload(false);

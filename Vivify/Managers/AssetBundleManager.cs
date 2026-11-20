@@ -54,15 +54,26 @@ internal class AssetBundleManager : IDisposable
 
         _log = log;
 
+        // check if bundle already downloaded
 #if !PRE_V1_37_1
-        string path = Path.Combine(
-            Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!,
-            BUNDLE_FILE);
+        string directory = Path.GetDirectoryName(fileSystemPreviewMediaData._previewAudioClipPath)!;
 #else
-        string path = Path.Combine(
-            ((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath,
-            BUNDLE_FILE);
+        string directory = ((CustomBeatmapLevel)customDifficultyBeatmap.level).customLevelPath;
 #endif
+        string path = Path.Combine(directory, BUNDLE_FILE);
+
+        if (!File.Exists(path))
+        {
+            foreach ((string file, string _) in Fallback)
+            {
+                path = Path.Combine(directory, file);
+                if (File.Exists(path))
+                {
+                    break;
+                }
+            }
+        }
+
         if (!File.Exists(path))
         {
             _log.Error($"[{BUNDLE_FILE}] not found");
