@@ -89,13 +89,7 @@ internal class CameraPropertyController : MonoBehaviour
 
     internal bool? BloomPrePass
     {
-        set
-        {
-            if (_bloomPrePass != null)
-            {
-                _bloomPrePass.enabled = value ?? true;
-            }
-        }
+        set => _bloomPrePass?.enabled = value ?? true;
     }
 
     internal bool? MainEffect

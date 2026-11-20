@@ -39,11 +39,7 @@ internal class SaberTrailHijacker : IHijacker<FollowedSaberTrail>
             Color color = colorManager.ColorForSaberType(saber.saberType);
             saberTrail.Setup(color, saber._movementData);
             saberTrail.enabled = true;
-
-            if (saberTrail._trailRenderer != null && saberTrail._trailRenderer._meshRenderer != null)
-            {
-                saberTrail._trailRenderer._meshRenderer.enabled = false;
-            }
+            saberTrail._trailRenderer?._meshRenderer.enabled = false;
         }
         else
         {
