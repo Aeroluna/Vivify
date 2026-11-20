@@ -62,12 +62,10 @@ internal class AssetBundleDownloadViewController : BSMLResourceViewController, I
     [UIComponent("tos")]
     private VerticalLayoutGroup _tosGroup = null!;
 
-#if !V1_29_1
     private bool _showWarn;
 
     [UIComponent("warn")]
     private VerticalLayoutGroup _warn = null!;
-#endif
 
     public event Action? Finished;
 
