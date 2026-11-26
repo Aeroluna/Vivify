@@ -15,6 +15,8 @@ namespace Vivify.Managers;
 
 internal class AssetBundleManager : IDisposable
 {
+    private static readonly int _mainTex = Shader.PropertyToID("_MainTex");
+
     private readonly Dictionary<string, Object> _assets = new();
     private readonly SiraLog _log;
     private readonly AssetBundle? _mainBundle;
@@ -123,6 +125,32 @@ internal class AssetBundleManager : IDisposable
                         textComponent.font.material != null)
                     {
                         continue;
+                    }
+
+                    // bundles built with older TextMesh Pro serialize the font asset's material as "material",
+                    // newer versions read "m_Material" so it loads as null, but the material is still loaded with the bundle
+                    TMPro.TMP_FontAsset? font = textComponent.font;
+                    if (font != null && font.material == null)
+                    {
+                        Texture? atlas = font.atlasTexture;
+                        Material? fontMaterial = atlas == null
+                            ? null
+                            : Resources.FindObjectsOfTypeAll<Material>()
+                                .Where(n => n.HasProperty(_mainTex) && n.GetTexture(_mainTex) == atlas)
+                                .OrderByDescending(n => n.name.EndsWith("Atlas Material"))
+                                .FirstOrDefault();
+                        if (fontMaterial != null)
+                        {
+                            _log.Debug($"Restored material [{fontMaterial.name}] for font [{font.name}]");
+                            font.material = fontMaterial;
+                            if (textComponent.fontSharedMaterial == null)
+                            {
+                                textComponent.fontSharedMaterial = fontMaterial;
+                            }
+
+                            textComponent.SetAllDirty();
+                            continue;
+                        }
                     }
 
                     if (fallbackFont == null)
