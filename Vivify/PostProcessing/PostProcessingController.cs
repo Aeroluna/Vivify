@@ -160,26 +160,67 @@ internal class PostProcessingController : CullingCameraController
         }
     }
 
+    private static void ExecuteAndDispose(CommandBuffer command)
+    {
+        Graphics.ExecuteCommandBuffer(command);
+        command.Dispose();
+    }
+
     private void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
         RenderTextureDescriptor descriptor = src.descriptor;
         descriptor.msaaSamples = 1;
         _cachedMainDescriptor = descriptor;
         CreateDeclaredTextures(descriptor);
-        RenderTexture temp = RenderTexture.GetTemporary(descriptor);
-        Graphics.ExecuteCommandBuffer(RenderImage(descriptor, src, temp, Effects[PostProcessingOrder.BeforeMainEffect]));
 
+        List<MaterialData> beforeEffects = Effects[PostProcessingOrder.BeforeMainEffect];
+        List<MaterialData> afterEffects = Effects[PostProcessingOrder.AfterMainEffect];
         ImageEffectController.RenderImageCallback? callback = _imageEffectController._renderImageCallback;
-        if (callback != null && _imageEffectController.isActiveAndEnabled)
+        bool hasMainEffect = callback != null && _imageEffectController.isActiveAndEnabled;
+        bool hasBefore = beforeEffects.Count > 0;
+        bool hasAfter = afterEffects.Count > 0;
+
+        // each stage renders straight into dst when nothing follows it,
+        // so a frame without any blits costs no extra full screen copies
+        RenderTexture current = src;
+        RenderTexture? temp = null;
+
+        if (hasBefore)
         {
-            RenderTexture temp2 = RenderTexture.GetTemporary(descriptor);
-            callback(temp, temp2);
-            RenderTexture.ReleaseTemporary(temp);
-            temp = temp2;
+            bool last = !hasMainEffect && !hasAfter;
+            RenderTexture target = last ? dst : RenderTexture.GetTemporary(descriptor);
+            ExecuteAndDispose(RenderImage(descriptor, current, target, beforeEffects));
+            current = target;
+            temp = last ? null : target;
         }
 
-        Graphics.ExecuteCommandBuffer(RenderImage(descriptor, temp, dst, Effects[PostProcessingOrder.AfterMainEffect]));
-        RenderTexture.ReleaseTemporary(temp);
+        if (hasMainEffect)
+        {
+            bool last = !hasAfter;
+            RenderTexture target = last ? dst : RenderTexture.GetTemporary(descriptor);
+            callback!(current, target);
+            if (temp != null)
+            {
+                RenderTexture.ReleaseTemporary(temp);
+            }
+
+            current = target;
+            temp = last ? null : target;
+        }
+
+        if (hasAfter)
+        {
+            ExecuteAndDispose(RenderImage(descriptor, current, dst, afterEffects));
+        }
+        else if (!hasBefore && !hasMainEffect)
+        {
+            Graphics.Blit(src, dst);
+        }
+
+        if (temp != null)
+        {
+            RenderTexture.ReleaseTemporary(temp);
+        }
     }
 
     private void OnPreRender()
